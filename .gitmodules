@@ -1,0 +1,3 @@
+[submodule "Vector"]
+	path = Vector
+	url = https://github.com/resilmesh2/Vector.git
