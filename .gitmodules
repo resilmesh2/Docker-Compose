@@ -4,3 +4,6 @@
 [submodule "NATS"]
 	path = NATS
 	url = https://github.com/resilmesh2/NATS.git
+[submodule "Wazuh"]
+	path = Wazuh
+	url = https://github.com/resilmesh2/Wazuh.git
