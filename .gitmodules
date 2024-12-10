@@ -7,3 +7,6 @@
 [submodule "Wazuh"]
 	path = Wazuh
 	url = https://github.com/resilmesh2/Wazuh.git
+[submodule "Enrichment"]
+	path = Enrichment
+	url = https://github.com/resilmesh2/Enrichment.git
