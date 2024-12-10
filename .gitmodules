@@ -10,3 +10,6 @@
 [submodule "Enrichment"]
 	path = Enrichment
 	url = https://github.com/resilmesh2/Enrichment.git
+[submodule "Anomaly-Detectors"]
+	path = Anomaly-Detectors
+	url = https://github.com/resilmesh2/Anomaly-Detectors.git
