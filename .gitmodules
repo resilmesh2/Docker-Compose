@@ -1,15 +1,20 @@
 [submodule "Vector"]
 	path = Vector
 	url = https://github.com/resilmesh2/Vector.git
+	branch = main
 [submodule "NATS"]
 	path = NATS
 	url = https://github.com/resilmesh2/NATS.git
+	branch = main
 [submodule "Wazuh"]
 	path = Wazuh
 	url = https://github.com/resilmesh2/Wazuh.git
+	branch = main
 [submodule "Enrichment"]
 	path = Enrichment
 	url = https://github.com/resilmesh2/Enrichment.git
+	branch = main
 [submodule "Anomaly-Detectors"]
 	path = Anomaly-Detectors
 	url = https://github.com/resilmesh2/Anomaly-Detectors.git
+	branch = main
