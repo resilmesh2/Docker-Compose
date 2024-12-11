@@ -19,3 +19,6 @@
 	path = Anomaly-Detectors
 	url = https://github.com/resilmesh2/Anomaly-Detectors.git
 	branch = main
+[submodule "MISP"]
+	path = MISP
+	url = https://github.com/resilmesh2/MISP.git
