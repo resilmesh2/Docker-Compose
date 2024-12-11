@@ -1,0 +1,80 @@
+services:
+  vector:
+    container_name: "Vector"
+    hostname: "vector"
+    restart: unless-stopped
+    env_file:
+      - "./Vector/.env"
+    build:
+      context: "./Vector"
+      target: "vector"
+    command: "--config-dir /etc/vector"
+    depends_on:
+      silentpush:
+        condition: service_healthy
+        restart: true
+    ports:
+      - "8686:8686"
+    networks:
+      - resilmesh_network
+
+  nats:
+    container_name: "NATS"
+    hostname: "nats"
+    restart: unless-stopped
+    build:
+      context: "./Nats"
+      target: "nats"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "6222:6222"
+    networks:
+      - resilmesh_network
+
+  misp:
+    hostname: "misp_client"
+    restart: unless-stopped
+    env_file:
+      - "./MISP/.env"
+    build:
+      context: "./MISP"
+    deploy:
+      replicas: 2
+    networks:
+      resilmesh_network:
+    depends_on: ["nats"]
+
+  silentpush:
+    hostname: "silentpush-enrichment"
+    restart: unless-stopped
+    env_file:
+      - "./.env"
+    build:
+      context: "./Enrichment"
+      target: "enrichment"
+    healthcheck:
+      # @TODO: needs improvement, can't rely on 'starting...' string
+      test: "(ps aux | grep -i subscriber.py | grep -v grep) && 
+      (tail -n2 subscriber.log | grep -i 'starting Silent Push - enrichment subscriber')"
+      interval: 1s
+      retries: 60
+    deploy:
+      replicas: 2
+    networks:
+      - resilmesh_network
+    depends_on: ["nats"]
+
+  redis:
+    hostname: "redis"
+    restart: unless-stopped
+    image: redis
+    container_name: redis
+    ports:
+      - 6378:6379
+    networks:
+      resilmesh_network:
+
+networks:
+  resilmesh_network:
+    driver: bridge
