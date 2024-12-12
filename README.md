@@ -40,9 +40,7 @@ sequenceDiagram
 ```
 
 ## Requirements
-All the requirements are fulfilled by the following Ansible provision scripts at: https://github.com/Resilmesh-eu/ansible-ph1
-
-You can use it as reference if you prefer another provisioning method.
+We will need Docker with Compose, see [Install Docker Compose](https://docs.docker.com/compose/install/)
 
 ## Installation
 1. Clone this repo: `git clone https://github.com/Resilmesh-eu/ph1.git`
@@ -53,11 +51,11 @@ You can use it as reference if you prefer another provisioning method.
 http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
 https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
 ```
-3. There are some config files we need, follow instructions at [README.md](./_config/README.md)
+3. There are some config files we need, follow instructions at [README.md](./Wazuh/README.md)
 4. Follow the README's in the other containers to set them up:
    - [Vector](Vector/README.md)
    - [MISP](MISP/README.md)
-   - [Silent Push - Enrichment](Modules/SilentPush/enrichment/README.md)
+   - [Silent Push - Enrichment](Enrichment/README.md)
 
 ## Datasets
 The datasets included in this repository are for demonstration purpose only, the real ones used in production need to be copied into Vector/datasets folder, replacing the sample ones.
