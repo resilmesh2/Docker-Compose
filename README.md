@@ -43,7 +43,7 @@ sequenceDiagram
 We will need Docker with Compose, see [Install Docker Compose](https://docs.docker.com/compose/install/)
 
 ## Installation
-1. Clone this repo: `git clone https://github.com/resilmesh2/Docker-Compose.git`
+1. Clone this repo: `git clone https://github.com/resilmesh2/Docker-Compose.git --recurse-submodules`
 2. Create .env file and add the following, replacing the values enclosed by < >:
 ```dotenv
 # Add this only if you're behind a proxy!
