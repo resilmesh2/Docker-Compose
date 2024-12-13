@@ -69,4 +69,3 @@ docker compose up -f production.yml -d
 
 ## Support
 Ping if you need any further help: <Jorgeley [jorgeley@silentpush.com](jorgeley@silentpush.com)>
-
