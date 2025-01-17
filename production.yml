@@ -23,7 +23,7 @@ services:
     hostname: "nats"
     restart: unless-stopped
     build:
-      context: "./Nats"
+      context: "./NATS"
       target: "nats"
     ports:
       - "4222:4222"
