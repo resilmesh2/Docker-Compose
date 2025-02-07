@@ -54,9 +54,8 @@ services:
       context: "./Enrichment"
       target: "enrichment"
     healthcheck:
-      # @TODO: needs improvement, can't rely on 'starting...' string
       test: "(ps aux | grep -i subscriber.py | grep -v grep) && 
-      (tail -n2 subscriber.log | grep -i 'starting Silent Push - enrichment subscriber')"
+      (tail -n2 subscriber.log | grep \"$(date '+%d-%m-%Y %H:%M')\")"
       interval: 1s
       retries: 60
     deploy:

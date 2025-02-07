@@ -20,6 +20,8 @@ sequenceDiagram
    participant NATS
    participant SLP-Enrichment
    note over SLP-Enrichment: Micro service enriches events
+   participant AD
+   note over AD: Anomaly Detector
    participant Wazuh
    participant MISP-Client
    note over MISP-Client: Micro service leverages MISP API
@@ -30,12 +32,16 @@ sequenceDiagram
    Vector->>+Vector: normalize (ECS) events
    Vector->>NATS: publish to<br/>'ecs_events' queue
    NATS->>SLP-Enrichment: subscribe to 'ecs_events'<br/>and enrich events
+   SLP-Enrichment->>+SLP-Enrichment: enriches events
    SLP-Enrichment-->>NATS: publish to<br/>'enriched_events' queue
+   NATS->>MISP-Client: MISP API Client subscribed to 'enriched_events' queue 
    NATS-->>Vector: source from 'enriched_events' queue
    Vector->>Wazuh: Vector sinks the enriched events into RSyslog using tcp connection
+   AD-->>NATS: publish to<br/>'ad_events' queue
+   NATS-->>Vector: source from 'ad_events' queue
+   Vector->>Wazuh: Vector sinks the Anomaly Detector events into RSyslog using tcp connection
    Wazuh->>+Wazuh: RSyslog logs<br/>events from Resilmesh
    Wazuh->>Wazuh: Wazuh Agent<br/>collects logs
-   NATS->>MISP-Client: MISP API Client subscribed to 'enriched_events' queue 
    MISP-Client->>MISP: push events
 ```
 
