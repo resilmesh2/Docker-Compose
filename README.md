@@ -73,5 +73,9 @@ If you need to add more datasets, check [Vector](Vector/README.md) for instructi
 docker compose up -f production.yml -d
 ```
 
+## Demo
+This is a quick demo showing the framework in action, on the left side you see the microservices, on the right side you can see the MISP and Wazuh instance:
+![Alt Text](./Resilmesh_Demo.gif)
+
 ## Support
 Ping if you need any further help: <Jorgeley [jorgeley@silentpush.com](jorgeley@silentpush.com)>
