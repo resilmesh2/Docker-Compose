@@ -17,6 +17,8 @@ services:
       - "8686:8686"
     networks:
       - resilmesh_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   nats:
     container_name: "NATS"
@@ -43,6 +45,8 @@ services:
       replicas: 2
     networks:
       resilmesh_network:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on: ["nats"]
 
   silentpush:
@@ -70,7 +74,7 @@ services:
     image: redis
     container_name: redis
     ports:
-      - 6378:6379
+      - 6379:6379
     networks:
       resilmesh_network:
 
