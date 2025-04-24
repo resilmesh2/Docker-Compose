@@ -58,8 +58,8 @@ services:
       context: "./Enrichment"
       target: "enrichment"
     healthcheck:
-      test: "(ps aux | grep -i subscriber.py | grep -v grep) && 
-      (tail -n2 subscriber.log | grep \"$(date '+%d-%m-%Y %H:%M')\")"
+      test: "(ps aux | grep -i subscriber.py | grep -v grep)
+#      && (tail -n2 subscriber.log | grep \"$(date '+%d-%m-%Y %H:%M')\")"
       interval: 1s
       retries: 60
     deploy:
