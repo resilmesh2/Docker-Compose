@@ -10,8 +10,8 @@ RAW_EVENTS_SUBJECT="ecs_events"
 ENRICHED_EVENTS_SUBJECT="enriched_events"
 # Add this only if you're behind a proxy!
 # i.e.: http_proxy=http://jao:secret@192.168.0.254:8080
-http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
-https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
+#http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
+#https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
 
 # Silent Push
 SLP_SUBSCRIBE_QUEUE="enrichment_queue"
