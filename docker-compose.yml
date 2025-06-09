@@ -1,88 +1,21 @@
+include:
+  - ./Enrichment/docker-compose.yaml
+  - ./MISP/docker-compose.yaml
+  - ./NATS/docker-compose.yaml
+  - ./Vector/docker-compose.yaml
+
 services:
-  vector:
-    container_name: "Vector"
-    hostname: "vector"
-    restart: unless-stopped
-    env_file:
-      - "./Vector/.env"
-    build:
-      context: "./Vector"
-      target: "vector"
-    command: "--config-dir /etc/vector"
-    depends_on:
-      silentpush:
-        condition: service_healthy
-        restart: true
-    ports:
-      - "8686:8686"
-    networks:
-      - resilmesh_network
-    volumes:
-      - ./Vector/etc/vector:/etc/vector
-
-  nats:
-    container_name: "NATS"
-    hostname: "nats"
-    restart: unless-stopped
-    build:
-      context: "./Nats"
-      target: "nats"
-    ports:
-      - "4222:4222"
-      - "8222:8222"
-      - "6222:6222"
-    networks:
-      - resilmesh_network
-    volumes:
-      - ./Nats/conf:/home/app
-
-  misp:
-    hostname: "misp_client"
-    restart: unless-stopped
-    env_file:
-      - "./MISP/.env"
-    build:
-      context: "./MISP"
-    deploy:
-      replicas: 2
-    networks:
-      resilmesh_network:
-    depends_on: ["nats"]
-    volumes:
-      - ./MISP:/home/app
-
-  silentpush:
-    hostname: "silentpush-enrichment"
-    restart: unless-stopped
-    env_file:
-      - "./.env"
-    build:
-      context: "./Enrichment"
-      target: "enrichment"
-    healthcheck:
-      test: "(ps aux | grep -i subscriber.py | grep -v grep)
-#      && (tail -n2 subscriber.log | grep \"$(date '+%d-%m-%Y %H:%M')\")"
-      interval: 1s
-      retries: 60
-    deploy:
-      # docker compose -f production.yml up -d --scale silentpush=3 --no-recreate
-      replicas: 2
-    networks:
-      - resilmesh_network
-    depends_on: ["nats"]
-    volumes:
-      - ./Enrichment:/home/app
-
-  redis:
+  resilmesh_ap_silentpush_redis:
     hostname: "redis"
     restart: unless-stopped
     image: redis
     container_name: redis
     ports:
-      - 6378:6379
+      - 6378:6378
     networks:
       resilmesh_network:
 
 networks:
   resilmesh_network:
-    driver: bridge
+#    external: true
+    name: resilmesh_network
