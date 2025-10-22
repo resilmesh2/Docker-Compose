@@ -68,6 +68,16 @@ The datasets included in this repository are for demonstration purpose only, the
 
 If you need to add more datasets, check [Vector](Vector/README.md) for instructions.
 
+
+## Docker convention
+Please use 'resilmesh_<PLANE>_<YOUR_COMPONENT>[_<INTERNAL_SERVICE>]', per example: 'resilmesh_ap_silentpush_redis'.
+
+There's a global external network called 'resilmesh_network', this network should be use for all 
+docker containers which represent the components.
+
+Don't expose ports unless really necessary, like dashboards, etc. Instead use the resilmesh_network
+
+
 ## Build and Run the containers
 ```shell
 docker compose up -f production.yml -d
