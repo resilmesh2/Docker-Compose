@@ -1,8 +1,9 @@
+# Full Resilmesh Platform
 include:
-  - ./Enrichment/docker-compose.yaml
-  - ./MISP/docker-compose.yaml
-  - ./NATS/docker-compose.yaml
-  - ./Vector/docker-compose.yaml
+  - ./Aggregation/docker-compose.yml
+  - ./Security-Operations/compose.yaml
+  - ./Situation-Assessment/docker-compose.yaml
+#  - ./Threat-Awareness/docker-compose.yaml  # TODO: docker-compose.yaml to be created
 
 services:
   resilmesh_ap_silentpush_redis:

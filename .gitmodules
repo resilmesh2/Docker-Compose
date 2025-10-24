@@ -1,24 +1,15 @@
-[submodule "Vector"]
-	path = Vector
-	url = https://github.com/resilmesh2/Vector.git
-	branch = main
-[submodule "NATS"]
-	path = NATS
-	url = https://github.com/resilmesh2/NATS.git
-	branch = main
-[submodule "Wazuh"]
-	path = Wazuh
-	url = https://github.com/resilmesh2/Wazuh.git
-	branch = main
-[submodule "Enrichment"]
-	path = Enrichment
-	url = https://github.com/resilmesh2/Enrichment.git
-	branch = main
-	update = merge
-[submodule "Anomaly-Detectors"]
-	path = Anomaly-Detectors
-	url = https://github.com/resilmesh2/Anomaly-Detectors.git
-	branch = main
-[submodule "MISP"]
-	path = MISP
-	url = https://github.com/resilmesh2/MISP.git
+[submodule "Aggregation"]
+	path = Aggregation
+	url = https://github.com/resilmesh2/Aggregation
+[submodule "Security-Operations"]
+	path = Security-Operations
+	url = https://github.com/resilmesh2/Security-Operations
+[submodule "Threat-Awareness"]
+	path = Threat-Awareness
+	url = https://github.com/resilmesh2/Threat-Awareness
+[submodule "Infrastructure"]
+	path = Infrastructure
+	url = https://github.com/resilmesh2/Infrastructure
+[submodule "Situation-Assessment"]
+	path = Situation-Assessment
+	url = https://github.com/resilmesh2/Situation-Assessment
