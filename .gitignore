@@ -1,3 +1,4 @@
 .idea
 .env
 /resilmesh.conf
+.DS_Store
