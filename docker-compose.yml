@@ -18,5 +18,5 @@ services:
 
 networks:
   resilmesh_network:
-#    external: true
+    external: true
     name: resilmesh_network
