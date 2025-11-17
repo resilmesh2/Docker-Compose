@@ -149,7 +149,9 @@ sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/w
 
 echo -e "\nLet's start deploying wazuh containers. Enter to start..."
 read
-docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
+# docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
+docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
+docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
 
 ####### END WAZUH CONFIGURATION  ##########
@@ -197,8 +199,8 @@ echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
 # Execute docker compose build
 
 echo -e "\n🔧 Executing 'docker compose build'... press enter to start"
-trap 'sleep 4' DEBUG
-#read
+# trap 'sleep 4' DEBUG
+read
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
 
 # Execute docker compose up -d
@@ -396,20 +398,25 @@ echo -e "\nNo configuration needed for ISIM component."
 echo -e "\nPress enter to start with CASM component configuration..."
 read
 echo -e "\nInstalling python3-poetry to create the venv and install all dependencies"
-sudo apt install python3-poetry
+sudo apt install python3-poetry -y
+
+echo -e "\nPress enter to create the virtual environment and install all dependencies..."
+read
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs ng-common
 
 echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 read
 echo -e "\nPress enter to start with NSE component configuration..."
 npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
 npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+echo -e "\n Press enter to create .env file..."
 read
 
-echo -e "\n Press enter to create .env file..."
 NSE_FILE=.env
 
-cat <<EOF >"NSE_FILE"
-NEO4J_URI=bolt://neo4j:7687
+cat <<EOF >"$NSE_FILE"
+NEO4J_URI=bolt://resilmesh_sap_neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
 OS_HOST=https://${SERVER_IP}:9200
@@ -426,21 +433,21 @@ read
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
 
-Check if the file exists
+# Check if the file exists
 if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
  echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."
  exit 1
 fi
 
 
-Check if the file exists
+# Check if the file exists
 if [ ! -f "$SACD_ENV_FILE" ]; then
  echo "❌ The file '$SACD_ENV_FILE' do not exist."
  exit 1
 fi
 
 
-Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
+# Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
 sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE"
 sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
 
@@ -567,3 +574,8 @@ docker exec -u 0 "$CONTAINER" rsyslogd
 echo -e "\nReady."
 
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
+
+# Test data injection with Vector to Wazuh Manager to test rsyslog
+echo -e "\nInjecting test data from Vector to Wazuh Manager to test rsyslog configuration. Press enter to start..."
+read
+docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
