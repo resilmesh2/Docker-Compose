@@ -60,7 +60,7 @@ docker network create \
 echo -e "You can see the network from the following list\n"
 docker network ls
 
-echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16. Press enter to continue with the deployment..."
+echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16."
 read -t 2
 
 #### END NETWORK CREATION  ########
@@ -80,7 +80,7 @@ read -t 2
 ####    WAZUH ENVIRONMENT CONFIGURATION   ########
 ##################################################
 
-echo -e "\nLet's continue configuring Wazuh Server!. Press enter to continue..."
+echo -e "\nLet's continue configuring Wazuh Server!."
 read -t 2
 
 WAZUH_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env.example"
@@ -118,8 +118,8 @@ if [ ! -d $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config ]; then
 fi
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml up
 
-echo "Certificates generated correctly. Press Enter to continue with the process..."
-read
+echo "Certificates generated correctly."
+read -t 2
 
 # Remove lingering container
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
@@ -127,8 +127,8 @@ docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.
 # Generating server configuration files
 docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
 
-echo "Server configuration files generated correctly. Press Enter to continue with the process..."
-read
+echo "Server configuration files generated correctly."
+read -t 2
 
 docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
 
@@ -151,16 +151,19 @@ echo -e "\nLet's start deploying wazuh containers. Enter to start..."
 read
 # docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
+read -t 2
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
+echo -e "\nWazuh has been already deployed. Enter to start..."
+read
 
 ####### END WAZUH CONFIGURATION  ##########
 
 ######################################################
 ####      MISP SERVER CONFIGURATION         ##########
 ######################################################
-echo -e "\n\nLet's continue configuring and deploying MISP Server!. Press enter to continue..."
-trap 'sleep 4' DEBUG
+echo -e "\n\nLet's continue configuring and deploying MISP Server!"
+read -t 2
 
 MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/template.env"
 MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
@@ -172,11 +175,11 @@ echo -e "\n#####  Read the following information carefully  #####\n"
 
 #echo -e "The first component to install will be Misp Server. Once installed, you will have to generate an API Key that will be required during the proccess. I will guide you, just follow my instructions.\n"
 
-echo -e "Pick your Server IP up from the following options (that IP will be used to expose the services of Resilmesh platform):"
+echo -e "Pick your Server IP up from the following options (that IP will be used to expose the services of Resilmesh platform). If you are on Cloud, please make sure you enter you PUBLIC IP:"
 hostname -I
 
 # Ask the user for the service URL
-echo -e "\nEnter your host IP to expose the service (normally the first IP shown above): "
+echo -e "\nEnter your host IP to expose the service (normally the first IP shown above or Public IP on Cloud): "
 read SERVER_IP
 mispserver_url="https://${SERVER_IP}:10443"
 #mispclient_url="https://${SERVER_IP}:8443"
@@ -198,16 +201,17 @@ echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
 
 # Execute docker compose build
 
-echo -e "\n🔧 Executing 'docker compose build'... press enter to start"
-# trap 'sleep 4' DEBUG
-read
+echo -e "\n🔧 Executing 'docker compose build'..."
+read -t 2
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
 
 # Execute docker compose up -d
-echo -e "\n🚀 Executing 'docker compose up -d'... press enter to start"
-read
+echo -e "\n🚀 Executing 'docker compose up -d'..."
+read -t 2
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
 
+echo -e "\nMisp Server has been already deployed."
+read -t 2
 #### END MISP SERVER CONFIGURATION  #######
 
 
@@ -254,14 +258,14 @@ echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
 
 #################################################################################################################################################################
 #                                                                                                                                                               #
-#                                               AGGREGATION PLANE	                                                                                        #
+#                                               AGGREGATION PLANE                                                                                               #
 #                                                                                                                                                               #
 #################################################################################################################################################################
 
 #### VECTOR ENVIRONMENT CONFIGURATION ####
 
-echo -e "\n\nLet's continue configuring Vector! Enter to continue..."
-read
+echo -e "\n\nLet's continue configuring Vector!"
+read -t 2
 
 VECTOR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env.sample"
 VECTOR_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env"
@@ -281,16 +285,16 @@ cp "$VECTOR_ORIGINAL_FILE" "$VECTOR_COPY_FILE"
 sed -i "${VECTOR_TARGET_LINE}s|\(${VECTOR_KEY_WORD} *\).*|\1$WAZUH_IP|" "$VECTOR_COPY_FILE"
 
 echo -e "\nVector .env file has been created"
-echo "✅ Line $VECTOR_TARGET_LINE updated in '$VECTOR_COPY_FILE'. Press enter to continue..."
-read
+echo "✅ Line $VECTOR_TARGET_LINE updated in '$VECTOR_COPY_FILE'."
+read -t 2
 
 ####### END VECTOR CONFIGURATION  ##########
 
 
 #### ENRICHMENT ENVIRONMENT CONFIGURATION ####
 
-echo -e "\nLet's continue configuring Enrichment! Press enter to start..."
-read
+echo -e "\nLet's continue configuring Enrichment!"
+read -t 2
 
 ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
 ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
@@ -315,8 +319,8 @@ sed -i "${ENRICHMENT_TARGET_LINE}s|\(${ENRICHMENT_KEY_WORD} *\).*|\1$enrich_key|
 
 echo -e "\nEnrichment .env file has been created"
 echo "✅ Line $ENRICHMENT_TARGET_LINE updated in '$ENRICHMENT_COPY_FILE'."
-echo "✅ Aggregation Plane has been configured. Press enter to continue..."
-read
+echo "✅ Aggregation Plane has been configured."
+read -t 2
 
 ####### END ENRICHMENT CONFIGURATION  ##########
 
@@ -340,8 +344,8 @@ read
 
 ####### PLAYBOOKS TOOL CONFIGURATION ############
 
-mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database 
-mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps 
+mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database
+mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps
 mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/files
 chown -R 1000:1000 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
 chmod -R 755 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
@@ -360,13 +364,14 @@ fi
 cp "$PBTOOL_ORIGINAL_FILE" "$PBTOOL_COPY_FILE"
 
 echo -e "\n✅ File .env created."
+read -t 2
 
 ####### END PLAYBOOKS TOOL CONFIGURATION ############
 
 ####### MITIGATION MANAGER CONFIGURATION ############
 
-echo -e "\nPress enter to continue with Mitigation Manager component configuration..."
-read
+echo -e "\nLet's continue with Mitigation Manager component configuration..."
+read -t 2
 
 MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
 MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
@@ -381,12 +386,11 @@ fi
 cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
-
 echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh. Press enter to continue..."
-read
+read -t 2
 
 echo -e "\nSecurity Operations Plane has been now deployed"
-
+read -t 2
 
 #################################################################################################################################################################
 #                                                                                                                                                               #
@@ -394,24 +398,25 @@ echo -e "\nSecurity Operations Plane has been now deployed"
 #                                                                                                                                                               #
 #################################################################################################################################################################
 echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
-echo -e "\nNo configuration needed for ISIM component."
+#echo -e "\nNo configuration needed for ISIM component."
 echo -e "\nPress enter to start with CASM component configuration..."
 read
 echo -e "\nInstalling python3-poetry to create the venv and install all dependencies"
 sudo apt install python3-poetry -y
 
-echo -e "\nPress enter to create the virtual environment and install all dependencies..."
-read
+echo -e "\nCreating the virtual environment and install all dependencies..."
+read -t 2
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs ng-common
 
-echo -e "\nNo configuration needed for CSA component. Enter to continue..."
-read
-echo -e "\nPress enter to start with NSE component configuration..."
+#echo -e "\nNo configuration needed for CSA component. Enter to continue..."
+#read
+echo -e "\nStarting with NSE component configuration..."
+read -t 2
 npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
 npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
-echo -e "\n Press enter to create .env file..."
-read
+echo -e "\nCreating .env file..."
+read -t 2
 
 NSE_FILE=.env
 
@@ -425,8 +430,8 @@ OS_PASSWORD=admin
 OS_INDEX=wazuh-alerts-*
 EOF
 
-echo -e "\n✅ .env file has been created. Enter to continue..."
-read
+echo -e "\n✅ .env file has been created."
+read -t 2
 echo -e "\nPress enter to start with SACD component configuration..."
 read
 
@@ -452,16 +457,17 @@ sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE"
 sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
+read -t 2
 
-ng server 	# to run the dashboard
-read
+# ng server       # to run the dashboard
+# read -t 2
 
 #NDR FALTA.
 
 
 #################################################################################################################################################################
 #                                                                                                                                                               #
-#                                               THREAT AWARENESS PLANE		                                                                                #
+#                                               THREAT AWARENESS PLANE                                                                                          #
 #                                                                                                                                                               #
 #################################################################################################################################################################
 echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
@@ -488,6 +494,7 @@ sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE"
 sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE2"
 
 echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
+read -t 2
 
 #Build ai-detection-engine component
 #docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile Docker-Compos>
@@ -513,9 +520,9 @@ echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files
 
 
 #######################################################################################################################################
-#																      #
-#						COMPOSE FILES EXECUTION								      #
-#																      #
+#                                                                                                          #
+#                                               COMPOSE FILES EXECUTION                                    #
+#                                                                                                          #
 #######################################################################################################################################
 
 #echo -e "\nEnter to start docker compose build..."
@@ -523,7 +530,7 @@ echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files
 
 #docker compose -f $DOCKER_BASE_PATH/Dockerfile build
 
-echo -e "\nEnter to start docker compose up..."
+echo -e "\nEnter to start main docker compose up..."
 read
 docker compose -f $DOCKER_BASE_PATH/docker-compose.yml up -d
 
@@ -531,9 +538,9 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose.yml up -d
 
 
 ######################################################################################################################################
-#																     #
-#						CONFIGURATION WAZUH DOCKER CONTAINER						     #
-#																     #
+#                                                                                                         #
+#                                               CONFIGURATION WAZUH DOCKER CONTAINER                      #
+#                                                                                                         #
 ######################################################################################################################################
 
 
@@ -575,7 +582,7 @@ echo -e "\nReady."
 
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
-# Test data injection with Vector to Wazuh Manager to test rsyslog
-echo -e "\nInjecting test data from Vector to Wazuh Manager to test rsyslog configuration. Press enter to start..."
+# Test data injection from Vector to Wazuh Manager to test rsyslog
+echo -e "\nInjecting test data from Vector to test rsyslog configuration. Press enter to start..."
 read
 docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
