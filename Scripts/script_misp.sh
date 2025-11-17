@@ -21,8 +21,9 @@ echo -e "\n\n\n"
 #################################################
 
 ## Are you behind a proxy? Complete the following information
-DOCKER_ORIGINAL_FILE="Docker-Compose/.env.sample"
-DOCKER_COPY_FILE="Docker-Compose/.env"
+DOCKER_BASE_PATH="../Docker"
+DOCKER_ORIGINAL_FILE="$DOCKER_BASE_PATH/.env.sample"
+DOCKER_COPY_FILE="$DOCKER_BASE_PATH/.env"
 
 
 read -n 1 -p "Are you behind a proxy? (y/n): " answer
@@ -82,8 +83,8 @@ read -t 2
 echo -e "\nLet's continue configuring Wazuh Server!. Press enter to continue..."
 read -t 2
 
-WAZUH_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env.example"
-WAZUH_COPY_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env"
+WAZUH_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env.example"
+WAZUH_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env"
 WAZUH_TARGET_LINE=4
 WAZUH_KEY_WORD="MANAGER_IP=" # keep the text and add the Auth key behind
 
@@ -112,43 +113,43 @@ echo "✅ Line $WAZUH_TARGET_LINE updated in '$WAZUH_COPY_FILE'."
 
 
 # Generating server certificates
-if [ ! -d Docker-Compose/Threat-Awareness/wazuh-docker/config ]; then
-   cp -r Docker-Compose/Threat-Awareness/wazuh-docker/base-configuration Docker-Compose/Threat-Awareness/wazuh-docker/config
+if [ ! -d $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config ]; then
+   cp -r $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/base-configuration $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config
 fi
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml up
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml up
 
 echo "Certificates generated correctly. Press Enter to continue with the process..."
 read
 
 # Remove lingering container
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
 
 # Generating server configuration files
-docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
+docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
 
 echo "Server configuration files generated correctly. Press Enter to continue with the process..."
 read
 
-docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
+docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
 
 # Updating server configuration files
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules
-sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/rules/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
-sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders Docker-Compose/Threat-Awareness/wazuh-docker/decoders/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules
+sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/rules/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/decoders/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations
 #cp -t config/wazuh_integrations integrations/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_cluster
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_cluster
 
-sudo bash -c 'chmod --reference=Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
+sudo bash -c 'chmod --reference=$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
 
-sudo chgrp -R systemd-journal Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
-sudo bash -c 'chmod 770 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
-# sudo bash -c 'chmod 750 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
+sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo bash -c 'chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
+# sudo bash -c 'chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
 
 echo -e "\nLet's start deploying wazuh containers. Enter to start..."
 read
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 
 
 ####### END WAZUH CONFIGURATION  ##########
@@ -159,8 +160,8 @@ docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose.yaml up -
 echo -e "\n\nLet's continue configuring and deploying MISP Server!. Press enter to continue..."
 trap 'sleep 4' DEBUG
 
-MISPSERVER_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/MISP_Server-docker/template.env"
-MISPSERVER_COPY_FILE="Docker-Compose/Threat-Awareness/MISP_Server-docker/.env"
+MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/template.env"
+MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
 MISPSERVER_TARGET_LINE=60
 MISPSERVER_KEY_WORD="BASE_URL="  # keep the text and add new content behind
 
@@ -198,12 +199,12 @@ echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
 echo -e "\n🔧 Executing 'docker compose build'... press enter to start"
 trap 'sleep 4' DEBUG
 #read
-docker compose -f Docker-Compose/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
 
 # Execute docker compose up -d
 echo -e "\n🚀 Executing 'docker compose up -d'... press enter to start"
 read
-docker compose -f Docker-Compose/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
 
 #### END MISP SERVER CONFIGURATION  #######
 
@@ -215,8 +216,8 @@ docker compose -f Docker-Compose/Threat-Awareness/MISP_Server-docker/docker-comp
 echo -e "\n\nLet's continue configuring MISP Client!\nEnter to continue..."
 read
 
-MISPCLIENT_ORIGINAL_FILE="Docker-Compose/Aggregation/MISP_client/.env.sample"
-MISPCLIENT_COPY_FILE="Docker-Compose/Aggregation/MISP_client/.env"
+MISPCLIENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env.sample"
+MISPCLIENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env"
 MISPCLIENT_TARGET_LINE1=2
 MISPCLIENT_TARGET_LINE2=3
 MISPCLIENT_KEY_WORD1="MISP_API_KEY=" # keep the text and add the Auth key behind
@@ -260,8 +261,8 @@ echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
 echo -e "\n\nLet's continue configuring Vector! Enter to continue..."
 read
 
-VECTOR_ORIGINAL_FILE="Docker-Compose/Aggregation/Vector/.env.sample"
-VECTOR_COPY_FILE="Docker-Compose/Aggregation/Vector/.env"
+VECTOR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env.sample"
+VECTOR_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env"
 VECTOR_TARGET_LINE=2
 VECTOR_KEY_WORD="RSYSLOG_HOST=" # keep the text and add the WAZUH MANAGER IP behind
 
@@ -289,8 +290,8 @@ read
 echo -e "\nLet's continue configuring Enrichment! Press enter to start..."
 read
 
-ENRICHMENT_ORIGINAL_FILE="Docker-Compose/Aggregation/Enrichment/.env.sample"
-ENRICHMENT_COPY_FILE="Docker-Compose/Aggregation/Enrichment/.env"
+ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
+ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
 ENRICHMENT_TARGET_LINE=14
 ENRICHMENT_KEY_WORD="API_KEY=" # keep the text and add the WAZUH MANAGER IP behind
 
@@ -337,15 +338,15 @@ read
 
 ####### PLAYBOOKS TOOL CONFIGURATION ############
 
-mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/database 
-mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/apps 
-mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/files
-chown -R 1000:1000 Docker-Compose/Security-Operations/Playbooks-tool/volumes
-chmod -R 755 Docker-Compose/Security-Operations/Playbooks-tool/volumes
+mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database 
+mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps 
+mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/files
+chown -R 1000:1000 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
+chmod -R 755 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
 sudo swapoff -a
 
-PBTOOL_ORIGINAL_FILE="Docker-Compose/Security-Operations/Playbooks-tool/.env.example"
-PBTOOL_COPY_FILE="Docker-Compose/Security-Operations/Playbooks-tool/.env"
+PBTOOL_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/.env.example"
+PBTOOL_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/.env"
 
 # Check if the file exists
 if [ ! -f "$PBTOOL_ORIGINAL_FILE" ]; then
@@ -365,8 +366,8 @@ echo -e "\n✅ File .env created."
 echo -e "\nPress enter to continue with Mitigation Manager component configuration..."
 read
 
-MM_ORIGINAL_FILE="Docker-Compose/Security-Operations/Mitigation-manager/.env.example"
-MM_COPY_FILE="Docker-Compose/Security-Operations/Mitigation-manager/.env"
+MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
+MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
 
 # Check if the file exists
 if [ ! -f "$MM_ORIGINAL_FILE" ]; then
@@ -400,8 +401,8 @@ echo -e "\nSecurity Operations Plane has been now deployed"
 #echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 #read
 #echo -e "\nPress enter to start with NSE component configuration..."
-#npm --prefix Docker-Compose/Situation-Assessment/NSE/ i
-#npm --prefix Docker-Compose/Situation-Assessment/NSE/ start &
+#npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+#npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 #read
 
 #echo -e "\n Press enter to create .env file..."
@@ -422,8 +423,8 @@ echo -e "\nSecurity Operations Plane has been now deployed"
 #echo -e "\nPress enter to start with SACD component configuration..."
 #read
 
-#SACD_ENV_PRODTS_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.prod.ts"
-#SACD_ENV_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.ts"
+#SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
+#SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
 
 # Check if the file exists
 #if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
@@ -461,8 +462,8 @@ echo -e "\nPress enter to start with Federated Learning component configuration.
 read
 
 ####### FEDERATED LEARNING CONFIGURATION  ##########
-FLAD_AGENT_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/config/fl_agent.conf"
-FLAD_AGENT_ORIGINAL_FILE2="Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/config/ai_detection_engine.conf"
+FLAD_AGENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/config/fl_agent.conf"
+FLAD_AGENT_ORIGINAL_FILE2="$DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/config/ai_detection_engine.conf"
 
 # Check if the file exists
 if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE" ]; then
@@ -482,23 +483,23 @@ sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE2"
 echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
 
 #Build ai-detection-engine component
-#docker build -t ai-detection-engine -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile Docker-Compos>
+#docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile Docker-Compos>
 
 #Build fl-aggregator component
-#docker build -t fl-aggregator -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile Docker-Compose/Threat-Awa>
+#docker build -t fl-aggregator -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile $DOCKER_BASE_PATH/Threat-Awa>
 
 #Build fl-agent component
-#docker build -t fl-agent -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile Docker-Compose/Threat-Awareness/Ano>
+#docker build -t fl-agent -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Ano>
 
 #Executing the components
-#docker run -p "9998:9998" -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
-#docker run -p "9999:9999" -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
-#docker run -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
+#docker run -p "9998:9998" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
+#docker run -p "9999:9999" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
+#docker run -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
 
 #### Add ssh connection to the second server where a new agent need to be deployed in #####
 #echo "A second Federated Learning Agent needs to be deployed in another server, please go there and deploy it"
 #echo "Follow the next steps:"
-#echo "1. Copy the Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent folder to the new server"
+#echo "1. Copy the $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent folder to the new server"
 #echo "2. Build the agent image and run it using the these commands: docker build -t fl-agent / docker run -d fl-agent"
 
 ####### END FEDERATED LEARNING CONFIGURATION  ##########
@@ -513,11 +514,11 @@ echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files
 #echo -e "\nEnter to start docker compose build..."
 #read
 
-#docker compose -f Docker-Compose/Dockerfile build
+#docker compose -f $DOCKER_BASE_PATH/Dockerfile build
 
 echo -e "\nEnter to start docker compose up..."
 read
-docker compose -f Docker-Compose/docker-compose.yml up -d
+docker compose -f $DOCKER_BASE_PATH/docker-compose.yml up -d
 
 
 

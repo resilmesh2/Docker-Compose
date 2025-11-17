@@ -1,6 +1,8 @@
 #################################################
 #####     Resilmesh network creation    #########
 #################################################
+#!/bin/bash
+DOCKER_BASE_PATH="../Docker"
 
 echo "The first step of the deployment is creating the resilmesh network where all components will run."
 echo "Enter to start..."
@@ -26,8 +28,8 @@ read
 
 echo -e "\nLet's continue configuring Wazuh Server!. Press enter to continue..."
 read
-WAZUH_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env.example"
-WAZUH_COPY_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env"
+WAZUH_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env.example"
+WAZUH_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env"
 WAZUH_TARGET_LINE=4
 WAZUH_KEY_WORD="MANAGER_IP=" # keep the text and add the Auth key behind
 
@@ -55,41 +57,41 @@ echo "✅ Line $WAZUH_TARGET_LINE updated in '$WAZUH_COPY_FILE'."
 ####################################################
 
 # Generating server certificates
- if [ ! -d Docker-Compose/Threat-Awareness/wazuh-docker/config ]; then
-    cp -r Docker-Compose/Threat-Awareness/wazuh-docker/base-configuration Docker-Compose/Threat-Awareness/wazuh-docker/config
+ if [ ! -d $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config ]; then
+    cp -r $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/base-configuration $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config
  fi
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml up
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml up
 
 echo -e "\nCertificates generated correctly. Press Enter to continue with the process..."
 read
 
 # Remove lingering container
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
 
 # Generating server configuration files
-docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
+docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
 
 echo -e "\nServer configuration files generated correctly. Press Enter to continue with the process..."
 read
 
-docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
+docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
 
 # Updating server configuration files
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules
-sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/rules/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
-sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders Docker-Compose/Threat-Awareness/wazuh-docker/decoders/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations
-#sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/integrations/*
-sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_cluster
-#chmod --reference=Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*
-sudo chgrp -R systemd-journal Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
-sudo chmod -R 770 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/ Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/
-#sudo chmod 750 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules
+sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/rules/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/decoders/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations
+#sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/integrations/*
+sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_cluster
+#chmod --reference=$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*
+sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo chmod -R 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/ $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/
+#sudo chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*
 
 echo -e "\nLet's start deploying wazuh containers. Enter to start..."
 read
-docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
+docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 
 ####### END WAZUH CONFIGURATION  ##########
 

@@ -3,6 +3,9 @@
 #                                               SITUATION ASSESSMENT PLANE                                                                                      #
 #                                                                                                                                                               #
 #################################################################################################################################################################
+#!/bin/bash
+DOCKER_BASE_PATH="../Docker"
+
 echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
 echo -e "\nNo configuration needed for ISIM component."
 echo -e "\nPress enter to start with CASM component configuration..."
@@ -13,8 +16,8 @@ sudo apt install python3-poetry
 echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 read
 echo -e "\nPress enter to start with NSE component configuration..."
-npm --prefix Docker-Compose/Situation-Assessment/NSE/ i
-npm --prefix Docker-Compose/Situation-Assessment/NSE/ start &
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 read
 
 echo -e "\n Press enter to create .env file..."
@@ -35,8 +38,8 @@ read
 echo -e "\nPress enter to start with SACD component configuration..."
 read
 
-SACD_ENV_PRODTS_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.prod.ts"
-SACD_ENV_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.ts"
+SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
+SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
 
 # Check if the file exists
 if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
@@ -65,8 +68,8 @@ read
 
 
 # Compose up
-docker compose -f Docker-Compose/Situation-Assessment/NSE/docker-compose.yml build
-docker compose -f Docker-Compose/Situation-Assessment/docker-compose.yml up
+docker compose -f $DOCKER_BASE_PATH/Situation-Assessment/NSE/docker-compose.yml build
+docker compose -f $DOCKER_BASE_PATH/Situation-Assessment/docker-compose.yml up
 
 docker build -t resilmesh-landing-page .
 docker run -p 8181:8181 resilmesh-landing-page
