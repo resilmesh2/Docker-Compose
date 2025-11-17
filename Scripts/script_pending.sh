@@ -545,19 +545,20 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose.yml up -d
 
 
 CONTAINER="ResilMesh-Wazuh-Manager"
-
+echo -e "\nStarting Wazuh Manager container configuration. Press enter to start..."
+read
 echo -e "\nUpdating repositories in the $CONTAINER..."
 docker exec -u 0 -it "$CONTAINER" yum update -y
-
+read
 echo -e "\nInstalling telnet in the $CONTAINER..."
 docker exec -u 0 -it "$CONTAINER" yum install -y telnet
-
+read
 echo -e "\nInstalling rsyslog in the $CONTAINER..."
 docker exec -u 0 -it "$CONTAINER" yum install -y rsyslog
-
+read
 echo -e "\nInstalling nano in the $CONTAINER..."
 docker exec -u 0 -it "$CONTAINER" yum install -y nano
-
+read
 echo -e "\nCreating Resilmesh.conf and adding the content to it in the $CONTAINER..."
 docker exec -u 0 -it "$CONTAINER" bash -c 'cat <<"EOF" > /etc/rsyslog.d/Resilmesh.conf
 module(load="imptcp" threads="3")
@@ -575,7 +576,7 @@ ioBufferSize="64k" flushOnTXEnd="off"
 asyncWriting="on")
 }
 EOF'
-
+read
 echo -e "\nStarting rsyslogd now"
 docker exec -u 0 "$CONTAINER" rsyslogd
 echo -e "\nReady."
