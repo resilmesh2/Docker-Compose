@@ -1,0 +1,3 @@
+type: "dedupe"
+inputs: [ "0_csv_datasets" ]
+# @TODO: https://vector.dev/docs/reference/configuration/transforms/dedupe/#fields.match

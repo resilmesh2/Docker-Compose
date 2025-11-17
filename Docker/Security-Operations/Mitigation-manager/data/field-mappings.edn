@@ -1,0 +1,17 @@
+[{:rule {:id :rule-id
+         :mitre {:id :mitre-ids}}
+  :syscheck {:sha1_after :file-hash
+             :path :file-path
+             :perm_after :file-permissions}
+  :agent {:id :agent-id
+          :ip :agent-ip}
+  :data {:dst_ip :connection-dst-ip
+         :src_port :connection-src-port
+         :dst_port :connection-dst-port
+         :pid :connection-pid
+         :attack_flow_alert {:source_ip :flow-source-ip
+                             :destination_ip :flow-destination-ip
+                             :source_port :flow-source-port
+                             :destination_port :flow-destination-port
+                             :attack_type :flow-attack-type
+                             :confidence :flow-confidence}}}]

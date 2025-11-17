@@ -1,0 +1,13 @@
+type: "nats"
+inputs: [ "1_dedupe_csv" ]
+subject: "deduped_csv_events"
+encoding:
+  codec: "json"
+url: "nats://nats:4222"
+connection_name: "2_deduped"
+# IMPORTANT: we need to throttle the data according to the consumers capacity
+# to avoid 'slow consumer' NATS (it will drop messages!)
+request:
+  # @TODO: make this an environment variable
+  rate_limit_num: 500
+  rate_limit_duration_secs: 1

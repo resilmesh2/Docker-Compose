@@ -1,0 +1,132 @@
+[project]
+name = "PP-CTI-Anonymizer"
+version = "1.0"
+requires-python = ">=3.13"
+authors = [
+    {name = "Ekam Puri Nieto", email = "ekam.purin@um.es"},
+    {name = "Juan Hernandez Acosta", email = "juan.hernandeza@um.es"}
+]
+dependencies = [
+    "sanic~=25.3",
+    "sanic-ext~=24.12",
+    "mysql-connector-python~=9.2",
+    "aiohttp~=3.11",
+    "motor~=3.7",
+    "pydantic~=2.11",
+    "pymisp==2.4.188",
+    "oic~=1.7",
+    "valkey~=6.1",
+    "msgpack~=1.1",
+    "pgpy13~=0.6.1rc1",
+    "misp-stix~=2.4.188",
+    "gmqtt~=0.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest~=8.3",
+    "pytest-mock~=3.14",
+    "sanic-testing~=24.3",
+]
+
+[project.scripts]
+build = "scripts.main:build"
+local = "scripts.main:local"
+test = "scripts.main:test"
+lint = "scripts.main:lint"
+
+[build-system]
+requires = ["setuptools"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.ruff]
+preview = true
+line-length = 79
+target-version = "py313"
+
+[tool.ruff.format]
+# Format code inside docstrings
+docstring-code-format = true
+indent-style = "space"
+quote-style = "single"
+# Indent function arguments even if they use magic comma
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = [
+    "E",    #   PEP8 style conventions (errors)
+    "W",    # PEP8 style conventions (warnings)
+    "N",    # PEP8 naming conventions
+    "D",    # Docstring conventions
+    "UP",   # Syntax upgrading
+    "ERA",  # Commented-out code analysis
+    "RUF",  # Ruff-specific rules
+    "ANN",  # flake8-annotations
+    "S",    # flake8-bandit
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "COM",  # flake8-commas
+    "C4",   # flake8-comprehensions
+    "EM",   # flake8-errmsg
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+    "LOG",  # flake8-logging
+    "G",    # flake8-logging-format
+    "INP",  # flake8-no-pep420
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "PT",   # flake8-pytest-style
+    "Q",    # flake8-quotes
+    "RSE",  # flake8-raise
+    "RET",  # flake8-return
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+    "TD",   # flake8-todos
+    "FIX",  # flake8-fixme
+]
+
+ignore = [
+    "ANN002",  # Allow untyped `*args`
+    "ANN003",  # Allow untyped `**kwargs`
+
+    "D100",    # Allow undocumented public modules
+    "D101",    # Allow undocumented public classes
+    "D104",    # Allow undocumented public packages
+    "D107",    # Allow undocumented public __init__
+
+    "TD003",   # Allow TODO items without issue links
+]
+
+logger-objects = ["anonymizer.config.log"]
+
+[tool.ruff.lint.per-file-ignores]
+"test/*" = [
+    "S101",    # Disable assertion checking
+    "D205",    # Disable docstring summary/description distinction
+    "N803",    # Disable lowercase argument name requirements
+    "N802",    # Disable lowercase function name requirements
+]
+
+[tool.ruff.lint.flake8-annotations]
+# Allow untyped dummy variables like '_'
+suppress-dummy-args = true
+# Allow untyped explicit None return types
+suppress-none-returning = true
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 70
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"

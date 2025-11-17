@@ -1,0 +1,82 @@
+#+TITLE: Playbooks Tool
+
+This project contains all the necessary resources to build and deploy the
+Playbooks Tool component on the Resilmesh network.
+
+* Shuffle
+
+** Volume setup
+
+Before deployment, the database folder has to be properly set up.  Additionally,
+swap has to be off on the host.  You will likely need administrator privileges
+for this step.  ~$volumes~ refers to the =volumes/= directory located at the
+root of this project, where the Shuffle volumes will be stored.
+
+#+NAME: prepare-shuffle-directories
+#+begin_src sh :dir (concat "/sudo::" (expand-file-name ".")) :var volumes=shuffle-volume-folder :results silent
+  mkdir -p $volumes/database $volumes/apps $volumes/files
+  chown -R 1000:1000 $volumes
+  chmod -R 755 $volumes
+  swapoff -a
+#+end_src
+
+** Creating the Resilmesh network
+
+All Resilmesh containers run on a special network called =resilmesh_network=.
+This network should be created in advance with the following command:
+
+#+NAME: create-resilmesh-network
+#+begin_src sh
+  docker network create resilmesh_network
+#+end_src
+
+** Setting environment variables
+
+The project includes an =.env.example= file with information regarding the
+available environment variables.  Make a copy of the file, rename it to =.env=,
+and fill/modify any necessary values.
+
+** Running the Compose file
+
+#+NAME: docker-up
+#+begin_src sh :results verbatim
+  docker compose up -d
+#+end_src
+
+#+NAME: docker-down
+#+begin_src sh :results verbatim
+  docker compose down --remove-orphans
+#+end_src
+
+* COMMENT Babel
+
+** Variables
+
+#+NAME: shuffle-volume-folder
+#+begin_src emacs-lisp :cache yes
+  (concat default-directory "/volumes")
+#+end_src
+
+#+NAME: shuffle-port
+: 5001
+
+#+NAME: shuffle-api-key
+: 7256dc1d-cadb-4414-9ee0-9048b70bc765
+
+** Code blocks
+
+*** Get apps
+
+#+NAME: get-apps
+#+begin_src sh :wrap src json-ts :results verbatim :var port=shuffle-port :var key=shuffle-api-key
+  curl http://localhost:$port/api/v1/apps \
+      -H "Authorization: Bearer $key"| jq -M
+#+end_src
+
+*** Get workflows
+
+#+NAME: shuffle-get-workflows
+#+begin_src sh :wrap src json-ts :results verbatim :var port=shuffle-port :var key=shuffle-api-key
+  curl http://localhost:$port/api/v1/workflows \
+      -H "Authorization: Bearer $key"| jq -M
+#+end_src

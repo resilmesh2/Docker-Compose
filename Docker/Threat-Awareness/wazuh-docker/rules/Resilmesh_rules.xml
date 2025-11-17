@@ -1,0 +1,77 @@
+<group name="Resilmesh"> 
+<rule id="99901" level="0"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">0</field> 
+</rule> 
+<rule id="99902" level="2"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">2</field> 
+</rule> 
+<rule id="99903" level="3"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">3</field> 
+</rule> 
+<rule id="99904" level="4"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">4</field> 
+</rule> 
+<rule id="99905" level="5"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">5</field> 
+</rule> 
+<rule id="99906" level="6"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">6</field> 
+</rule> 
+<rule id="99907" level="7"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">7</field>
+</rule> 
+<rule id="99908" level="8"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">8</field> 
+</rule> 
+<rule id="99909" level="9"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">9</field> 
+</rule> 
+<rule id="99910" level="10"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">10</field> 
+</rule> 
+<rule id="99911" level="11"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">11</field> 
+</rule> 
+<rule id="99912" level="12"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">12</field> 
+</rule> 
+<rule id="99913" level="13"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">13</field> 
+</rule> 
+<rule id="99914" level="14"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">14</field> 
+</rule> 
+<rule id="99915" level="15"> 
+<description>Resilmesh</description> 
+<decoded_as>Resilmesh_decoders</decoded_as> 
+<field name="silent_push.wazuh_rule_level">15</field> 
+</rule> 
+</group>

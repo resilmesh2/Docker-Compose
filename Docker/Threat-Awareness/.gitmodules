@@ -1,0 +1,29 @@
+[submodule "AI-Correlation"]
+	path = AI-Correlation
+	url = https://github.com/resilmesh2/AI-Correlation.git
+[submodule "Threat-Hunting-And-Forensics"]
+	path = Threat-Hunting-And-Forensics
+	url = https://github.com/resilmesh2/Threat-Hunting-And-Forensics.git
+[submodule "RobustCTI"]
+	path = RobustCTI
+	url = https://github.com/resilmesh2/RobustCTI.git
+[submodule "PP-CTI"]
+	path = PP-CTI
+	url = https://github.com/resilmesh2/PP-CTI.git
+[submodule "wazuh-docker"]
+	path = wazuh-docker
+	url = https://github.com/resilmesh2/wazuh-docker.git
+[submodule "MISP_Server-docker"]
+	path = MISP_Server-docker
+	url = https://github.com/resilmesh2/MISP_Server-docker.git
+[submodule "IoB"]
+	path = IoB
+	url = https://github.com/resilmesh2/IoB.git
+[submodule "AI_Based_Detector"]
+	path = AI_Based_Detector
+	url = https://github.com/resilmesh2/AI_Based_Detector.git
+	branch = main
+[submodule "Anomaly-Detectors"]
+	path = Anomaly-Detectors
+	url = https://github.com/resilmesh2/Anomaly-Detectors.git
+	branch = main

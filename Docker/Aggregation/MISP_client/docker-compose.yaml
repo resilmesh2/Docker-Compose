@@ -1,0 +1,15 @@
+services:
+  resilmesh_ap_misp_client:
+    hostname: "misp_client"
+    restart: unless-stopped
+    env_file:
+      - ".env"
+    build:
+      context: "./"
+    deploy:
+      replicas: 2
+    networks:
+      resilmesh_network:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: ["resilmesh_ap_nats"]

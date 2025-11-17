@@ -1,0 +1,13 @@
+
+type: "file"
+include:
+  # UMU (Fuzzers, Analysis, Backdoors, DoS, Exploits, Generic, Reconnaissance, Shellcode and Worms)
+  - "/etc/vector/datasets/UMU/NUSW-NB15_GT.csv"
+  # JR
+  - "/etc/vector/datasets/JR/DDoS_ICMP_Flood_attack.csv"
+  # CESNET
+  - "/etc/vector/datasets/CESNET/ip_rep.csv"
+  - "/etc/vector/datasets/CESNET/bad_ips.csv"
+  - "/etc/vector/datasets/CESNET/bad_ips_med_conf.csv"
+  # Zenodo
+  - "/etc/vector/datasets/Zenodo/AIT_Netflow_Data_Set.csv"

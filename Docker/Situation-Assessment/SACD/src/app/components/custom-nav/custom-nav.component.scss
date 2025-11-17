@@ -1,0 +1,56 @@
+.nav-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 12em;
+  background-color: #343F5D;
+  overflow-x: hidden;
+}
+
+.sentinel-logo-wrapper {
+  width: full;
+  height: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0em 1em;
+  gap: 0.5em;
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+#version {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-bottom: 1em;
+  align-items: flex-end;
+}
+
+mat-divider {
+  background-color: white;
+  width: 1px;
+  height: 100%;
+}
+
+.version-content {
+  flex: 1;
+}
+
+.footer-extra-content {
+  flex: 1;
+}

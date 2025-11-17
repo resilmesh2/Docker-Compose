@@ -1,0 +1,24 @@
+# This is a template configuration file for parsing firewall logs in Syslog format, like the example below:
+#   2025-04-14T16:55:47.062932+01:00 athena kernel: IN=enp4s0 OUT= MAC=58:47:ca:7b:a9:d9:16:4d:a9:b4:b7:33:08:00 SRC=223.4.170.2 DST=194.187.179.21 LEN=52 TOS=0x08 PREC=0x40 TTL=64 ID=0 DF PROTO=TCP SPT=50567 DPT=22 WINDOW=2043 RES=0x00 ACK URGP=0
+#   ...which will be parsed as:
+#   {"@timestamp":"2025-04-15T15:55:47.062932Z","destination":{"ip":"194.187.179.21","port":"22"},"ecs":{"version":"1.6.0"},"host":"127.0.0.1","network":{"transport":"TCP"},"port":41878,"source":{"ip":"223.4.170.2","port":"50567"},"source_type":"socket","timestamp":"2025-04-16T14:37:59.398855073Z"}
+
+# IMPORTANT: you need to add this as input in '8_enrichment_queue' sink
+
+type: remap
+inputs: [ "template_syslog" ]
+source: |
+  # message = parse_syslog!(.message)
+  .@timestamp = now()
+  .ecs.version = "1.6.0"
+  # .app = m.appname
+  # .hostname = m.hostname
+  fields = parse_key_value(.message, key_value_delimiter: "=", field_delimiter: " ") ?? {}
+  .source.ip = fields.SRC
+  .source.port = fields.SPT
+  .destination.ip = fields.DST
+  .destination.port = fields.DPT
+  .network.transport = fields.PROTO
+  del(.source_type)
+  del(.message)
+  del(.subject)

@@ -1,0 +1,28 @@
+#                 RESILMESH
+#         ____________________________
+#                  Phase 1
+#
+#
+# [event 1]
+# [event 2] ---> [VECTOR] ---> [NATS] ---> [ELASTIC]
+# [event N]                      ^
+#                        [custom ^ modules]
+#
+# ***Vector***
+# ------------------------------------------------------------------------------
+# Website: https://vector.dev
+# Docs: https://vector.dev/docs
+# Chat: https://chat.vector.dev
+# ------------------------------------------------------------------------------
+
+# TODO: TLS configuration? https://vector.dev/docs/reference/configuration/tls/
+
+# ./sources/*, ./transforms/* and ./sinks/* files are numbered to
+# help to understand the order of the pipeline, like: 0_csv, 1_normalize, 3_elastic, ...
+data_dir: "/etc/vector"
+
+# Vector's GraphQL API (disabled by default)
+# http://localhost:8686
+api:
+  enabled: true
+  address: "0.0.0.0:8686"

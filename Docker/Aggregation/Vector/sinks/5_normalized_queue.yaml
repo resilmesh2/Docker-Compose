@@ -1,0 +1,7 @@
+type: "nats"
+inputs: [ "4_csv_normalizer" ]
+subject: "normalized_events"
+encoding:
+  codec: "json"
+url: "nats://nats:4222"
+connection_name: "5_normalized"

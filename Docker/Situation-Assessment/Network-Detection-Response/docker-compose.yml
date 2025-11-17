@@ -1,0 +1,37 @@
+version: '3.3'
+
+services:
+  ndr_server:
+    container_name: mont_ndr_server
+    image: mont/ndr-server
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - 31057:31057/tcp
+    networks:
+      - ndr_network
+    env_file:
+      - .env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  ndr_client:
+    container_name: mont_ndr_client
+    image: mont/ndr-client
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://ndr_server:31057}
+    ports:
+      - 3000:3000/tcp
+    networks:
+      - ndr_network
+
+networks:
+  ndr_network:
+    driver: bridge

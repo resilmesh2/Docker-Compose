@@ -1,0 +1,7 @@
+# This is a template configuration file for collecting email logs in Syslog format
+
+type: socket
+#address: <SYSLOG-IP>:<SYSLOG-PORT>
+# Example:
+address: 127.0.0.1:514
+mode: udp

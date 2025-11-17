@@ -1,0 +1,126 @@
+.App {
+  text-align: center;
+  background-color: var(--color-fogSilver);
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sidenav active button color overrides */
+.sidenav .btn.btn-primary,
+.sidenav .btn.btn-outline-primary.active,
+.sidenav .btn.btn-primary:focus,
+.sidenav .btn.btn-primary:active {
+  background-color: var(--color-inkNavy) !important;
+  border-color: var(--color-inkNavy) !important;
+  color: #ffffff !important;
+}
+
+/* Sidenav button uniform layout */
+.sidenav {
+  padding: 0 !important;
+  background-color: #ffffff !important;
+}
+
+.sidenav .btn {
+  display: block;
+  width: 100% !important;
+  height: 44px;
+  line-height: 1.2;
+  padding: 10px 12px;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* 🎨 Botones inactivos */
+  background-color: #ffffff !important;
+  color: var(--color-inkNavy) !important;
+}
+
+.sidenav .btn:hover {
+  background-color: var(--color-babyBlue) !important;
+  color: #ffffff !important;
+}
+
+
+/* Form styling with corporate colors */
+.section {
+  background-color: #ffffff !important;
+  border: 1px solid var(--color-mistBlueGray) !important;
+}
+
+.form-control,
+.form-select {
+  border-color: var(--color-stormGray);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-oceanBlue);
+  box-shadow: 0 0 0 0.2rem rgba(61, 128, 176, 0.25);
+}
+
+.btn-primary {
+  background-color: var(--color-oceanBlue);
+  border-color: var(--color-oceanBlue);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-deepTeal);
+  border-color: var(--color-deepTeal);
+}
+
+.btn-outline-secondary {
+  color: var(--color-steelSlate);
+  border-color: var(--color-stormGray);
+}
+
+.btn-privacy {
+  background-color: var(--color-lightSky) !important;
+  /* azul más claro */
+  border-color: var(--color-stormGray) !important;
+  color: white;
+}
+
+.btn-privacy:hover {
+  background-color: var(--color-lightSky) !important;
+  /* azul más oscuro en hover */
+  border-color: var(--color-stormGray) !important;
+}

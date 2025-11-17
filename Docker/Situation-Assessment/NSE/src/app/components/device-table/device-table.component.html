@@ -1,0 +1,156 @@
+<div class="table-view">
+  <div class="controls">
+    <button class="back-btn" (click)="backToSubnets()">
+      ← Back to Subnets
+    </button>
+    
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm"
+      (input)="onSearchChange()"
+      placeholder="Search devices..." />
+      
+    <select [(ngModel)]="filterType" (change)="onFilterChange()">
+      <option value="all">All Devices</option>
+      <option value="critical">Critical Risk (8.0+)</option>
+      <option value="high">High Risk (6.0-7.9)</option>
+      <option value="medium">Medium Risk (4.0-5.9)</option>
+      <option value="low">Low Risk (<4.0)</option>
+      <option value="vulnerable">With Vulnerabilities</option>
+    </select>
+    
+    <button class="export-btn" (click)="exportDeviceList()">
+       Export CSV
+    </button>
+  </div>
+
+  <!-- Header Info -->
+  <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+    <h3 style="margin: 0; color: #333;">Devices in {{ subnet?.subnet }}</h3>
+    <p style="margin: 5px 0 0 0; color: #666;">{{ filteredDevices.length }} devices found</p>
+  </div>
+
+  <div class="table-container">
+    <table class="subnet-table">
+      <thead>
+        <tr>
+          <th class="sortable" (click)="onSortChange('hostname')">
+            Hostname 
+            <span class="sort-indicator">
+              {{sortField === 'hostname' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}}
+            </span>
+          </th>
+          <th class="sortable" (click)="onSortChange('ip')">
+            IP Address 
+            <span class="sort-indicator">
+              {{sortField === 'ip' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}}
+            </span>
+          </th>
+          <th class="sortable" (click)="onSortChange('deviceType')">
+            Type 
+            <span class="sort-indicator">
+              {{sortField === 'deviceType' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}}
+            </span>
+          </th>
+          <th class="sortable" (click)="onSortChange('os')">
+            OS 
+            <span class="sort-indicator">
+              {{sortField === 'os' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}}
+            </span>
+          </th>
+          <th class="sortable" (click)="onSortChange('riskScore')">
+            Risk Score 
+            <span class="sort-indicator">
+              {{sortField === 'riskScore' ? (sortDirection === 'asc' ? '▲' : '▼') : (sortField === '' ? '▼' : '')}}
+            </span>
+          </th>
+          <th>Vulnerabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let device of paginatedDevices"
+            (mouseenter)="showDeviceTooltip($event, device)" (mouseleave)="hideTooltip()">
+          <td>
+            <div style="font-weight: 500;">{{ device.hostname || 'Unknown' }}</div>
+            <div style="font-size: 12px; color: #666;">{{ getDeviceStatus(device) || 'Unknown' }}</div>
+          </td>
+          <td>{{ device.ip || 'Unknown' }}</td>
+          <td>{{ device.deviceType || 'Unknown' }}</td>
+          <td>{{ device.os || 'Unknown' }}</td>
+          <td>
+            <span *ngIf="device.hasRiskScore !== false" [style.color]="getRiskColor(device.riskScore || 0)" style="font-weight: 600;">
+              {{ (device.riskScore || 0).toFixed(1) }}
+            </span>
+            <span *ngIf="device.hasRiskScore === false" style="color: #666; font-style: italic; font-size: 12px;">
+              No Score
+            </span>
+          </td>
+          <td>
+            <span [style.color]="getVulnerabilityColor(device)" style="font-weight: 600;">
+              {{ getVulnerabilityCount(device) }}
+            </span>
+            <span *ngIf="hasVulnerabilities(device)" style="margin-left: 5px;">⚠️</span>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedDevices.length === 0">
+          <td colspan="6" class="text-center">No devices found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-container">
+    <div class="pagination-info">
+      {{paginationInfo}}
+    </div>
+    
+    <div class="pagination-controls">
+      <div class="pagination-select">
+        <label>Show:</label>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="25">25</option>
+        </select>
+        <span>entries</span>
+      </div>
+      
+      <div class="pagination-buttons">
+        <button 
+          class="pagination-btn" 
+          (click)="goToPage(1)"
+          [disabled]="currentPage === 1">
+          First
+        </button>
+        <button 
+          class="pagination-btn" 
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="currentPage === 1">
+          Previous
+        </button>
+        
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="pagination-btn"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{page}}
+        </button>
+        
+        <button 
+          class="pagination-btn" 
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === totalPages">
+          Next
+        </button>
+        <button 
+          class="pagination-btn" 
+          (click)="goToPage(totalPages)"
+          [disabled]="currentPage === totalPages">
+          Last
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

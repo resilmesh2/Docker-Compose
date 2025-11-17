@@ -1,0 +1,5 @@
+type: "nats"
+connection_name: "9_enriched_events"
+subject: "enriched_events"
+queue: "enriched_events"
+url: "nats://nats:4222"

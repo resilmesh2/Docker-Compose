@@ -1,0 +1,54 @@
+services:
+  anonymizer:
+    build:
+      context: .
+      args:
+        project_name: anonymizer
+    container_name: PP-CTI-Anonymizer
+    expose:
+      - 8080
+    volumes:
+      - ./pipelines:/pipelines
+      - ./config.yaml:/usr/config.yaml
+      - ./resources/pgp:/pgp_keys
+    depends_on:
+      - arxlet
+      - flaskdp
+      - context
+      - valkey
+    environment:
+      PYTHONPATH: ./src
+    command: --extra-pipelines /pipelines --extra-pgp-keys /pgp_keys
+    networks:
+      internal:
+      resilmesh:
+
+  context:
+    image: mysql:8
+    container_name: PP-CTI-Anonymizer-Context
+    expose:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - v_context:/var/lib/mysql
+    networks:
+      internal:
+
+  valkey:
+    image: valkey/valkey:7.2.5-alpine
+    container_name: PP-CTI-Anonymizer-Valkey
+    ports:
+      - 6379
+    volumes:
+      - v_valkey:/data
+    command: --save 60 1 --loglevel warning
+    networks:
+      internal:
+
+volumes:
+  v_context:
+  v_valkey:
+
+networks:
+  internal:

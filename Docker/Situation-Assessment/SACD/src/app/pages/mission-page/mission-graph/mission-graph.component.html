@@ -1,0 +1,79 @@
+@if (nodes && edges) {
+<ngx-graph
+  [autoCenter]="true"
+  [autoZoom]="true"
+  [center$]="center$"
+  class="missions-graph"
+  [links]="edges"
+  [nodes]="nodes"
+  [layout]="customLayout"
+  (select)="selectNode($event)"
+  style="width: 100%; height: 100%;"
+>
+  <ng-template #defsTemplate>
+    <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+      <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+    </svg:marker>
+  </ng-template>
+
+  <ng-template #clusterTemplate let-cluster>
+    <svg:g
+      class="node cluster"
+      matTooltip="{{ cluster.label }}"
+      matTooltipPosition="above">
+    >
+      <svg:rect
+        rx="5"
+        ry="5"
+        [attr.width]="cluster.dimension.width"
+        [attr.height]="cluster.dimension.height"
+        [attr.fill]="cluster.data.color"
+      />
+    </svg:g>
+  </ng-template>
+
+  <ng-template #nodeTemplate let-node>
+    <svg:g
+      class="node"
+      [matTooltipDisabled]="node.data.type !== 'host'"
+      matTooltip="{{ node.data.ip }}"
+      matTooltipPosition="above"
+      [style.cursor]="(node.data.type === 'mission' || node.data.type === 'host') ? 'pointer' : 'default'"
+    >
+      <svg:rect
+        [attr.width]="node.dimension.width"
+        [attr.height]="node.dimension.height"
+        [attr.fill]="node.data.disabled ? 'red' : node.data.customColor"
+        [attr.stroke]="'transparent'"
+        [attr.rx]="4"
+        [attr.ry]="4"
+      />
+      <svg:text
+        [attr.fill]="node.data.disabled ? '#fff' : node.data.textColor"
+        dominant-baseline="middle" 
+        text-anchor="middle" 
+        [attr.x]="node.dimension.width / 2" 
+        [attr.y]="node.dimension.height / 2"
+      >
+        {{ node.label }}
+      </svg:text>
+    </svg:g>
+  </ng-template>
+
+  <ng-template #linkTemplate let-link>
+    <svg:g class="edge">
+      <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+      <svg:text class="edge-label" text-anchor="middle">
+        <textPath
+          class="text-path"
+          [attr.href]="'#' + link.id"
+          [style.dominant-baseline]="link.dominantBaseline"
+          startOffset="50%"
+        >
+          {{ link.label }}
+        </textPath>
+      </svg:text>
+    </svg:g>
+  </ng-template>
+</ngx-graph>
+}

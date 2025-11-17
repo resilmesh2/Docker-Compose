@@ -1,0 +1,29 @@
+<decoder name="Resilmesh_decoders"> 
+<prematch type="pcre2">(?!"type":"anomalies")</prematch> 
+</decoder> 
+<!-- extracts source IP --> 
+<decoder name="Resilmesh_decoders"> 
+<parent>Resilmesh_decoders</parent> 
+<use_own_name>true</use_own_name> 
+<regex type="pcre2">"source":\s?\{"ip":\s?"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"</regex> 
+<order>srcip</order> 
+</decoder> 
+<!-- extracts destination IP --> 
+<decoder name="Resilmesh_decoders"> 
+<parent>Resilmesh_decoders</parent> 
+<use_own_name>true</use_own_name> 
+<regex type="pcre2">"destination":\s?\{"ip":\s?"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"</regex> 
+<order>dstip</order> 
+</decoder> 
+<!-- extracts risk score --> 
+<decoder name="Resilmesh_decoders"> 
+<parent>Resilmesh_decoders</parent> 
+<use_own_name>true</use_own_name> 
+<regex type="pcre2">"sp_risk_score":\s?(\d{1,3})</regex> 
+<order>risk_score</order> 
+</decoder> 
+<!-- extracts the rest of the event as JSON --> 
+<decoder name="Resilmesh_decoders">
+<parent>Resilmesh_decoders</parent> 
+<plugin_decoder>JSON_Decoder</plugin_decoder> 
+</decoder>

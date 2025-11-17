@@ -1,0 +1,75 @@
+from anonymizer.models import arxlet
+from test.models import check_model_maintains_extra_fields
+
+
+def test_arxlet_model_is_json_serializable(
+        f_arxlet_ObjectResponseSingle: arxlet.ObjectResponseSingle,
+        f_arxlet_ObjectRequest: arxlet.ObjectRequest,
+        f_arxlet_AttributeResponseSingle: arxlet.AttributeResponseSingle,
+        f_arxlet_AttributeRequest: arxlet.AttributeRequest,
+        f_arxlet_ObjectData: arxlet.ObjectData,
+        f_arxlet_AttributeData: arxlet.AttributeData,
+        f_arxlet_Hierarchy: arxlet.Hierarchy,
+        f_arxlet_Pet: arxlet.Pet,
+        f_arxlet_Object: arxlet.Object,
+        f_arxlet_Attribute: arxlet.Attribute,
+        f_arxlet_TCloMetadata: arxlet.TCloMetadata,
+        f_arxlet_CLDivMetadata: arxlet.CLDivMetadata,
+        f_arxlet_LDivMetadata: arxlet.LDivMetadata,
+        f_arxlet_SensitiveMetadata: arxlet.SensitiveMetadata,
+        f_arxlet_KMapMetadata: arxlet.KMapMetadata,
+        f_arxlet_KAnonMetadata: arxlet.KAnonMetadata):
+    for fixture in [
+            f_arxlet_ObjectResponseSingle,
+            f_arxlet_ObjectRequest,
+            f_arxlet_AttributeResponseSingle,
+            f_arxlet_AttributeRequest,
+            f_arxlet_ObjectData,
+            f_arxlet_AttributeData,
+            f_arxlet_Hierarchy,
+            f_arxlet_Pet,
+            f_arxlet_Object,
+            f_arxlet_Attribute,
+            f_arxlet_TCloMetadata,
+            f_arxlet_CLDivMetadata,
+            f_arxlet_LDivMetadata,
+            f_arxlet_SensitiveMetadata,
+            f_arxlet_KMapMetadata,
+            f_arxlet_KAnonMetadata,
+    ]:
+        assert fixture.model_dump_json(by_alias=True)
+
+
+def test_arxlet_model_maintains_extra_fields(
+        f_arxlet_ObjectResponseSingle: arxlet.ObjectResponseSingle,
+        f_arxlet_ObjectRequest: arxlet.ObjectRequest,
+        f_arxlet_AttributeResponseSingle: arxlet.AttributeResponseSingle,
+        f_arxlet_AttributeRequest: arxlet.AttributeRequest,
+        f_arxlet_ObjectData: arxlet.ObjectData,
+        f_arxlet_AttributeData: arxlet.AttributeData,
+        f_arxlet_Hierarchy: arxlet.Hierarchy,
+        f_arxlet_Pet: arxlet.Pet,
+        f_arxlet_Object: arxlet.Object,
+        f_arxlet_Attribute: arxlet.Attribute,
+        f_arxlet_TCloMetadata: arxlet.TCloMetadata,
+        f_arxlet_CLDivMetadata: arxlet.CLDivMetadata,
+        f_arxlet_LDivMetadata: arxlet.LDivMetadata,
+        f_arxlet_SensitiveMetadata: arxlet.SensitiveMetadata,
+        f_arxlet_KMapMetadata: arxlet.KMapMetadata,
+        f_arxlet_KAnonMetadata: arxlet.KAnonMetadata):
+    check_model_maintains_extra_fields(f_arxlet_ObjectResponseSingle,
+                                       f_arxlet_ObjectRequest,
+                                       f_arxlet_AttributeResponseSingle,
+                                       f_arxlet_AttributeRequest,
+                                       f_arxlet_ObjectData,
+                                       f_arxlet_AttributeData,
+                                       f_arxlet_Hierarchy,
+                                       f_arxlet_Pet,
+                                       f_arxlet_Object,
+                                       f_arxlet_Attribute,
+                                       f_arxlet_TCloMetadata,
+                                       f_arxlet_CLDivMetadata,
+                                       f_arxlet_LDivMetadata,
+                                       f_arxlet_SensitiveMetadata,
+                                       f_arxlet_KMapMetadata,
+                                       f_arxlet_KAnonMetadata)

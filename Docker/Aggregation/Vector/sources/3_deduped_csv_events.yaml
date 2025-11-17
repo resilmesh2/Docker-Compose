@@ -1,0 +1,5 @@
+type: "nats"
+connection_name: "3_deduped"
+subject: "deduped_csv_events"
+queue: "deduped_csv_events"
+url: "nats://nats:4222"

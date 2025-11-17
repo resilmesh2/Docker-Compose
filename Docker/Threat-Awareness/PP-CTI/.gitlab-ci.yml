@@ -1,0 +1,23 @@
+stages:
+  - deploy
+
+Resilmesh GitHub upload:
+  stage: deploy
+  image: alpine:latest
+  variables:
+    GIT_DEPTH: 0
+  tags:
+    - docker
+  before_script:
+    - apk add --no-cache git openssh-client
+    - git config --global user.email "${GITHUB_EMAIL}"
+    - git config --global user.name "${GITHUB_USERNAME}"
+    - git remote remove github || true
+    - git remote add github "https://oauth2:${GITHUB_TOKEN}@github.com/resilmesh2/PP-CTI.git"
+  script:
+    - echo "Pushing 'release' branch to Resilmesh 'main' branch..."
+    - git fetch origin release
+    - git push --force github refs/remotes/origin/release:refs/heads/main
+  rules:
+    - if: $CI_COMMIT_BRANCH == "release"
+      when: on_success

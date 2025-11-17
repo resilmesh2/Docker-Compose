@@ -1,0 +1,20 @@
+pipeline:
+  file: /pipelines/default.json
+auth:
+  provider: NONE
+valkey:
+  dsn: redis://valkey:6379/0
+  ssl: False
+context:
+  mysql:
+    dsn: mysql://root:root@context-mysql:3306/
+    database: Anonymizer
+services:
+  arxlet:
+    url: http://arxlet:8080/api
+  flaskdp:
+    url: http://flaskdp:8000
+  misp:
+    url: https://<YOUR_MISP_URL>
+    key: <YOUR_MISP_KEY>
+    ssl: false

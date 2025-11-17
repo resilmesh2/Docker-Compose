@@ -1,0 +1,471 @@
+{
+  "spec_version": "2.1",
+  "id": "bundle--f5be0b16-2fc7-4640-8471-6579088526ab",
+  "type": "bundle",
+  "objects": [
+    {
+      "id": "extension-definition--45aade3e-a252-4ac0-ad34-f3cb31199424",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T16:18:30.290Z",
+      "modified": "2024-12-04T16:18:30.290Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "new-sdo"
+      ],
+      "extension_properties": []
+    },
+    {
+      "id": "extension-definition--5b360e01-2fd0-4665-91c7-dfb1853108f6",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T16:18:30.290Z",
+      "modified": "2024-12-04T16:18:30.290Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "new-sdo"
+      ],
+      "extension_properties": []
+    },
+    {
+      "id": "extension-definition--d1d3161f-ece4-48af-86c9-aa1cd68cf349",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T13:26:29.250Z",
+      "modified": "2024-12-04T13:26:29.250Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "new-sdo"
+      ],
+      "extension_properties": []
+    },
+    {
+      "id": "extension-definition--c98699a2-4629-4a09-b4fc-5568e4f445d8",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T13:26:29.250Z",
+      "modified": "2024-12-04T13:26:29.250Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "new-sdo"
+      ],
+      "extension_properties": []
+    },
+    {
+      "id": "extension-definition--29f3274d-6af7-4cd5-86f9-b4a917391e84",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T13:26:29.250Z",
+      "modified": "2024-12-04T13:26:29.250Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "new-sdo"
+      ],
+      "extension_properties": []
+    },
+    {
+      "id": "grouping--1e439dd9-78b9-4529-b589-d185081d1168",
+      "type": "grouping",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T13:26:29.246Z",
+      "modified": "2024-12-04T13:26:29.246Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "TUS-SDO-Set",
+      "description": "",
+      "context": "",
+      "object_refs": [
+        "x-oca-behavior--07704743-eb45-45b8-a8df-16f1415df244",
+        "x-oca-behavior--202d9b4f-6f1f-47e1-9e92-643ec48d7432",
+        "x-oca-behavior--46648720-3243-4196-bf68-5d7ab8c8b4af"
+      ]
+    },
+    {
+      "id": "x-oca-behavior--96a761ca-32c9-4061-adcd-53d82cda84c2",
+      "type": "x-oca-behavior",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:44.969Z",
+      "modified": "2024-12-04T13:26:44.970Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": "",
+          "url": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "Spearphish Link",
+      "description": "Adversaries may send spearphishing emails with a malicious link in an attempt to gain access to victim systems. ",
+      "behavior_class": "anomalous",
+      "tactic": "initial access",
+      "technique": "PHISHING:spear phishing link - T1566.002",
+      "first_seen": "2024-12-04T13:26:44.970Z",
+      "platforms": [
+        "OS:Windows",
+        "Version:11"
+      ],
+      "extensions": {
+        "extension-definition--d1d3161f-ece4-48af-86c9-aa1cd68cf349": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-behavior--07704743-eb45-45b8-a8df-16f1415df244",
+      "type": "x-oca-behavior",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:44.969Z",
+      "modified": "2024-12-04T13:26:44.970Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": ""
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "Remote Login",
+      "description": "Adversaries may send spearphishing emails with a malicious link in an attempt to gain access to victim systems. ",
+      "behavior_class": "anomalous ",
+      "tactic": "Lateral Movement",
+      "technique": "Remote Services: Windows Remote Management :T1021:006",
+      "first_seen": "2024-12-04T13:26:44.970Z",
+      "platforms": [
+        "OS:Windows",
+        "Version:11"
+      ],
+      "extensions": {
+        "extension-definition--d1d3161f-ece4-48af-86c9-aa1cd68cf349": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-behavior--202d9b4f-6f1f-47e1-9e92-643ec48d7432",
+      "type": "x-oca-behavior",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:44.969Z",
+      "modified": "2024-12-04T13:26:44.970Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": "",
+          "url": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "credential Dumping",
+      "description": "Adversaries may attempt to access credential material stored in the process memory of the Local Security Authority Subsystem Service (LSASS). After a user logs on, the system generates and stores a variety of credential materials in LSASS process memory. These credential materials can be harvested by an administrative user or SYSTEM and used to conduct Lateral Movement",
+      "behavior_class": "anomalous",
+      "tactic": "credential access",
+      "technique": "OS credential Dumping:LSASS Memory - t1003.001",
+      "first_seen": "2024-12-04T13:26:44.970Z",
+      "platforms": [
+        "OS:Windows",
+        "Version:11"
+      ],
+      "extensions": {
+        "extension-definition--d1d3161f-ece4-48af-86c9-aa1cd68cf349": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-behavior--46648720-3243-4196-bf68-5d7ab8c8b4af",
+      "type": "x-oca-behavior",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:44.969Z",
+      "modified": "2024-12-04T13:26:44.970Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+        "source_name": "",
+        "url": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+      }],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "shared folder creation",
+      "description": "Adversaries may enumerate files and directories or may search in specific locations of a host or network share for certain information within a file system. Adversaries may use the information from File and Directory Discovery during automated discovery to shape follow-on behaviors, including whether or not the adversary fully infects the target and/or attempts specific actions",
+      "behavior_class": "anomalous",
+      "tactic": "discovery",
+      "technique": "file and directory discovery-t1083",
+      "first_seen": "2024-12-04T13:26:44.970Z",
+      "platforms": [
+        "OS:Windows",
+        "Version:11"
+      ],
+      "extensions": {
+        "extension-definition--d1d3161f-ece4-48af-86c9-aa1cd68cf349": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-detection--7b5e41e3-a9f2-43c1-b50c-031fed8474a7",
+      "type": "x-oca-detection",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:58.852Z",
+      "modified": "2024-12-04T13:26:58.852Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": "",
+          "url": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "Shared folder",
+      "data_sources": [
+        "windows sysmon log"
+      ],
+      "analytic": {
+        "sigma rule": "ZGF0ZTogMjAyMS8wNi8wNwpkZXRlY3Rpb246CiAgc2VsZWN0aW9uOgogICAgRXZlbnRJRDogJzExJwogICAgU291cmNlX0ltYWdlfGNvbnRhaW5zOgogICAgICBuZXQuZXhlCiAgICBDb21tYW5kX0xpbmV8Y29udGFpbnM6CiAgICAgICJTaGFyZWQgRm9sZGVyIgogICAgY29uZGl0aW9uOiBzZWxlY3Rpb24KICAgIGxldmVsOiBoaWdoCiAgICBhdXRob3I6IHR1cwogICAgZGVzY3JpcHRpb246IERldGVjdHMgc2hhcmVkIGZvbGRlciBjcmVhdGlvbi4KICAgIGlkOiBzcGVhcnBoaXNoaW5nCiAgICBmYWxzZXBvc2l0aXZlczoKICAgICAgLSBMb3cKICAgIHRpdGxlOiBEZXRlY3RzIGNyZWF0aW5nIHNoYXJlZCBmb2xkZXIKICAgIGxvZ3NvdXJjZToKICAgICAgcHJvZHVjdDogd2luZG93cwogICAgICBzZXJ2aWNlOiBzeXNtb24KICAgICAgY2F0ZWdvcnk6IGZpbGVfY3JlYXRpb24KICAgIHRhZ3M6CiAgICAgIC0gYXR0YWNrLmRpc2NvdmVyCiAgICAgIC0gYXR0YWNrLnQxMTM1Cg=="
+      },
+      "extensions": {
+        "extension-definition--c98699a2-4629-4a09-b4fc-5568e4f445d8": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-detection--a7416413-13c9-4a19-979a-43cbc5e3dd0f",
+      "type": "x-oca-detection",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:58.852Z",
+      "modified": "2024-12-04T13:26:58.852Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": "",
+          "url": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "lsaas injection",
+      "data_sources": [
+        "windows sysmon log"
+      ],
+      "analytic": {
+        "sigma rule": "ZGF0ZTogMjAyMS8wNi8wNwpkZXRlY3Rpb246CiAgc2VsZWN0aW9uOgogICAgRXZlbnRJRDogJzEwJwogICAgU291cmNlX0ltYWdlfGNvbnRhaW5zOgogICAgICBwb3dlcnNoZWxsCiAgICBUYXJnZXRfSW1hZ2V8IGNvbnRhaW5zOgogICAgICBsc2Fhcy5leGUKICAgIGNvbmRpdGlvbjogc2VsZWN0aW9uCiAgICBsZXZlbDogaGlnaAogICAgYXV0aG9yOiB0dXMKICAgIGRlc2NyaXB0aW9uOiBEZXRlY3RzIGxzYXNzIGluamVjdGlvbi4KICAgIGZhbHNlcG9zaXRpdmVzOgogICAgICAtIExvdwogICAgdGl0bGU6IENyZGVudGlhbCBEdW1waW5nCiAgICBsb2dzb3VyY2U6CiAgICAgIHByb2R1Y3Q6IHdpbmRvd3MKICAgICAgc2VydmljZTogc3lzbW9uCiAgICAgIGNhdGVnb3J5OiBwcm9jZXNzX2FjY2VzcwogICAgdGFnczoKICAgICAgLSBhdHRhY2sucHJvY2Vzc19pbmplY3Rpb24KICAgICAgLSBhdHRhY2sudDEwNTUuMDAxCg=="
+      },
+      "extensions": {
+        "extension-definition--c98699a2-4629-4a09-b4fc-5568e4f445d8": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-detection--ed210949-624d-49c8-bfc0-df749cf2e666",
+      "type": "x-oca-detection",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:58.852Z",
+      "modified": "2024-12-04T13:26:58.852Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": ""
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "Powershell remote",
+      "data_sources": [
+        "windows sysmon log"
+      ],
+      "analytic": {
+        "": "",
+        "sigma rule": "ZGF0ZTogMjAyMS8wNi8wNwpkZXRlY3Rpb246CiAgc2VsZWN0aW9uOgogICAgRXZlbnRJRDogJzEwJwogICAgU291cmNlX0ltYWdlfGNvbnRhaW5zOgogICAgICB3c21wcm92aG9zdAogICAgY29uZGl0aW9uOiBzZWxlY3Rpb24KICAgIGxldmVsOiBoaWdoCiAgICBhdXRob3I6IHR1cwogICAgZGVzY3JpcHRpb246IERldGVjdHMgcmVtb3RlIGludm9jYXRpb24gb2YgIHBvd2Vyc2hlbGwuCiAgICBmYWxzZXBvc2l0aXZlczoKICAgICAgLSBMb3cKICAgIHRpdGxlOiBSZW1vdGUgTG9naW4KICAgIGxvZ3NvdXJjZToKICAgICAgcHJvZHVjdDogd2luZG93cwogICAgICBzZXJ2aWNlOiBzeXNtb24KICAgICAgY2F0ZWdvcnk6IHByb2Nlc3NfYWNjZXNzCiAgICB0YWdzOgogICAgICAtIGF0dGFjay5wcm9jZXNzX2luamVjdGlvbgogICAgICAtIGF0dGFjay50MTA1NQo="
+      },
+      "extensions": {
+        "extension-definition--c98699a2-4629-4a09-b4fc-5568e4f445d8": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "x-oca-detection--6218525f-c96f-4e88-88f5-274817002c8f",
+      "type": "x-oca-detection",
+      "spec_version": 2.1,
+      "created_by_ref": "identity--8f2dfb7d-b230-485c-a5ce-8a3a5dc6418a",
+      "created": "2024-12-04T13:26:58.852Z",
+      "modified": "2024-12-04T13:26:58.852Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [
+        {
+          "source_name": "https://github.com/opencybersecurityalliance/oca-iob/blob/main/apl_reference_implementation_bundle/revision_3/BehaviorBundle.json"
+        }
+      ],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "Mail spearphink link",
+      "data_sources": [
+        "SYSMON Events collected by Wazuh"
+      ],
+      "analytic": {
+        "ZWNobyBkYXRlOiAyMDIxLzA2LzA3CmRldGVjdGlvbjoKICBzZWxlY3Rpb246CiAgICBFdmVudElEOiAnMScKICAgIENyZWF0b3JfUHJvY2Vzc19OYW1lfGNvbnRhaW5zOgogICAgICAtIG91dGxvb2sKICAgICAgLSB0aHVuZGVyYmlyZAogICAgICAtIG1haWwKICAgIE5ld19Qcm9jZXNzX05hbWV8Y29udGFpbnM6CiAgICAgIC0gZWRnZQogICAgICAtIGNocm9tZQogICAgICAtIGZpcmVmb3gKICAgIGNvbmRpdGlvbjogc2VsZWN0aW9uCiAgICBsZXZlbDogaGlnaAogICAgYXV0aG9yOiB0dXMKICAgIGRlc2NyaXB0aW9uOiBEZXRlY3RzIGJyb3dzZXIgbGF1bmNoZWQgZnJvbSBlbWFpbCBjbGllbnQuCiAgICBpZDogc3BlYXJwaGlzaGluZwogICAgZmFsc2Vwb3NpdGl2ZXM6CiAgICAgIC0gTG93CiAgICB0aXRsZTogU3BlYXJwaGlzaGluZyB3aXRoIExpbmsKICAgIGxvZ3NvdXJjZToKICAgICAgcHJvZHVjdDogd2luZG93cwogICAgICBzZXJ2aWNlOiBzeXNtb24KICAgICAgY2F0ZWdvcnk6IHByb2Nlc3NfZXZlbnQKICAgIHRhZ3M6CiAgICAgIC0gYXR0YWNrLmluaXRpYWxfYWNjZXNzCiAgICAgIC0gYXR0YWNrLnQxNTY2LjAwMgo=": "Sigma Rule"
+      },
+      "extensions": {
+        "extension-definition--c98699a2-4629-4a09-b4fc-5568e4f445d8": {
+          "extension_type": "new-sdo"
+        }
+      }
+    },
+    {
+      "id": "extension-definition--2faa0cc6-f211-48b4-9f45-638fa50cc4b2",
+      "type": "extension-definition",
+      "spec_version": 2.1,
+      "created_by_ref": "",
+      "created": "2024-12-04T13:26:29.250Z",
+      "modified": "2024-12-04T13:26:29.250Z",
+      "revoked": false,
+      "confidence": 0,
+      "lang": "en",
+      "external_references": [],
+      "object_marking_refs": [],
+      "granular_markings": [],
+      "name": "",
+      "description": "",
+      "schema": "",
+      "version": "",
+      "extension_types": [
+        "property-extension"
+      ],
+      "extension_properties": []
+    },
+    {
+      "source_ref": "grouping--1e439dd9-78b9-4529-b589-d185081d1168",
+      "target_ref": "x-oca-behavior--96a761ca-32c9-4061-adcd-53d82cda84c2",
+      "relationship_type": "includes",
+      "type": "relationship",
+      "spec_version": "2.1",
+      "created": "2024-12-04T13:31:48.820Z",
+      "modified": "2024-12-04T13:31:48.820Z",
+      "id": "relationship--05b92865-cb0e-4fa0-bfec-a832b06bb672"
+    },
+    {
+      "source_ref": "x-oca-detection--7b5e41e3-a9f2-43c1-b50c-031fed8474a7",
+      "target_ref": "x-oca-behavior--46648720-3243-4196-bf68-5d7ab8c8b4af",
+      "relationship_type": "detects",
+      "type": "relationship",
+      "spec_version": "2.1",
+      "created": "2024-12-04T13:51:15.704Z",
+      "modified": "2024-12-04T13:51:15.706Z",
+      "id": "relationship--d6b975e0-cdb6-46b8-849c-77eefcc9903a"
+    },
+    {
+      "source_ref": "x-oca-detection--a7416413-13c9-4a19-979a-43cbc5e3dd0f",
+      "target_ref": "x-oca-behavior--202d9b4f-6f1f-47e1-9e92-643ec48d7432",
+      "relationship_type": "detects",
+      "type": "relationship",
+      "spec_version": "2.1",
+      "created": "2024-12-04T13:51:22.365Z",
+      "modified": "2024-12-04T13:51:22.365Z",
+      "id": "relationship--57d2dc4c-0088-407a-b090-cbcf1cd60e72",
+      "targetObjectType": "x-oca-behavior"
+    },
+    {
+      "source_ref": "x-oca-detection--ed210949-624d-49c8-bfc0-df749cf2e666",
+      "target_ref": "x-oca-behavior--07704743-eb45-45b8-a8df-16f1415df244",
+      "relationship_type": "detects",
+      "type": "relationship",
+      "spec_version": "2.1",
+      "created": "2024-12-04T13:51:34.897Z",
+      "modified": "2024-12-04T13:51:34.897Z",
+      "id": "relationship--385596cb-be81-425c-9210-9e85fae61d56",
+      "targetObjectType": "x-oca-behavior"
+    },
+    {
+      "source_ref": "x-oca-detection--6218525f-c96f-4e88-88f5-274817002c8f",
+      "target_ref": "x-oca-behavior--96a761ca-32c9-4061-adcd-53d82cda84c2",
+      "relationship_type": "detects",
+      "type": "relationship",
+      "spec_version": "2.1",
+      "created": "2024-12-04T13:51:42.330Z",
+      "modified": "2024-12-04T13:51:42.331Z",
+      "id": "relationship--773b7eb5-8d57-470e-804e-827a4a061538",
+      "targetObjectType": "x-oca-behavior"
+    }
+  ]
+}

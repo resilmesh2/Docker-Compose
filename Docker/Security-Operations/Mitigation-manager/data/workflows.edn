@@ -1,0 +1,39 @@
+[{:description "Deletes a file"
+  :url "http://resilmesh-pt/api/v1/hooks/webhook_6b219a4d-9723-4607-b6c6-6e56f790650c"
+  :mitre-id "T1222.002"
+  :cost 1.0
+  :params {}
+  :args {:sha1_after :file-hash
+         :file_path :file-path
+         :actuator_ip :agent-ip
+         :agent_id :agent-id}
+  :conditions ()}
+ {:description "Closes a remote connection"
+  :url "http://resilmesh-pt/api/v1/hooks/webhook_aa2e31ea-dd3e-4471-ad4e-3f032bdb381d"
+  :mitre-id "T1041"
+  :cost 1.0
+  :params {}
+  :args {:actuator_ip :agent-ip
+         :src_port :connection-src-port
+         :dst_port :connection-dst-port
+         :dst_ip :connection-dst-ip
+         :pid :connection-pid
+         :agent_id :agent-id}
+  :conditions ()}
+ {:description "Mitigates a ransomware attack"
+  :url "http://resilmesh-pt/api/v1/hooks/webhook_1d5366eb-8006-45a3-8fff-e764c283b811"
+  :mitre-id "T1204.002"
+  :cost 1.0
+  :params {}
+  :args {:sha1_after :file-hash
+         :file_path :file-path
+         :actuator_ip :agent-ip
+         :agent_id :agent-ip}
+  :conditions ()}
+ {:description "Drop network packets from IP address"
+  :url "http://resilmesh-pt/api/v1/hooks/webhook_fcf6d1e8-c7e6-46ae-aaf8-75e9fc47b0f0"
+  :mitre-id "T1499"
+  :cost 1.0
+  :params {:firewall_ip "10.185.2.98"}
+  :args {:attacker_ip :flow-source-ip}
+  :conditions ()}]

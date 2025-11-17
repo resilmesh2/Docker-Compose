@@ -1,0 +1,16 @@
+#See the Vector Remap Language reference for more info: https://vrl.dev
+type: "remap"
+inputs: ["6_normalized_events"]
+source: |
+  message = parse_json!(.message)
+  .@timestamp = now()
+  .ecs.version = "1.6.0"
+  .threat.enrichments.indicator.last_seen = get!(value: message, path: ["last_time"])
+  .threat.group.name = get!(value: message, path: ["attack_category"])
+  .source.ip = get!(value: message, path: ["source_ip"])
+  .destination.ip = get!(value: message, path: ["destination_ip"])
+  .threat.enrichments.indicator.reference = get!(value: message, path: ["attack_name"])
+  del(.source_type)
+  del(.subject)
+  del(.message)
+# "threat.enrichments.indicator.first_seen": get!(value: message, path: ["start_time"]),

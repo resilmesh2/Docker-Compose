@@ -1,0 +1,20 @@
+<div class="network-graph-container">
+  <div class="controls">
+    <div class="search-container">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        (keydown.enter)="performZoomSearch(searchTerm)"
+        placeholder="Search subnets (Enter to zoom)" 
+        class="search-input" />
+      <div class="search-hint" *ngIf="searchTerm">
+        Press Enter to zoom immediately
+      </div>
+    </div>
+    
+    <div #legendContainer class="legend-container"></div>
+  </div>
+
+  <div #graphContainer class="graph-container"></div>
+</div>

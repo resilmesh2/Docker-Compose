@@ -1,0 +1,347 @@
+<div class="component-configuration-container">
+  <div class="header-section">
+  <div class="header-content">
+    <div class="header-text">
+      <h2>Component Scheduling</h2>
+      <p class="subtitle">Configure how custom components calculate their scores</p>
+    </div>
+    <button class="btn btn-primary" (click)="addCustomComponent()">
+    + Create New Component
+    </button>
+  </div>
+</div>
+
+  <div class="components-grid" *ngIf="!loading">
+    <div class="component-card" *ngFor="let component of components">
+      <div class="card-header">
+        <div class="component-info">
+          <h3>{{ component.name }}</h3>
+          <p class="description">{{ component.description }}</p>
+        </div>
+        <span class="status-badge" [ngClass]="getStatusBadgeClass(component)">
+          {{ getStatusText(component) }}
+        </span>
+      </div>
+
+      <div class="card-content">
+        <div class="component-details">
+        <div class="detail-row">
+          <span class="label">Component ID:</span>
+          <span class="value component-id-display">{{ component.neo4jProperty || component.name.toLowerCase().replace(' ', '_') }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Runtime:</span>
+          <span class="value timer-display">{{ getTimerDisplay(component) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Neo4j Property:</span>
+          <span class="value">{{ component.neo4jProperty }}</span>
+        </div>
+        <div class="detail-row" *ngIf="component.calculationMethod">
+          <span class="label">Calculation Method:</span>
+          <span class="value">{{ component.calculationMethod }}</span>
+        </div>
+      </div>
+      <div class="progress-container" *ngIf="component.currentValue > 0">
+        <div class="progress-bar">
+          <div class="progress-fill" 
+              [style.width.%]="(component.currentValue / component.maxValue) * 100">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <button 
+        class="btn btn-primary" 
+        (click)="configureComponent(component)">
+        {{ component.isConfigured ? 'Edit Configuration' : 'Configure' }}
+      </button>
+      
+      <button 
+        *ngIf="component.schedule && component.schedule.frequency !== 'manual'"
+        class="btn"
+        [ngClass]="getToggleButtonClass(component)"
+        (click)="toggleComponentAutomation(component)"
+        [title]="component.schedule.enabled ? 'Pause automation' : 'Resume automation'">
+        {{ getToggleButtonText(component) }}
+      </button>
+      
+      <button class="btn btn-outline" (click)="deleteComponent(component)">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+    <div class="loading-container" *ngIf="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading components...</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && components.length === 0">
+      <div class="empty-icon">⚙️</div>
+      <h3>No Custom Components Found</h3>
+      <p>Create custom components to configure them here.</p>
+    </div>
+  </div>
+
+<div class="notification-container">
+  <div *ngFor="let notification of notifications" 
+       class="notification"
+       [ngClass]="'notification-' + notification.type">
+    <div class="notification-header">
+      <span class="notification-icon">{{getNotificationIcon(notification.type)}}</span>
+      <span class="notification-title">{{notification.title}}</span>
+      <button class="notification-close" (click)="dismissNotification(notification.id)">×</button>
+    </div>
+    <div class="notification-message">{{notification.message}}</div>
+  </div>
+</div>
+
+<!-- Configuration Modal -->
+<div class="modal-overlay" *ngIf="showConfigModal" (click)="closeConfigModal()">
+  <div class="config-modal" (click)="$event.stopPropagation()" *ngIf="selectedComponent">
+    <div class="modal-header">
+      <h2>Configure {{ selectedComponent.name }}</h2>
+      <button class="close-btn" (click)="closeConfigModal()">&times;</button>
+    </div>
+
+    <div class="config-modal-content">
+      <!-- Method Selection -->
+      <div class="section">
+        <h3>Calculation Method</h3>
+        <div class="method-grid">
+          <div class="method-card" 
+               *ngFor="let method of methods"
+               [class.selected]="selectedMethod === method.id"
+               (click)="selectedMethod = method.id; onMethodChange()">
+            <h4>{{ method.name }}</h4>
+            <p>{{ method.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Source Configuration -->
+      <div class="section" *ngIf="selectedMethod !== 'manual'">
+        <h3>Data Source Configuration</h3>
+        
+        <!-- Database Configuration -->
+        <div *ngIf="selectedMethod === 'database'">
+          <div class="form-group">
+            <label>Connection String</label>
+            <input type="text" [(ngModel)]="dataSource.connectionString" 
+                   placeholder="postgresql://user:pass@host:port/dbname">
+          </div>
+          <div class="form-group">
+            <label>Query</label>
+            <textarea [(ngModel)]="dataSource.query" rows="4"
+                      placeholder="SELECT ip_address, score FROM asset_table WHERE active = true"></textarea>
+          </div>
+        </div>
+
+        <!-- API Configuration -->
+        <div *ngIf="selectedMethod === 'api'">
+          <div class="form-group">
+            <label>API URL</label>
+            <input type="text" [(ngModel)]="dataSource.apiUrl" 
+                   placeholder="https://api.example.com/scores">
+          </div>
+          <div class="form-group">
+            <label>Headers (JSON)</label>
+            <textarea [(ngModel)]="dataSource.headers" rows="3"
+                      placeholder='{"Authorization": "Bearer token", "Content-Type": "application/json"}'></textarea>
+          </div>
+        </div>
+
+        <!-- Custom Script Configuration -->
+        <div *ngIf="selectedMethod === 'script'">
+          <div class="form-group">
+            <label>Python Script</label>
+            <textarea [(ngModel)]="dataSource.scriptContent" rows="10"
+                      placeholder="def calculate_score(node_data):&#10;    # Your calculation logic here&#10;    return score"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Configuration -->
+      <div class="section">
+        <h3>Update Schedule</h3>
+        <div class="schedule-options">
+          <select [(ngModel)]="schedule.frequency">
+            <option *ngFor="let freq of updateFrequencies" [value]="freq.value">
+              {{ freq.label }}
+            </option>
+          </select>
+          
+          <div *ngIf="schedule.frequency === 'daily'" class="time-picker">
+            <label>Time:</label>
+            <input type="time" [(ngModel)]="schedule.time">
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Section -->
+      <div class="section" *ngIf="selectedMethod !== 'manual'">
+        <h3>Test Configuration</h3>
+        <button class="btn btn-outline" (click)="testConfiguration()" [disabled]="testing">
+          {{ testing ? 'Testing...' : 'Test Configuration' }}
+        </button>
+        
+        <div class="test-results" *ngIf="testResults">
+          <div class="success-results" *ngIf="!testResults.error">
+            <h4>Test Results</h4>
+            <p>{{ testResults.message }}</p>
+            <div *ngIf="testResults.preview">
+              <strong>Sample Results:</strong>
+              <pre>{{ testResults.preview | json }}</pre>
+            </div>
+          </div>
+          <div class="error-results" *ngIf="testResults.error">
+            <h4>Test Failed</h4>
+            <p>{{ testResults.error }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeConfigModal()">Cancel</button>
+      <button class="btn btn-secondary" (click)="executeNow()" 
+              *ngIf="selectedComponent.isConfigured">Execute Now</button>
+      <button class="btn btn-primary" (click)="saveConfiguration()" 
+              [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Configuration' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Component Modal -->
+<div class="modal-overlay" *ngIf="showCustomComponentModal" (click)="closeCustomComponentModal()">
+  <div class="custom-component-modal" (click)="$event.stopPropagation()">
+    <div class="custom-component-modal-header">
+      <h3>Create Custom Component</h3>
+      <button (click)="closeCustomComponentModal()" class="close-btn">&times;</button>
+    </div>
+    <div class="custom-component-modal-content">
+      <form #customForm="ngForm" (ngSubmit)="saveCustomComponent()">
+        <div class="form-group">
+          <label for="componentName">Component Name *</label>
+          <input 
+            type="text" 
+            id="componentName"
+            name="componentName"
+            [(ngModel)]="customComponent.name"
+            #componentName="ngModel"
+            required
+            maxlength="50"
+            class="form-input"
+            placeholder="Enter component name">
+          <div class="form-hint">A descriptive name for your custom component</div>
+          <div *ngIf="componentName.invalid && componentName.touched" class="form-error">
+            Component name is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="componentMaxValue">Maximum Value *</label>
+          <input 
+            type="number" 
+            id="componentMaxValue"
+            name="componentMaxValue"
+            [(ngModel)]="customComponent.maxValue"
+            #componentMaxValue="ngModel"
+            required
+            min="1"
+            max="10"
+            step="0.1"
+            class="form-input">
+          <div class="form-hint">The highest possible score for this component (1-10)</div>
+          <div *ngIf="componentMaxValue.invalid && componentMaxValue.touched" class="form-error">
+            Max value must be between 1 and 10
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <h5>Component Preview</h5>
+          <div class="component-preview-card">
+            <div class="preview-icon">🔧</div>
+            <div class="preview-details">
+              <div class="preview-name">{{customComponent.name || 'Component Name'}}</div>
+              <div class="preview-desc">Custom component for risk assessment</div>
+            </div>
+            <div class="preview-values">
+              <div class="preview-value">Max: {{customComponent.maxValue}}</div>
+              <div class="preview-value">Weight: 0.2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeCustomComponentModal()" class="btn btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="customForm.invalid" class="btn btn-primary">Add Component</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+  <div class="confirmation-modal" (click)="$event.stopPropagation()">
+    <div class="confirmation-modal-header">
+      <h3>{{confirmModalData.title}}</h3>
+    </div>
+    <div class="confirmation-modal-content">
+      <div class="confirmation-message">{{confirmModalData.message}}</div>
+    </div>
+    <div class="confirmation-modal-actions">
+      <button (click)="confirmModalData.onCancel()" class="btn btn-secondary">{{confirmModalData.cancelText}}</button>
+      <button (click)="confirmModalData.onConfirm()" class="btn btn-primary">{{confirmModalData.confirmText}}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Frequency Modal -->
+<div class="modal-overlay" *ngIf="showFrequencyModal" (click)="cancelFrequencyModal()">
+  <div class="selector-modal" (click)="$event.stopPropagation()">
+    <div class="selector-modal-header">
+      <h3>How often should this component automation run?</h3>
+      <button (click)="cancelFrequencyModal()" class="close-btn">×</button>
+    </div>
+    <div class="selector-modal-content">
+      <div class="frequency-options">
+        <div *ngFor="let freq of updateFrequencies" 
+          class="frequency-option"
+          [class.selected]="schedule.frequency === freq.value"
+          (click)="setFrequency(freq.value)">
+          <div class="radio-wrapper">
+            <input 
+              type="radio" 
+              name="frequency" 
+              [value]="freq.value"
+              [checked]="schedule.frequency === freq.value"
+              (click)="$event.stopPropagation()">
+          </div>
+          <div class="option-content">
+            <div class="option-label">{{ freq.label }}</div>
+            <div class="option-description" [ngSwitch]="freq.value">
+              <span *ngSwitchCase="'manual'">Run only when triggered manually</span>
+              <!-- <span *ngSwitchCase="'minute'">For testing - not recommended for production</span> -->
+              <span *ngSwitchCase="'hourly'">Run every hour automatically</span>
+              <span *ngSwitchCase="'daily'">Run once every 24 hours</span>
+              <span *ngSwitchCase="'weekly'">Run once per week</span>
+              <span *ngSwitchCase="'monthly'">Run once per month</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button (click)="cancelFrequencyModal()" class="btn btn-secondary">Cancel</button>
+        <button (click)="confirmFrequency()" class="btn btn-primary">Save Schedule</button>
+      </div>
+    </div>
+  </div>
+</div>

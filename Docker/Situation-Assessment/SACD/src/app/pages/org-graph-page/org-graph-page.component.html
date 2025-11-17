@@ -1,0 +1,174 @@
+<h1>Organizations Graph</h1>
+<!-- <div class="top-bar">
+    @if (missionNames && missionNames.length > 0) {
+      <ng-container>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>Mission</mat-label>
+          <mat-select [(ngModel)]="selectedMissionName">
+            <mat-option></mat-option>
+            @for (mission of missionNames; track $index) {
+              <mat-option [value]="mission">
+                {{ mission }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+    }
+    <sentinel-button-with-icon
+      color="primary" 
+      icon="search"
+      tooltip=""
+      [disabled]="!selectedMissionName"
+      (click)="getGraphData()"
+    >
+      Search
+    </sentinel-button-with-icon>
+</div> -->
+
+<sentinel-card class="graph-card" [controls]="controls">
+  <div class="content-container">
+    <div class="graph-wrapper">
+      @if (graphLoading) {
+        <ng-container>
+          <div class="loader">
+            <mat-spinner></mat-spinner>
+          </div>
+        </ng-container>
+      } @else if (!graphLoading && errorMessage) {
+        <ng-container>
+          <p class="error-message">{{ errorMessage }}</p>
+        </ng-container>
+      } @else if (orgUnits().length > 0 && !graphLoading && !errorMessage && nodes() && edges()) {
+        <ngx-graph
+            [autoCenter]="true"
+            [autoZoom]="true"
+            [center$]="center$"
+            class="missions-graph"
+            [links]="edges()"
+            [nodes]="nodes()"
+            [layout]="customLayout"
+            (select)="selectNode($event)"
+            style="width: 100%; height: 100%;"
+        >
+            <ng-template #defsTemplate>
+                <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+                <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+                </svg:marker>
+            </ng-template>
+
+            <ng-template #clusterTemplate let-cluster>
+                <svg:g
+                class="node cluster"
+                matTooltip="{{ cluster.label }}"
+                matTooltipPosition="above">
+                >
+                <svg:rect
+                    rx="5"
+                    ry="5"
+                    [attr.width]="cluster.dimension.width"
+                    [attr.height]="cluster.dimension.height"
+                    [attr.fill]="cluster.data.color"
+                />
+                </svg:g>
+            </ng-template>
+
+            <ng-template #nodeTemplate let-node>
+                <svg:g
+                    class="node"
+                    [style.cursor]="'pointer'"
+                >
+                <svg:rect
+                    [attr.width]="node.dimension.width"
+                    [attr.height]="node.dimension.height"
+                    [attr.fill]="node.id == selectedNode()?.id ? node.data.textColor : node.data.customColor"
+                    [attr.stroke]="node.id == selectedNode()?.id ?  node.data.customColor : 'transparent'"
+                    [attr.rx]="4"
+                    [attr.ry]="4"
+                />
+                <svg:text
+                    [attr.fill]="node.id == selectedNode()?.id ? '#000' : node.data.textColor"
+                    dominant-baseline="middle" 
+                    text-anchor="middle" 
+                    [attr.x]="node.dimension.width / 2" 
+                    [attr.y]="node.dimension.height / 2"
+                >
+                    {{ node.label }}
+                </svg:text>
+                </svg:g>
+            </ng-template>
+
+            <ng-template #linkTemplate let-link>
+                <svg:g class="edge">
+                <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+                <svg:text class="edge-label" text-anchor="middle">
+                    <textPath
+                        class="text-path"
+                        [attr.href]="'#' + link.id"
+                        [style.dominant-baseline]="link.dominantBaseline"
+                        startOffset="50%"
+                    >
+                    {{ link.label }}
+                    </textPath>
+                </svg:text>
+                </svg:g>
+            </ng-template>
+        </ngx-graph>
+      } @else {
+        <p class="empty">No org units available.</p>
+      }
+    </div>
+    <div class="node-wrapper">
+        <ng-container>
+          <div class="node-detail">
+            @if (selectedNode() && selectedNode()?.id !== '') {
+              <div class="badge" [style.background-color]="selectedNode()?.data.customColor" [style.color]="selectedNode()?.data.textColor">
+                <span>{{ selectedNode()?.data.type }}</span>
+              </div>
+              <h2>{{ selectedNode()?.label }}</h2>
+              <hr />
+              <p class="attributes-title">Attributes:</p>
+              <ul class="node-attributes">
+                <li>
+                  <strong>Parent org unit:</strong>
+                  @if (selectedNode()?.data.parentOrgUnit && selectedNode()?.data.parentOrgUnit !== '' && selectedNode()?.data.parentOrgUnit !== '---') {
+                    <a class="badge attribute" (click)="navigateToOrgUnitDetail(selectedNode()?.data.parentOrgUnit)">
+                      {{selectedNode()?.data?.parentOrgUnit != "" ?  selectedNode()?.data.parentOrgUnit : "---"}}
+                    </a>
+                  } @else {
+                    <span> --- </span>
+                  }
+                </li>
+                <li>
+                  <strong>Contacts:</strong>
+                    @if(selectedNode()?.data.contacts && selectedNode()?.data.contacts.length > 0) {
+                      @for (contact of selectedNode()?.data.contacts || []; track contact; let index = $index) {
+                        <a href="mailto:{{ contact }}" class="badge attribute contact-link">
+                          {{ contact }}
+                        </a>
+                      }
+                    } @else {
+                      <span> --- </span>
+                    }
+                </li>
+                <li class="subnets-attribute">
+                  <strong>Subnets: </strong>
+                  @if(selectedNode()?.data.subnets && selectedNode()?.data.subnets.length > 0) {
+                    @for (subnet of selectedNode()?.data.subnets || []; track subnet; let index = $index) {
+                      <a (click)="navigateToSubnetDetail(subnet)" class="badge attribute">
+                        {{ subnet }}
+                      </a>
+                    }
+                  } @else {
+                    <span> --- </span>
+                  }
+                </li>
+              </ul>
+            } @else {
+              <p class="vertical-center">No node selected.</p>
+            }
+          </div>
+        </ng-container>
+    </div>
+  </div>
+</sentinel-card>

@@ -1,0 +1,22 @@
+{
+    "policies": {
+	"discard_response_on_failure": false
+    },
+    "stages": [
+	"1",
+	"response"
+    ],
+    "jobs": {
+	"1": {
+	    "type": "DummyJob",
+	    "stage": "1",
+	    "args": {
+		"message": "This job should not fail"
+	    }
+	},
+	"respond-with-pipeline-results": {
+	    "type": "ResultsPong",
+	    "stage": "response"
+	}
+    }
+}

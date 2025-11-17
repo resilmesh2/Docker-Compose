@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf8" />
+  <title>ARXlet - ARX connector</title>
+  <!-- needed for adaptive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+  <script src="https://cdn.redoc.ly/redoc/v2.1.3/bundles/redoc.standalone.js"></script><style data-styled="true" data-styled-version="6.1.6">.gGraJK{width:calc(100% - 40%);padding:0 40px;}/*!sc*/
+@media print,screen and (max-width: 75rem){.gGraJK{width:100%;padding:40px 40px;}}/*!sc*/
+.hpmOdy{width:calc(100% - 40%);padding:0 40px;}/*!sc*/
+@media print,screen and (max-width: 75rem){.hpmOdy{width:100%;padding:0px 40px;}}/*!sc*/
+data-styled.g4[id="sc-hLBatu"]{content:"gGraJK,hpmOdy,"}/*!sc*/
+.iIoNLV{padding:40px 0;}/*!sc*/
+.iIoNLV:last-child{min-height:calc(100vh + 1px);}/*!sc*/
+.iIoNLV>.iIoNLV:last-child{min-height:initial;}/*!sc*/
+@media print,screen and (max-width: 75rem){.iIoNLV{padding:0;}}/*!sc*/
+.Kudvm{padding:40px 0;position:relative;}/*!sc*/
+.Kudvm:last-child{min-height:calc(100vh + 1px);}/*!sc*/
+.Kudvm>.Kudvm:last-child{min-height:initial;}/*!sc*/
+@media print,screen and (max-width: 75rem){.Kudvm{padding:0;}}/*!sc*/
+.Kudvm:not(:last-of-type):after{position:absolute;bottom:0;width:100%;display:block;content:'';border-bottom:1px solid rgba(0, 0, 0, 0.2);}/*!sc*/
+data-styled.g5[id="sc-eDvShL"]{content:"iIoNLV,Kudvm,"}/*!sc*/
+.hzAXSB{width:40%;color:#ffffff;background-color:#263238;padding:0 40px;}/*!sc*/
+@media print,screen and (max-width: 75rem){.hzAXSB{width:100%;padding:40px 40px;}}/*!sc*/
+data-styled.g6[id="sc-jSVask"]{content:"hzAXSB,"}/*!sc*/
+.cnGjiW{background-color:#263238;}/*!sc*/
+data-styled.g7[id="sc-gKPSgB"]{content:"cnGjiW,"}/*!sc*/
+.gDKEpP{display:flex;width:100%;padding:0;}/*!sc*/
+@media print,screen and (max-width: 75rem){.gDKEpP{flex-direction:column;}}/*!sc*/
+data-styled.g8[id="sc-iBYPxa"]{content:"gDKEpP,"}/*!sc*/
+.cWuMGi{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.85714em;line-height:1.6em;color:#333333;}/*!sc*/
+data-styled.g9[id="sc-ftTHlr"]{content:"cWuMGi,"}/*!sc*/
+.gRCthN{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.57143em;line-height:1.6em;color:#333333;margin:0 0 20px;}/*!sc*/
+data-styled.g10[id="sc-pyeOL"]{content:"gRCthN,"}/*!sc*/
+.gIPEzB{color:#ffffff;}/*!sc*/
+data-styled.g12[id="sc-kDvuXt"]{content:"gIPEzB,"}/*!sc*/
+.loLBUm{border-bottom:1px solid rgba(38, 50, 56, 0.3);margin:1em 0 1em 0;color:rgba(38, 50, 56, 0.5);font-weight:normal;text-transform:uppercase;font-size:0.929em;line-height:20px;}/*!sc*/
+data-styled.g13[id="sc-ipEzrc"]{content:"loLBUm,"}/*!sc*/
+.dOUsBF{cursor:pointer;margin-left:-20px;padding:0;line-height:1;width:20px;display:inline-block;outline:0;}/*!sc*/
+.dOUsBF:before{content:'';width:15px;height:15px;background-size:contain;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMCIgeT0iMCIgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiB4bWw6c3BhY2U9InByZXNlcnZlIj48cGF0aCBmaWxsPSIjMDEwMTAxIiBkPSJNNDU5LjcgMjMzLjRsLTkwLjUgOTAuNWMtNTAgNTAtMTMxIDUwLTE4MSAwIC03LjktNy44LTE0LTE2LjctMTkuNC0yNS44bDQyLjEtNDIuMWMyLTIgNC41LTMuMiA2LjgtNC41IDIuOSA5LjkgOCAxOS4zIDE1LjggMjcuMiAyNSAyNSA2NS42IDI0LjkgOTAuNSAwbDkwLjUtOTAuNWMyNS0yNSAyNS02NS42IDAtOTAuNSAtMjQuOS0yNS02NS41LTI1LTkwLjUgMGwtMzIuMiAzMi4yYy0yNi4xLTEwLjItNTQuMi0xMi45LTgxLjYtOC45bDY4LjYtNjguNmM1MC01MCAxMzEtNTAgMTgxIDBDNTA5LjYgMTAyLjMgNTA5LjYgMTgzLjQgNDU5LjcgMjMzLjR6TTIyMC4zIDM4Mi4ybC0zMi4yIDMyLjJjLTI1IDI0LjktNjUuNiAyNC45LTkwLjUgMCAtMjUtMjUtMjUtNjUuNiAwLTkwLjVsOTAuNS05MC41YzI1LTI1IDY1LjUtMjUgOTAuNSAwIDcuOCA3LjggMTIuOSAxNy4yIDE1LjggMjcuMSAyLjQtMS40IDQuOC0yLjUgNi44LTQuNWw0Mi4xLTQyYy01LjQtOS4yLTExLjYtMTgtMTkuNC0yNS44IC01MC01MC0xMzEtNTAtMTgxIDBsLTkwLjUgOTAuNWMtNTAgNTAtNTAgMTMxIDAgMTgxIDUwIDUwIDEzMSA1MCAxODEgMGw2OC42LTY4LjZDMjc0LjYgMzk1LjEgMjQ2LjQgMzkyLjMgMjIwLjMgMzgyLjJ6Ii8+PC9zdmc+Cg==');opacity:0.5;visibility:hidden;display:inline-block;vertical-align:middle;}/*!sc*/
+h1:hover>.dOUsBF::before,h2:hover>.dOUsBF::before,.dOUsBF:hover::before{visibility:visible;}/*!sc*/
+data-styled.g14[id="sc-csuRvn"]{content:"dOUsBF,"}/*!sc*/
+.jYOolr{height:18px;width:18px;min-width:18px;vertical-align:middle;float:right;transition:transform 0.2s ease-out;transform:rotateZ(-90deg);}/*!sc*/
+.bligQf{height:18px;width:18px;min-width:18px;vertical-align:middle;transition:transform 0.2s ease-out;transform:rotateZ(-90deg);}/*!sc*/
+.hpUShJ{height:1.5em;width:1.5em;min-width:1.5em;vertical-align:middle;float:left;transition:transform 0.2s ease-out;transform:rotateZ(-90deg);}/*!sc*/
+.hpUShJ polygon{fill:#1d8127;}/*!sc*/
+.fnHxaZ{height:1.5em;width:1.5em;min-width:1.5em;vertical-align:middle;float:left;transition:transform 0.2s ease-out;transform:rotateZ(-90deg);}/*!sc*/
+.fnHxaZ polygon{fill:#d41f1c;}/*!sc*/
+.uCKit{height:20px;width:20px;min-width:20px;vertical-align:middle;float:right;transition:transform 0.2s ease-out;transform:rotateZ(0);}/*!sc*/
+.uCKit polygon{fill:white;}/*!sc*/
+data-styled.g15[id="sc-eDVOW"]{content:"jYOolr,bligQf,hpUShJ,fnHxaZ,uCKit,"}/*!sc*/
+.jDNUpi{border-left:1px solid #7c7cbb;box-sizing:border-box;position:relative;padding:10px 10px 10px 0;}/*!sc*/
+@media screen and (max-width: 50rem){.jDNUpi{display:block;overflow:hidden;}}/*!sc*/
+tr:first-of-type>.jDNUpi,tr.last>.jDNUpi{border-left-width:0;background-position:top left;background-repeat:no-repeat;background-size:1px 100%;}/*!sc*/
+tr:first-of-type>.jDNUpi{background-image:linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 22px,
+      #7c7cbb 22px,
+      #7c7cbb 100%
+    );}/*!sc*/
+tr.last>.jDNUpi{background-image:linear-gradient(
+      to bottom,
+      #7c7cbb 0%,
+      #7c7cbb 22px,
+      transparent 22px,
+      transparent 100%
+    );}/*!sc*/
+tr.last+tr>.jDNUpi{border-left-color:transparent;}/*!sc*/
+tr.last:first-child>.jDNUpi{background:none;border-left-color:transparent;}/*!sc*/
+data-styled.g18[id="sc-hBxdun"]{content:"jDNUpi,"}/*!sc*/
+.hqJqZp{vertical-align:top;line-height:20px;white-space:nowrap;font-size:13px;font-family:Courier,monospace;}/*!sc*/
+.hqJqZp.deprecated{text-decoration:line-through;color:#707070;}/*!sc*/
+data-styled.g20[id="sc-fEXmZk"]{content:"hqJqZp,"}/*!sc*/
+.KEGMo{border-bottom:1px solid #9fb4be;padding:10px 0;width:75%;box-sizing:border-box;}/*!sc*/
+tr.expanded .KEGMo{border-bottom:none;}/*!sc*/
+@media screen and (max-width: 50rem){.KEGMo{padding:0 20px;border-bottom:none;border-left:1px solid #7c7cbb;}tr.last>.KEGMo{border-left:none;}}/*!sc*/
+data-styled.g21[id="sc-bjfHPd"]{content:"KEGMo,"}/*!sc*/
+.eqBPZp{color:#7c7cbb;font-family:Courier,monospace;margin-right:10px;}/*!sc*/
+.eqBPZp::before{content:'';display:inline-block;vertical-align:middle;width:10px;height:1px;background:#7c7cbb;}/*!sc*/
+.eqBPZp::after{content:'';display:inline-block;vertical-align:middle;width:1px;background:#7c7cbb;height:7px;}/*!sc*/
+data-styled.g22[id="sc-idXfnW"]{content:"eqBPZp,"}/*!sc*/
+.jttMJO{border-collapse:separate;border-radius:3px;font-size:14px;border-spacing:0;width:100%;}/*!sc*/
+.jttMJO >tr{vertical-align:middle;}/*!sc*/
+@media screen and (max-width: 50rem){.jttMJO{display:block;}.jttMJO >tr,.jttMJO >tbody>tr{display:block;}}/*!sc*/
+@media screen and (max-width: 50rem) and (-ms-high-contrast:none){.jttMJO td{float:left;width:100%;}}/*!sc*/
+.jttMJO .sc-dIfA-dP,.jttMJO .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP,.jttMJO .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP{margin:1em;margin-right:0;background:#fafafa;}/*!sc*/
+.jttMJO .sc-dIfA-dP .sc-dIfA-dP,.jttMJO .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP,.jttMJO .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP .sc-dIfA-dP{background:#ffffff;}/*!sc*/
+data-styled.g24[id="sc-hHTZFM"]{content:"jttMJO,"}/*!sc*/
+.gvVaQR >ul{list-style:none;padding:0;margin:0;margin:0 -5px;}/*!sc*/
+.gvVaQR >ul >li{padding:5px 10px;display:inline-block;background-color:#11171a;border-bottom:1px solid rgba(0, 0, 0, 0.5);cursor:pointer;text-align:center;outline:none;color:#ccc;margin:0 5px 5px 5px;border:1px solid #07090b;border-radius:5px;min-width:60px;font-size:0.9em;font-weight:bold;}/*!sc*/
+.gvVaQR >ul >li.react-tabs__tab--selected{color:#333333;background:#ffffff;}/*!sc*/
+.gvVaQR >ul >li.react-tabs__tab--selected:focus{outline:auto;}/*!sc*/
+.gvVaQR >ul >li:only-child{flex:none;min-width:100px;}/*!sc*/
+.gvVaQR >ul >li.tab-success{color:#1d8127;}/*!sc*/
+.gvVaQR >ul >li.tab-redirect{color:#ffa500;}/*!sc*/
+.gvVaQR >ul >li.tab-info{color:#87ceeb;}/*!sc*/
+.gvVaQR >ul >li.tab-error{color:#d41f1c;}/*!sc*/
+.gvVaQR >.react-tabs__tab-panel{background:#11171a;}/*!sc*/
+.gvVaQR >.react-tabs__tab-panel>div,.gvVaQR >.react-tabs__tab-panel>pre{padding:20px;margin:0;}/*!sc*/
+.gvVaQR >.react-tabs__tab-panel>div>pre{padding:0;}/*!sc*/
+data-styled.g30[id="sc-cwSeNB"]{content:"gvVaQR,"}/*!sc*/
+.kWkAGQ code[class*='language-'],.kWkAGQ pre[class*='language-']{text-shadow:0 -0.1em 0.2em black;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none;}/*!sc*/
+@media print{.kWkAGQ code[class*='language-'],.kWkAGQ pre[class*='language-']{text-shadow:none;}}/*!sc*/
+.kWkAGQ pre[class*='language-']{padding:1em;margin:0.5em 0;overflow:auto;}/*!sc*/
+.kWkAGQ .token.comment,.kWkAGQ .token.prolog,.kWkAGQ .token.doctype,.kWkAGQ .token.cdata{color:hsl(30, 20%, 50%);}/*!sc*/
+.kWkAGQ .token.punctuation{opacity:0.7;}/*!sc*/
+.kWkAGQ .namespace{opacity:0.7;}/*!sc*/
+.kWkAGQ .token.property,.kWkAGQ .token.tag,.kWkAGQ .token.number,.kWkAGQ .token.constant,.kWkAGQ .token.symbol{color:#4a8bb3;}/*!sc*/
+.kWkAGQ .token.boolean{color:#e64441;}/*!sc*/
+.kWkAGQ .token.selector,.kWkAGQ .token.attr-name,.kWkAGQ .token.string,.kWkAGQ .token.char,.kWkAGQ .token.builtin,.kWkAGQ .token.inserted{color:#a0fbaa;}/*!sc*/
+.kWkAGQ .token.selector+a,.kWkAGQ .token.attr-name+a,.kWkAGQ .token.string+a,.kWkAGQ .token.char+a,.kWkAGQ .token.builtin+a,.kWkAGQ .token.inserted+a,.kWkAGQ .token.selector+a:visited,.kWkAGQ .token.attr-name+a:visited,.kWkAGQ .token.string+a:visited,.kWkAGQ .token.char+a:visited,.kWkAGQ .token.builtin+a:visited,.kWkAGQ .token.inserted+a:visited{color:#4ed2ba;text-decoration:underline;}/*!sc*/
+.kWkAGQ .token.property.string{color:white;}/*!sc*/
+.kWkAGQ .token.operator,.kWkAGQ .token.entity,.kWkAGQ .token.url,.kWkAGQ .token.variable{color:hsl(40, 90%, 60%);}/*!sc*/
+.kWkAGQ .token.atrule,.kWkAGQ .token.attr-value,.kWkAGQ .token.keyword{color:hsl(350, 40%, 70%);}/*!sc*/
+.kWkAGQ .token.regex,.kWkAGQ .token.important{color:#e90;}/*!sc*/
+.kWkAGQ .token.important,.kWkAGQ .token.bold{font-weight:bold;}/*!sc*/
+.kWkAGQ .token.italic{font-style:italic;}/*!sc*/
+.kWkAGQ .token.entity{cursor:help;}/*!sc*/
+.kWkAGQ .token.deleted{color:red;}/*!sc*/
+data-styled.g32[id="sc-iJnacD"]{content:"kWkAGQ,"}/*!sc*/
+.dgvKER{opacity:0.7;transition:opacity 0.3s ease;text-align:right;}/*!sc*/
+.dgvKER:focus-within{opacity:1;}/*!sc*/
+.dgvKER >button{background-color:transparent;border:0;color:inherit;padding:2px 10px;font-family:Roboto,sans-serif;font-size:14px;line-height:1.5em;cursor:pointer;outline:0;}/*!sc*/
+.dgvKER >button :hover,.dgvKER >button :focus{background:rgba(255, 255, 255, 0.1);}/*!sc*/
+data-styled.g33[id="sc-gikzsm"]{content:"dgvKER,"}/*!sc*/
+.bvDCNC{position:relative;}/*!sc*/
+data-styled.g37[id="sc-kMjMJf"]{content:"bvDCNC,"}/*!sc*/
+.jsNjjJ{margin-left:10px;text-transform:none;font-size:0.929em;color:black;}/*!sc*/
+data-styled.g41[id="sc-gYbyFu"]{content:"jsNjjJ,"}/*!sc*/
+.laPUdK{font-family:Roboto,sans-serif;font-weight:400;line-height:1.5em;}/*!sc*/
+.laPUdK p:last-child{margin-bottom:0;}/*!sc*/
+.laPUdK h1{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.85714em;line-height:1.6em;color:#32329f;margin-top:0;}/*!sc*/
+.laPUdK h2{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.57143em;line-height:1.6em;color:#333333;}/*!sc*/
+.laPUdK code{color:#e53935;background-color:rgba(38, 50, 56, 0.05);font-family:Courier,monospace;border-radius:2px;border:1px solid rgba(38, 50, 56, 0.1);padding:0 5px;font-size:13px;font-weight:400;word-break:break-word;}/*!sc*/
+.laPUdK pre{font-family:Courier,monospace;white-space:pre;background-color:#11171a;color:white;padding:20px;overflow-x:auto;line-height:normal;border-radius:0;border:1px solid rgba(38, 50, 56, 0.1);}/*!sc*/
+.laPUdK pre code{background-color:transparent;color:white;padding:0;}/*!sc*/
+.laPUdK pre code:before,.laPUdK pre code:after{content:none;}/*!sc*/
+.laPUdK blockquote{margin:0;margin-bottom:1em;padding:0 15px;color:#777;border-left:4px solid #ddd;}/*!sc*/
+.laPUdK img{max-width:100%;box-sizing:content-box;}/*!sc*/
+.laPUdK ul,.laPUdK ol{padding-left:2em;margin:0;margin-bottom:1em;}/*!sc*/
+.laPUdK ul ul,.laPUdK ol ul,.laPUdK ul ol,.laPUdK ol ol{margin-bottom:0;margin-top:0;}/*!sc*/
+.laPUdK table{display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all;border-collapse:collapse;border-spacing:0;margin-top:1.5em;margin-bottom:1.5em;}/*!sc*/
+.laPUdK table tr{background-color:#fff;border-top:1px solid #ccc;}/*!sc*/
+.laPUdK table tr:nth-child(2n){background-color:#fafafa;}/*!sc*/
+.laPUdK table th,.laPUdK table td{padding:6px 13px;border:1px solid #ddd;}/*!sc*/
+.laPUdK table th{text-align:left;font-weight:bold;}/*!sc*/
+.laPUdK .share-link{cursor:pointer;margin-left:-20px;padding:0;line-height:1;width:20px;display:inline-block;outline:0;}/*!sc*/
+.laPUdK .share-link:before{content:'';width:15px;height:15px;background-size:contain;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMCIgeT0iMCIgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiB4bWw6c3BhY2U9InByZXNlcnZlIj48cGF0aCBmaWxsPSIjMDEwMTAxIiBkPSJNNDU5LjcgMjMzLjRsLTkwLjUgOTAuNWMtNTAgNTAtMTMxIDUwLTE4MSAwIC03LjktNy44LTE0LTE2LjctMTkuNC0yNS44bDQyLjEtNDIuMWMyLTIgNC41LTMuMiA2LjgtNC41IDIuOSA5LjkgOCAxOS4zIDE1LjggMjcuMiAyNSAyNSA2NS42IDI0LjkgOTAuNSAwbDkwLjUtOTAuNWMyNS0yNSAyNS02NS42IDAtOTAuNSAtMjQuOS0yNS02NS41LTI1LTkwLjUgMGwtMzIuMiAzMi4yYy0yNi4xLTEwLjItNTQuMi0xMi45LTgxLjYtOC45bDY4LjYtNjguNmM1MC01MCAxMzEtNTAgMTgxIDBDNTA5LjYgMTAyLjMgNTA5LjYgMTgzLjQgNDU5LjcgMjMzLjR6TTIyMC4zIDM4Mi4ybC0zMi4yIDMyLjJjLTI1IDI0LjktNjUuNiAyNC45LTkwLjUgMCAtMjUtMjUtMjUtNjUuNiAwLTkwLjVsOTAuNS05MC41YzI1LTI1IDY1LjUtMjUgOTAuNSAwIDcuOCA3LjggMTIuOSAxNy4yIDE1LjggMjcuMSAyLjQtMS40IDQuOC0yLjUgNi44LTQuNWw0Mi4xLTQyYy01LjQtOS4yLTExLjYtMTgtMTkuNC0yNS44IC01MC01MC0xMzEtNTAtMTgxIDBsLTkwLjUgOTAuNWMtNTAgNTAtNTAgMTMxIDAgMTgxIDUwIDUwIDEzMSA1MCAxODEgMGw2OC42LTY4LjZDMjc0LjYgMzk1LjEgMjQ2LjQgMzkyLjMgMjIwLjMgMzgyLjJ6Ii8+PC9zdmc+Cg==');opacity:0.5;visibility:hidden;display:inline-block;vertical-align:middle;}/*!sc*/
+.laPUdK h1:hover>.share-link::before,.laPUdK h2:hover>.share-link::before,.laPUdK .share-link:hover::before{visibility:visible;}/*!sc*/
+.laPUdK a{text-decoration:auto;color:#32329f;}/*!sc*/
+.laPUdK a:visited{color:#32329f;}/*!sc*/
+.laPUdK a:hover{color:#6868cf;text-decoration:auto;}/*!sc*/
+.ioCKjQ{font-family:Roboto,sans-serif;font-weight:400;line-height:1.5em;}/*!sc*/
+.ioCKjQ p:last-child{margin-bottom:0;}/*!sc*/
+.ioCKjQ p:first-child{margin-top:0;}/*!sc*/
+.ioCKjQ p:last-child{margin-bottom:0;}/*!sc*/
+.ioCKjQ h1{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.85714em;line-height:1.6em;color:#32329f;margin-top:0;}/*!sc*/
+.ioCKjQ h2{font-family:Montserrat,sans-serif;font-weight:400;font-size:1.57143em;line-height:1.6em;color:#333333;}/*!sc*/
+.ioCKjQ code{color:#e53935;background-color:rgba(38, 50, 56, 0.05);font-family:Courier,monospace;border-radius:2px;border:1px solid rgba(38, 50, 56, 0.1);padding:0 5px;font-size:13px;font-weight:400;word-break:break-word;}/*!sc*/
+.ioCKjQ pre{font-family:Courier,monospace;white-space:pre;background-color:#11171a;color:white;padding:20px;overflow-x:auto;line-height:normal;border-radius:0;border:1px solid rgba(38, 50, 56, 0.1);}/*!sc*/
+.ioCKjQ pre code{background-color:transparent;color:white;padding:0;}/*!sc*/
+.ioCKjQ pre code:before,.ioCKjQ pre code:after{content:none;}/*!sc*/
+.ioCKjQ blockquote{margin:0;margin-bottom:1em;padding:0 15px;color:#777;border-left:4px solid #ddd;}/*!sc*/
+.ioCKjQ img{max-width:100%;box-sizing:content-box;}/*!sc*/
+.ioCKjQ ul,.ioCKjQ ol{padding-left:2em;margin:0;margin-bottom:1em;}/*!sc*/
+.ioCKjQ ul ul,.ioCKjQ ol ul,.ioCKjQ ul ol,.ioCKjQ ol ol{margin-bottom:0;margin-top:0;}/*!sc*/
+.ioCKjQ table{display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all;border-collapse:collapse;border-spacing:0;margin-top:1.5em;margin-bottom:1.5em;}/*!sc*/
+.ioCKjQ table tr{background-color:#fff;border-top:1px solid #ccc;}/*!sc*/
+.ioCKjQ table tr:nth-child(2n){background-color:#fafafa;}/*!sc*/
+.ioCKjQ table th,.ioCKjQ table td{padding:6px 13px;border:1px solid #ddd;}/*!sc*/
+.ioCKjQ table th{text-align:left;font-weight:bold;}/*!sc*/
+.ioCKjQ .share-link{cursor:pointer;margin-left:-20px;padding:0;line-height:1;width:20px;display:inline-block;outline:0;}/*!sc*/
+.ioCKjQ .share-link:before{content:'';width:15px;height:15px;background-size:contain;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMCIgeT0iMCIgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiB4bWw6c3BhY2U9InByZXNlcnZlIj48cGF0aCBmaWxsPSIjMDEwMTAxIiBkPSJNNDU5LjcgMjMzLjRsLTkwLjUgOTAuNWMtNTAgNTAtMTMxIDUwLTE4MSAwIC03LjktNy44LTE0LTE2LjctMTkuNC0yNS44bDQyLjEtNDIuMWMyLTIgNC41LTMuMiA2LjgtNC41IDIuOSA5LjkgOCAxOS4zIDE1LjggMjcuMiAyNSAyNSA2NS42IDI0LjkgOTAuNSAwbDkwLjUtOTAuNWMyNS0yNSAyNS02NS42IDAtOTAuNSAtMjQuOS0yNS02NS41LTI1LTkwLjUgMGwtMzIuMiAzMi4yYy0yNi4xLTEwLjItNTQuMi0xMi45LTgxLjYtOC45bDY4LjYtNjguNmM1MC01MCAxMzEtNTAgMTgxIDBDNTA5LjYgMTAyLjMgNTA5LjYgMTgzLjQgNDU5LjcgMjMzLjR6TTIyMC4zIDM4Mi4ybC0zMi4yIDMyLjJjLTI1IDI0LjktNjUuNiAyNC45LTkwLjUgMCAtMjUtMjUtMjUtNjUuNiAwLTkwLjVsOTAuNS05MC41YzI1LTI1IDY1LjUtMjUgOTAuNSAwIDcuOCA3LjggMTIuOSAxNy4yIDE1LjggMjcuMSAyLjQtMS40IDQuOC0yLjUgNi44LTQuNWw0Mi4xLTQyYy01LjQtOS4yLTExLjYtMTgtMTkuNC0yNS44IC01MC01MC0xMzEtNTAtMTgxIDBsLTkwLjUgOTAuNWMtNTAgNTAtNTAgMTMxIDAgMTgxIDUwIDUwIDEzMSA1MCAxODEgMGw2OC42LTY4LjZDMjc0LjYgMzk1LjEgMjQ2LjQgMzkyLjMgMjIwLjMgMzgyLjJ6Ii8+PC9zdmc+Cg==');opacity:0.5;visibility:hidden;display:inline-block;vertical-align:middle;}/*!sc*/
+.ioCKjQ h1:hover>.share-link::before,.ioCKjQ h2:hover>.share-link::before,.ioCKjQ .share-link:hover::before{visibility:visible;}/*!sc*/
+.ioCKjQ a{text-decoration:auto;color:#32329f;}/*!sc*/
+.ioCKjQ a:visited{color:#32329f;}/*!sc*/
+.ioCKjQ a:hover{color:#6868cf;text-decoration:auto;}/*!sc*/
+data-styled.g42[id="sc-cCjTvn"]{content:"laPUdK,ioCKjQ,"}/*!sc*/
+.hQQoLI{display:inline;}/*!sc*/
+data-styled.g43[id="sc-cjicoQ"]{content:"hQQoLI,"}/*!sc*/
+.khxxbG{position:relative;}/*!sc*/
+data-styled.g44[id="sc-jcMgDF"]{content:"khxxbG,"}/*!sc*/
+.gCZNBv:hover>.sc-gikzsm{opacity:1;}/*!sc*/
+data-styled.g49[id="sc-cUENMa"]{content:"gCZNBv,"}/*!sc*/
+.hAEZjw{font-family:Courier,monospace;font-size:13px;white-space:pre;contain:content;overflow-x:auto;}/*!sc*/
+.hAEZjw .redoc-json code>.collapser{display:none;pointer-events:none;}/*!sc*/
+.hAEZjw .callback-function{color:gray;}/*!sc*/
+.hAEZjw .collapser:after{content:'-';cursor:pointer;}/*!sc*/
+.hAEZjw .collapsed>.collapser:after{content:'+';cursor:pointer;}/*!sc*/
+.hAEZjw .ellipsis:after{content:' … ';}/*!sc*/
+.hAEZjw .collapsible{margin-left:2em;}/*!sc*/
+.hAEZjw .hoverable{padding-top:1px;padding-bottom:1px;padding-left:2px;padding-right:2px;border-radius:2px;}/*!sc*/
+.hAEZjw .hovered{background-color:rgba(235, 238, 249, 1);}/*!sc*/
+.hAEZjw .collapser{background-color:transparent;border:0;color:#fff;font-family:Courier,monospace;font-size:13px;padding-right:6px;padding-left:6px;padding-top:0;padding-bottom:0;display:flex;align-items:center;justify-content:center;width:15px;height:15px;position:absolute;top:4px;left:-1.5em;cursor:default;user-select:none;-webkit-user-select:none;padding:2px;}/*!sc*/
+.hAEZjw .collapser:focus{outline-color:#fff;outline-style:dotted;outline-width:1px;}/*!sc*/
+.hAEZjw ul{list-style-type:none;padding:0px;margin:0px 0px 0px 26px;}/*!sc*/
+.hAEZjw li{position:relative;display:block;}/*!sc*/
+.hAEZjw .hoverable{display:inline-block;}/*!sc*/
+.hAEZjw .selected{outline-style:solid;outline-width:1px;outline-style:dotted;}/*!sc*/
+.hAEZjw .collapsed>.collapsible{display:none;}/*!sc*/
+.hAEZjw .ellipsis{display:none;}/*!sc*/
+.hAEZjw .collapsed>.ellipsis{display:inherit;}/*!sc*/
+data-styled.g50[id="sc-jOiSaP"]{content:"hAEZjw,"}/*!sc*/
+.DtSWF{padding:0.9em;background-color:rgba(38,50,56,0.4);margin:0 0 10px 0;display:block;font-family:Montserrat,sans-serif;font-size:0.929em;line-height:1.5em;}/*!sc*/
+data-styled.g51[id="sc-dPWqtL"]{content:"DtSWF,"}/*!sc*/
+.bAlDXI{font-family:Montserrat,sans-serif;font-size:12px;position:absolute;z-index:1;top:-11px;left:12px;font-weight:600;color:rgba(255,255,255,0.7);}/*!sc*/
+data-styled.g52[id="sc-bCfuNu"]{content:"bAlDXI,"}/*!sc*/
+.JAcDr{position:relative;}/*!sc*/
+data-styled.g53[id="sc-cOxXdx"]{content:"JAcDr,"}/*!sc*/
+.jLBEgu{margin-top:15px;}/*!sc*/
+data-styled.g56[id="sc-hTBtIS"]{content:"jLBEgu,"}/*!sc*/
+.gZmVPQ button{background-color:transparent;border:0;outline:0;font-size:13px;font-family:Courier,monospace;cursor:pointer;padding:0;color:#333333;}/*!sc*/
+.gZmVPQ button:focus{font-weight:600;}/*!sc*/
+.gZmVPQ .sc-eDVOW{height:1.1em;width:1.1em;}/*!sc*/
+.gZmVPQ .sc-eDVOW polygon{fill:#666;}/*!sc*/
+data-styled.g57[id="sc-jfTVYV"]{content:"gZmVPQ,"}/*!sc*/
+.cbwYag{vertical-align:middle;font-size:13px;line-height:20px;}/*!sc*/
+data-styled.g58[id="sc-gSdasE"]{content:"cbwYag,"}/*!sc*/
+.hzvZLu{color:rgba(102,102,102,0.9);}/*!sc*/
+data-styled.g59[id="sc-lbVoZn"]{content:"hzvZLu,"}/*!sc*/
+.iiypfo{color:#666;}/*!sc*/
+data-styled.g60[id="sc-iOetsW"]{content:"iiypfo,"}/*!sc*/
+.kHMGxR{color:#666;word-break:break-word;}/*!sc*/
+data-styled.g61[id="sc-jfvyEk"]{content:"kHMGxR,"}/*!sc*/
+.ezgiwH{color:#d41f1c;font-size:0.9em;font-weight:normal;margin-left:20px;line-height:1;}/*!sc*/
+data-styled.g62[id="sc-eJDTud"]{content:"ezgiwH,"}/*!sc*/
+.jTxFXH{margin-top:0;margin-bottom:0.5em;}/*!sc*/
+data-styled.g91[id="sc-eGufxr"]{content:"jTxFXH,"}/*!sc*/
+.bzOEDQ{border:1px solid #32329f;color:#32329f;font-weight:normal;margin-left:0.5em;padding:4px 8px 4px;display:inline-block;text-decoration:none;cursor:pointer;}/*!sc*/
+data-styled.g92[id="sc-csDjRa"]{content:"bzOEDQ,"}/*!sc*/
+.iAxJxT::before{content:'|';display:inline-block;opacity:0.5;width:15px;text-align:center;}/*!sc*/
+.iAxJxT:last-child::after{display:none;}/*!sc*/
+data-styled.g93[id="sc-dEVMhd"]{content:"iAxJxT,"}/*!sc*/
+.luCXI{overflow:hidden;}/*!sc*/
+data-styled.g94[id="sc-breQAM"]{content:"luCXI,"}/*!sc*/
+.bjfQKv{display:flex;flex-wrap:wrap;margin-left:-15px;}/*!sc*/
+data-styled.g95[id="sc-gJqSdT"]{content:"bjfQKv,"}/*!sc*/
+.foIAPC{width:9ex;display:inline-block;height:13px;line-height:13px;background-color:#333;border-radius:3px;background-repeat:no-repeat;background-position:6px 4px;font-size:7px;font-family:Verdana,sans-serif;color:white;text-transform:uppercase;text-align:center;font-weight:bold;vertical-align:middle;margin-right:6px;margin-top:2px;}/*!sc*/
+.foIAPC.get{background-color:#2F8132;}/*!sc*/
+.foIAPC.post{background-color:#186FAF;}/*!sc*/
+.foIAPC.put{background-color:#95507c;}/*!sc*/
+.foIAPC.options{background-color:#947014;}/*!sc*/
+.foIAPC.patch{background-color:#bf581d;}/*!sc*/
+.foIAPC.delete{background-color:#cc3333;}/*!sc*/
+.foIAPC.basic{background-color:#707070;}/*!sc*/
+.foIAPC.link{background-color:#07818F;}/*!sc*/
+.foIAPC.head{background-color:#A23DAD;}/*!sc*/
+.foIAPC.hook{background-color:#32329f;}/*!sc*/
+.foIAPC.schema{background-color:#707070;}/*!sc*/
+data-styled.g99[id="sc-dkBcLH"]{content:"foIAPC,"}/*!sc*/
+.eucwOb{margin:0;padding:0;}/*!sc*/
+.eucwOb:first-child{padding-bottom:32px;}/*!sc*/
+.sc-WKhfq .sc-WKhfq{font-size:0.929em;}/*!sc*/
+.lfofmW{margin:0;padding:0;display:none;}/*!sc*/
+.lfofmW:first-child{padding-bottom:32px;}/*!sc*/
+.sc-WKhfq .sc-WKhfq{font-size:0.929em;}/*!sc*/
+data-styled.g100[id="sc-WKhfq"]{content:"eucwOb,lfofmW,"}/*!sc*/
+.bJctWO{list-style:none inside none;overflow:hidden;text-overflow:ellipsis;padding:0;}/*!sc*/
+data-styled.g101[id="sc-ikHFqL"]{content:"bJctWO,"}/*!sc*/
+.jgtyaQ{cursor:pointer;color:#333333;margin:0;padding:12.5px 20px;display:flex;justify-content:space-between;font-family:Montserrat,sans-serif;font-size:0.929em;text-transform:none;background-color:#fafafa;}/*!sc*/
+.jgtyaQ:hover{color:#32329f;background-color:#e1e1e1;}/*!sc*/
+.jgtyaQ .sc-eDVOW{height:1.5em;width:1.5em;}/*!sc*/
+.jgtyaQ .sc-eDVOW polygon{fill:#333333;}/*!sc*/
+.kKkTJq{cursor:pointer;color:#333333;margin:0;padding:12.5px 20px;display:flex;justify-content:space-between;font-family:Montserrat,sans-serif;background-color:#fafafa;}/*!sc*/
+.kKkTJq:hover{color:#32329f;background-color:#ededed;}/*!sc*/
+.kKkTJq .sc-eDVOW{height:1.5em;width:1.5em;}/*!sc*/
+.kKkTJq .sc-eDVOW polygon{fill:#333333;}/*!sc*/
+data-styled.g102[id="sc-uhmsm"]{content:"jgtyaQ,kKkTJq,"}/*!sc*/
+.groYat{display:inline-block;vertical-align:middle;width:calc(100% - 38px);overflow:hidden;text-overflow:ellipsis;}/*!sc*/
+data-styled.g103[id="sc-bhNLsF"]{content:"groYat,"}/*!sc*/
+.dfqeWb{font-size:0.8em;margin-top:10px;text-align:center;position:fixed;width:260px;bottom:0;background:#fafafa;}/*!sc*/
+.dfqeWb a,.dfqeWb a:visited,.dfqeWb a:hover{color:#333333!important;padding:5px 0;border-top:1px solid #e1e1e1;text-decoration:none;display:flex;align-items:center;justify-content:center;}/*!sc*/
+.dfqeWb img{width:15px;margin-right:5px;}/*!sc*/
+@media screen and (max-width: 50rem){.dfqeWb{width:100%;}}/*!sc*/
+data-styled.g104[id="sc-eGJbTc"]{content:"dfqeWb,"}/*!sc*/
+.bgWHWO{cursor:pointer;position:relative;margin-bottom:5px;}/*!sc*/
+data-styled.g110[id="sc-bQmNJW"]{content:"bgWHWO,"}/*!sc*/
+.iVHqZk{font-family:Courier,monospace;margin-left:10px;flex:1;overflow-x:hidden;text-overflow:ellipsis;}/*!sc*/
+data-styled.g111[id="sc-fWQJKu"]{content:"iVHqZk,"}/*!sc*/
+.jeVGmx{outline:0;color:inherit;width:100%;text-align:left;cursor:pointer;padding:10px 30px 10px 20px;border-radius:4px 4px 0 0;background-color:#11171a;display:flex;white-space:nowrap;align-items:center;border:1px solid transparent;border-bottom:0;transition:border-color 0.25s ease;}/*!sc*/
+.jeVGmx ..sc-fWQJKu{color:#ffffff;}/*!sc*/
+.jeVGmx:focus{box-shadow:inset 0 2px 2px rgba(0, 0, 0, 0.45),0 2px 0 rgba(128, 128, 128, 0.25);}/*!sc*/
+data-styled.g112[id="sc-EJzvH"]{content:"jeVGmx,"}/*!sc*/
+.hlCGpN{font-size:0.929em;line-height:20px;background-color:#186FAF;color:#ffffff;padding:3px 10px;text-transform:uppercase;font-family:Montserrat,sans-serif;margin:0;}/*!sc*/
+.deXhbT{font-size:0.929em;line-height:20px;background-color:#2F8132;color:#ffffff;padding:3px 10px;text-transform:uppercase;font-family:Montserrat,sans-serif;margin:0;}/*!sc*/
+data-styled.g113[id="sc-jWgUhk"]{content:"hlCGpN,deXhbT,"}/*!sc*/
+.dEUCXg{position:absolute;width:100%;z-index:100;background:#fafafa;color:#263238;box-sizing:border-box;box-shadow:0 0 6px rgba(0, 0, 0, 0.33);overflow:hidden;border-bottom-left-radius:4px;border-bottom-right-radius:4px;transition:all 0.25s ease;visibility:hidden;transform:translateY(-50%) scaleY(0);}/*!sc*/
+data-styled.g114[id="sc-eDZJSx"]{content:"dEUCXg,"}/*!sc*/
+.fgjeWP{padding:10px;}/*!sc*/
+data-styled.g115[id="sc-fmZqlu"]{content:"fgjeWP,"}/*!sc*/
+.exHLoS{padding:5px;border:1px solid #ccc;background:#fff;word-break:break-all;color:#32329f;}/*!sc*/
+.exHLoS >span{color:#333333;}/*!sc*/
+data-styled.g116[id="sc-lknPvD"]{content:"exHLoS,"}/*!sc*/
+.gLPaNf{text-transform:lowercase;margin-left:0;line-height:1.5em;}/*!sc*/
+data-styled.g117[id="sc-jmpAIk"]{content:"gLPaNf,"}/*!sc*/
+.euftIA{display:block;border:0;width:100%;text-align:left;padding:10px;border-radius:2px;margin-bottom:4px;line-height:1.5em;cursor:pointer;color:#1d8127;background-color:rgba(29,129,39,0.07);}/*!sc*/
+.euftIA:focus{outline:auto #1d8127;}/*!sc*/
+.cNWpqa{display:block;border:0;width:100%;text-align:left;padding:10px;border-radius:2px;margin-bottom:4px;line-height:1.5em;cursor:pointer;color:#d41f1c;background-color:rgba(212,31,28,0.07);}/*!sc*/
+.cNWpqa:focus{outline:auto #d41f1c;}/*!sc*/
+data-styled.g119[id="sc-hsWlce"]{content:"euftIA,cNWpqa,"}/*!sc*/
+.igtTCx{vertical-align:top;}/*!sc*/
+data-styled.g122[id="sc-gUJzAE"]{content:"igtTCx,"}/*!sc*/
+.klqdro{font-size:1.3em;padding:0.2em 0;margin:3em 0 1.1em;color:#333333;font-weight:normal;}/*!sc*/
+data-styled.g123[id="sc-fWHhJj"]{content:"klqdro,"}/*!sc*/
+.fDVOnx{margin-bottom:30px;}/*!sc*/
+data-styled.g128[id="sc-eYqbKq"]{content:"fDVOnx,"}/*!sc*/
+.OcLfL{user-select:none;width:20px;height:20px;align-self:center;display:flex;flex-direction:column;color:#32329f;}/*!sc*/
+data-styled.g129[id="sc-iFoNsh"]{content:"OcLfL,"}/*!sc*/
+.hzAYaS{width:260px;background-color:#fafafa;overflow:hidden;display:flex;flex-direction:column;backface-visibility:hidden;height:100vh;position:sticky;position:-webkit-sticky;top:0;}/*!sc*/
+@media screen and (max-width: 50rem){.hzAYaS{position:fixed;z-index:20;width:100%;background:#fafafa;display:none;}}/*!sc*/
+@media print{.hzAYaS{display:none;}}/*!sc*/
+data-styled.g130[id="sc-iqPaSo"]{content:"hzAYaS,"}/*!sc*/
+.efSEzA{outline:none;user-select:none;background-color:#f2f2f2;color:#32329f;display:none;cursor:pointer;position:fixed;right:20px;z-index:100;border-radius:50%;box-shadow:0 0 20px rgba(0, 0, 0, 0.3);bottom:44px;width:60px;height:60px;padding:0 20px;}/*!sc*/
+@media screen and (max-width: 50rem){.efSEzA{display:flex;}}/*!sc*/
+.efSEzA svg{color:#0065FB;}/*!sc*/
+@media print{.efSEzA{display:none;}}/*!sc*/
+data-styled.g131[id="sc-eVsqug"]{content:"efSEzA,"}/*!sc*/
+.eJRkUg{font-family:Roboto,sans-serif;font-size:14px;font-weight:400;line-height:1.5em;color:#333333;display:flex;position:relative;text-align:left;-webkit-font-smoothing:antialiased;font-smoothing:antialiased;text-rendering:optimizeSpeed!important;tap-highlight-color:rgba(0, 0, 0, 0);text-size-adjust:100%;}/*!sc*/
+.eJRkUg *{box-sizing:border-box;-webkit-tap-highlight-color:rgba(255, 255, 255, 0);}/*!sc*/
+data-styled.g132[id="sc-kSGPEp"]{content:"eJRkUg,"}/*!sc*/
+.flFHhN{z-index:1;position:relative;overflow:hidden;width:calc(100% - 260px);contain:layout;}/*!sc*/
+@media print,screen and (max-width: 50rem){.flFHhN{width:100%;}}/*!sc*/
+data-styled.g133[id="sc-dvEGYS"]{content:"flFHhN,"}/*!sc*/
+.ijzmud{background:#263238;position:absolute;top:0;bottom:0;right:0;width:calc((100% - 260px) * 0.4);}/*!sc*/
+@media print,screen and (max-width: 75rem){.ijzmud{display:none;}}/*!sc*/
+data-styled.g134[id="sc-jsTgjb"]{content:"ijzmud,"}/*!sc*/
+.ikBlBU{padding:5px 0;}/*!sc*/
+data-styled.g135[id="sc-elAWVg"]{content:"ikBlBU,"}/*!sc*/
+.ZYZJJ{width:calc(100% - 40px);box-sizing:border-box;margin:0 20px;padding:5px 10px 5px 20px;border:0;border-bottom:1px solid #e1e1e1;font-family:Roboto,sans-serif;font-weight:bold;font-size:13px;color:#333333;background-color:transparent;outline:none;}/*!sc*/
+data-styled.g136[id="sc-kiPwfp"]{content:"ZYZJJ,"}/*!sc*/
+.cnoJmN{position:absolute;left:20px;height:1.8em;width:0.9em;}/*!sc*/
+.cnoJmN path{fill:#333333;}/*!sc*/
+data-styled.g137[id="sc-cLNnzS"]{content:"cnoJmN,"}/*!sc*/
+</style>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+</head>
+
+<body>
+  
+      <div id="redoc"><div class="sc-kSGPEp eJRkUg redoc-wrap"><div class="sc-iqPaSo hzAYaS menu-content" style="top:0px;height:calc(100vh - 0px)"><div role="search" class="sc-elAWVg ikBlBU"><svg class="sc-cLNnzS cnoJmN search-icon" version="1.1" viewBox="0 0 1000 1000" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px"><path d="M968.2,849.4L667.3,549c83.9-136.5,66.7-317.4-51.7-435.6C477.1-25,252.5-25,113.9,113.4c-138.5,138.3-138.5,362.6,0,501C219.2,730.1,413.2,743,547.6,666.5l301.9,301.4c43.6,43.6,76.9,14.9,104.2-12.4C981,928.3,1011.8,893,968.2,849.4z M524.5,522c-88.9,88.7-233,88.7-321.8,0c-88.9-88.7-88.9-232.6,0-321.3c88.9-88.7,233-88.7,321.8,0C613.4,289.4,613.4,433.3,524.5,522z"></path></svg><input placeholder="Search..." aria-label="Search" type="text" class="sc-kiPwfp ZYZJJ search-input" value=""/></div><div class="sc-kMjMJf bvDCNC scrollbar-container undefined"><ul role="menu" class="sc-WKhfq eucwOb"><li tabindex="0" depth="1" data-item-id="tag/attributes" role="menuitem" class="sc-ikHFqL bJctWO"><label class="sc-uhmsm jgtyaQ -depth1"><span width="calc(100% - 38px)" title="attributes" class="sc-bhNLsF groYat">attributes</span><svg class="sc-eDVOW jYOolr" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></label><ul class="sc-WKhfq lfofmW"><li tabindex="0" depth="2" data-item-id="tag/attributes/operation/attributes1" role="menuitem" class="sc-ikHFqL bJctWO"><label class="sc-uhmsm kKkTJq -depth2"><span type="post" class="sc-dkBcLH foIAPC operation-type post">post</span><span tabindex="0" width="calc(100% - 38px)" class="sc-bhNLsF groYat">Applies the specified PETs to a collection of attributes</span></label></li></ul></li><li tabindex="0" depth="1" data-item-id="tag/objects" role="menuitem" class="sc-ikHFqL bJctWO"><label class="sc-uhmsm jgtyaQ -depth1"><span width="calc(100% - 38px)" title="objects" class="sc-bhNLsF groYat">objects</span><svg class="sc-eDVOW jYOolr" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></label><ul class="sc-WKhfq lfofmW"><li tabindex="0" depth="2" data-item-id="tag/objects/operation/objects1" role="menuitem" class="sc-ikHFqL bJctWO"><label class="sc-uhmsm kKkTJq -depth2"><span type="post" class="sc-dkBcLH foIAPC operation-type post">post</span><span tabindex="0" width="calc(100% - 38px)" class="sc-bhNLsF groYat">Applies the specified PETs to a collection of objects</span></label></li></ul></li><li tabindex="0" depth="2" data-item-id="/paths/~1version/get" role="menuitem" class="sc-ikHFqL bJctWO"><label class="sc-uhmsm kKkTJq -depth2"><span type="get" class="sc-dkBcLH foIAPC operation-type get">get</span><span tabindex="0" width="calc(100% - 38px)" class="sc-bhNLsF groYat">Retrieves the current ARXlet version</span></label></li></ul><div class="sc-eGJbTc dfqeWb"><a target="_blank" rel="noopener noreferrer" href="https://redocly.com/redoc/">API docs by Redocly</a></div></div></div><div class="sc-eVsqug efSEzA"><div class="sc-iFoNsh OcLfL"><svg class="" style="transform:translate(2px, -4px) rotate(180deg);transition:transform 0.2s ease" viewBox="0 0 926.23699 573.74994" version="1.1" x="0px" y="0px" width="15" height="15"><g transform="translate(904.92214,-879.1482)"><path d="
+          m -673.67664,1221.6502 -231.2455,-231.24803 55.6165,
+          -55.627 c 30.5891,-30.59485 56.1806,-55.627 56.8701,-55.627 0.6894,
+          0 79.8637,78.60862 175.9427,174.68583 l 174.6892,174.6858 174.6892,
+          -174.6858 c 96.079,-96.07721 175.253196,-174.68583 175.942696,
+          -174.68583 0.6895,0 26.281,25.03215 56.8701,
+          55.627 l 55.6165,55.627 -231.245496,231.24803 c -127.185,127.1864
+          -231.5279,231.248 -231.873,231.248 -0.3451,0 -104.688,
+          -104.0616 -231.873,-231.248 z
+        " fill="currentColor"></path></g></svg><svg class="" style="transform:translate(2px, 4px);transition:transform 0.2s ease" viewBox="0 0 926.23699 573.74994" version="1.1" x="0px" y="0px" width="15" height="15"><g transform="translate(904.92214,-879.1482)"><path d="
+          m -673.67664,1221.6502 -231.2455,-231.24803 55.6165,
+          -55.627 c 30.5891,-30.59485 56.1806,-55.627 56.8701,-55.627 0.6894,
+          0 79.8637,78.60862 175.9427,174.68583 l 174.6892,174.6858 174.6892,
+          -174.6858 c 96.079,-96.07721 175.253196,-174.68583 175.942696,
+          -174.68583 0.6895,0 26.281,25.03215 56.8701,
+          55.627 l 55.6165,55.627 -231.245496,231.24803 c -127.185,127.1864
+          -231.5279,231.248 -231.873,231.248 -0.3451,0 -104.688,
+          -104.0616 -231.873,-231.248 z
+        " fill="currentColor"></path></g></svg></div></div><div class="sc-dvEGYS flFHhN api-content"><div class="sc-eDvShL iIoNLV"><div class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK api-info"><h1 class="sc-ftTHlr sc-eGufxr cWuMGi jTxFXH">ARXlet - ARX connector<!-- --> <span>(<!-- -->1.0<!-- -->)</span></h1><p>Download OpenAPI specification<!-- -->:<a download="openapi.json" target="_blank" class="sc-csDjRa bzOEDQ">Download</a></p><div class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"><div class="sc-breQAM luCXI"><div class="sc-gJqSdT bjfQKv"><span class="sc-dEVMhd iAxJxT">E-mail<!-- -->:<!-- --> <a href="mailto:ekam.purin@um.es">ekam.purin@um.es</a></span> <!-- --> <span class="sc-dEVMhd iAxJxT">License:<!-- --> <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a></span> </div></div></div><div data-role="redoc-summary" html="" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"></div><div data-role="redoc-description" html="&lt;p&gt;This server allows for interaction with the &lt;a href=&quot;https://arx.deidentifier.org/&quot;&gt;ARX&lt;/a&gt; anonymization library through a web interface. The server&amp;#39;s objective is providing ARX functionality in a language-agnostic manner by way of offering a REST API.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"><p>This server allows for interaction with the <a href="https://arx.deidentifier.org/">ARX</a> anonymization library through a web interface. The server&#39;s objective is providing ARX functionality in a language-agnostic manner by way of offering a REST API.</p>
+</div></div></div></div><div id="tag/attributes" data-section-id="tag/attributes" class="sc-eDvShL iIoNLV"><div class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK"><h1 class="sc-ftTHlr cWuMGi"><a class="sc-csuRvn dOUsBF" href="#tag/attributes" aria-label="tag/attributes"></a>attributes</h1></div></div><div class="sc-hLBatu hpmOdy"><div class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK redoc-markdown " html="&lt;p&gt;Anonymization of attributes&lt;/p&gt;
+"><p>Anonymization of attributes</p>
+</div></div></div><div id="tag/attributes/operation/attributes1" data-section-id="tag/attributes/operation/attributes1" class="sc-eDvShL Kudvm"><div data-section-id="operation/attributes1" id="operation/attributes1" class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK"><h2 class="sc-pyeOL gRCthN"><a class="sc-csuRvn dOUsBF" href="#tag/attributes/operation/attributes1" aria-label="tag/attributes/operation/attributes1"></a>Applies the specified PETs to a collection of attributes<!-- --> </h2><h5 class="sc-ipEzrc loLBUm">Request Body schema: <span class="sc-gYbyFu jsNjjJ">application/json</span><div class="sc-gSdasE sc-eJDTud sc-jmpAIk cbwYag ezgiwH gLPaNf">required</div></h5><div html="&lt;p&gt;An ordered list of attributes, alongside the PET information to apply.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"><p>An ordered list of attributes, alongside the PET information to apply.</p>
+</div><table class="sc-hHTZFM jttMJO"><tbody><tr class=""><td kind="field" title="data" class="sc-hBxdun sc-fEXmZk sc-jfTVYV jDNUpi hqJqZp gZmVPQ"><span class="sc-idXfnW eqBPZp"></span><button aria-label="expand data"><span class="property-name">data</span><svg class="sc-eDVOW bligQf" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div class="sc-gSdasE sc-eJDTud cbwYag ezgiwH">required</div></td><td class="sc-bjfHPd KEGMo"><div><div><span class="sc-gSdasE sc-lbVoZn cbwYag hzvZLu">Array of </span><span class="sc-gSdasE sc-iOetsW cbwYag iiypfo">objects</span><span class="sc-gSdasE sc-jfvyEk cbwYag kHMGxR"> (<!-- -->AttributeData<!-- -->) </span></div> <div><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div></div></div></td></tr><tr class="last "><td kind="field" title="pets" class="sc-hBxdun sc-fEXmZk sc-jfTVYV jDNUpi hqJqZp gZmVPQ"><span class="sc-idXfnW eqBPZp"></span><button aria-label="expand pets"><span class="property-name">pets</span><svg class="sc-eDVOW bligQf" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div class="sc-gSdasE sc-eJDTud cbwYag ezgiwH">required</div></td><td class="sc-bjfHPd KEGMo"><div><div><span class="sc-gSdasE sc-lbVoZn cbwYag hzvZLu">Array of </span><span class="sc-gSdasE sc-iOetsW cbwYag iiypfo">objects</span><span class="sc-gSdasE sc-jfvyEk cbwYag kHMGxR"> (<!-- -->Pets<!-- -->) </span></div> <div><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div></div></div></td></tr></tbody></table><div><h3 class="sc-fWHhJj klqdro">Responses</h3><div><button class="sc-hsWlce euftIA"><svg class="sc-eDVOW hpUShJ" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg><strong class="sc-gUJzAE igtTCx">200<!-- --> </strong><div html="&lt;p&gt;Successful operation, the response array will contain a list of anonymized attributes. This list will maintain the same order as the one that was received.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK sc-cjicoQ hQQoLI"><p>Successful operation, the response array will contain a list of anonymized attributes. This list will maintain the same order as the one that was received.</p>
+</div></button></div><div><button class="sc-hsWlce cNWpqa"><svg class="sc-eDVOW fnHxaZ" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg><strong class="sc-gUJzAE igtTCx">400<!-- --> </strong><div html="&lt;p&gt;An unknown error occurred. Returns information about the error.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK sc-cjicoQ hQQoLI"><p>An unknown error occurred. Returns information about the error.</p>
+</div></button></div></div></div><div class="sc-jSVask sc-gKPSgB hzAXSB cnGjiW"><div class="sc-bQmNJW bgWHWO"><button class="sc-EJzvH jeVGmx"><span type="post" class="sc-jWgUhk hlCGpN http-verb post">post</span><span class="sc-fWQJKu iVHqZk">/attributes</span><svg class="sc-eDVOW uCKit" style="margin-right:-25px" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div aria-hidden="true" class="sc-eDZJSx dEUCXg"><div class="sc-fmZqlu fgjeWP"><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div><div tabindex="0" role="button"><div class="sc-lknPvD exHLoS"><span>https://localhost:8080/api</span>/attributes</div></div></div></div></div><div><h3 class="sc-kDvuXt gIPEzB"> <!-- -->Request samples<!-- --> </h3><div class="sc-cwSeNB gvVaQR" data-rttabs="true"><ul class="react-tabs__tab-list" role="tablist"><li class="react-tabs__tab react-tabs__tab--selected" role="tab" id="react-tabs-0" aria-selected="true" aria-disabled="false" aria-controls="react-tabs-1" tabindex="0" data-rttab="true">Payload</li></ul><div class="react-tabs__tab-panel react-tabs__tab-panel--selected" role="tabpanel" id="react-tabs-1" aria-labelledby="react-tabs-0"><div><div class="sc-cOxXdx JAcDr"><span class="sc-bCfuNu bAlDXI">Content type</span><div class="sc-dPWqtL DtSWF">application/json</div></div><div class="sc-hTBtIS jLBEgu"><div class="sc-cUENMa gCZNBv"><div class="sc-gikzsm dgvKER"><button><div class="sc-jcMgDF khxxbG">Copy</div></button><button> Expand all </button><button> Collapse all </button></div><div class="sc-iJnacD kWkAGQ sc-jOiSaP hAEZjw"><div class="redoc-json"><code><button class="collapser" aria-label="collapse"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable "><span class="property token string">"data"</span>: <button class="collapser" aria-label="collapse"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"value"</span>: <span class="token string">&quot;ExampleValue1&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"hierarchies"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><span class="token string">&quot;ExampleValue*&quot;</span></div></li></ul><span class="token punctuation">]</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span><span class="token punctuation">,</span></div></li><li><div class="hoverable "><span class="property token string">"pets"</span>: <button class="collapser" aria-label="collapse"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"scheme"</span>: <span class="token string">&quot;k-anonymity&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"metadata"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"k"</span>: <span class="token number">3</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span></div></li></ul><span class="token punctuation">}</span></code></div></div></div></div></div></div></div></div><div><h3 class="sc-kDvuXt gIPEzB"> <!-- -->Response samples<!-- --> </h3><div class="sc-cwSeNB gvVaQR" data-rttabs="true"><ul class="react-tabs__tab-list" role="tablist"><li class="tab-success react-tabs__tab--selected" role="tab" id="react-tabs-2" aria-selected="true" aria-disabled="false" aria-controls="react-tabs-3" tabindex="0" data-rttab="true">200</li><li class="tab-error" role="tab" id="react-tabs-4" aria-selected="false" aria-disabled="false" aria-controls="react-tabs-5" data-rttab="true">400</li></ul><div class="react-tabs__tab-panel react-tabs__tab-panel--selected" role="tabpanel" id="react-tabs-3" aria-labelledby="react-tabs-2"><div><div class="sc-cOxXdx JAcDr"><span class="sc-bCfuNu bAlDXI">Content type</span><div class="sc-dPWqtL DtSWF">application/json</div></div><div class="sc-hTBtIS jLBEgu"><div class="sc-cUENMa gCZNBv"><div class="sc-gikzsm dgvKER"><button><div class="sc-jcMgDF khxxbG">Copy</div></button></div><div class="sc-iJnacD kWkAGQ sc-jOiSaP hAEZjw"><div class="redoc-json"><code><button class="collapser" aria-label="collapse"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable "><span class="token string">&quot;ExampleValue*&quot;</span></div></li></ul><span class="token punctuation">]</span></code></div></div></div></div></div></div><div class="react-tabs__tab-panel" role="tabpanel" id="react-tabs-5" aria-labelledby="react-tabs-4"></div></div></div></div></div></div><div id="tag/objects" data-section-id="tag/objects" class="sc-eDvShL iIoNLV"><div class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK"><h1 class="sc-ftTHlr cWuMGi"><a class="sc-csuRvn dOUsBF" href="#tag/objects" aria-label="tag/objects"></a>objects</h1></div></div><div class="sc-hLBatu hpmOdy"><div class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK redoc-markdown " html="&lt;p&gt;Anonymization of objects (collections of attributes)&lt;/p&gt;
+"><p>Anonymization of objects (collections of attributes)</p>
+</div></div></div><div id="tag/objects/operation/objects1" data-section-id="tag/objects/operation/objects1" class="sc-eDvShL Kudvm"><div data-section-id="operation/objects1" id="operation/objects1" class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK"><h2 class="sc-pyeOL gRCthN"><a class="sc-csuRvn dOUsBF" href="#tag/objects/operation/objects1" aria-label="tag/objects/operation/objects1"></a>Applies the specified PETs to a collection of objects<!-- --> </h2><div class="sc-eYqbKq fDVOnx"><div html="&lt;p&gt;asd&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"><p>asd</p>
+</div></div><h5 class="sc-ipEzrc loLBUm">Request Body schema: <span class="sc-gYbyFu jsNjjJ">application/json</span><div class="sc-gSdasE sc-eJDTud sc-jmpAIk cbwYag ezgiwH gLPaNf">required</div></h5><div html="&lt;p&gt;An ordered list of objects, alongside the PET information to apply.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK"><p>An ordered list of objects, alongside the PET information to apply.</p>
+</div><table class="sc-hHTZFM jttMJO"><tbody><tr class=""><td kind="field" title="data" class="sc-hBxdun sc-fEXmZk sc-jfTVYV jDNUpi hqJqZp gZmVPQ"><span class="sc-idXfnW eqBPZp"></span><button aria-label="expand data"><span class="property-name">data</span><svg class="sc-eDVOW bligQf" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div class="sc-gSdasE sc-eJDTud cbwYag ezgiwH">required</div></td><td class="sc-bjfHPd KEGMo"><div><div><span class="sc-gSdasE sc-lbVoZn cbwYag hzvZLu">Array of </span><span class="sc-gSdasE sc-iOetsW cbwYag iiypfo">objects</span><span class="sc-gSdasE sc-jfvyEk cbwYag kHMGxR"> (<!-- -->ObjectData<!-- -->) </span></div> <div><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div></div></div></td></tr><tr class="last "><td kind="field" title="pets" class="sc-hBxdun sc-fEXmZk sc-jfTVYV jDNUpi hqJqZp gZmVPQ"><span class="sc-idXfnW eqBPZp"></span><button aria-label="expand pets"><span class="property-name">pets</span><svg class="sc-eDVOW bligQf" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div class="sc-gSdasE sc-eJDTud cbwYag ezgiwH">required</div></td><td class="sc-bjfHPd KEGMo"><div><div><span class="sc-gSdasE sc-lbVoZn cbwYag hzvZLu">Array of </span><span class="sc-gSdasE sc-iOetsW cbwYag iiypfo">objects</span><span class="sc-gSdasE sc-jfvyEk cbwYag kHMGxR"> (<!-- -->Pets<!-- -->) </span></div> <div><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div></div></div></td></tr></tbody></table><div><h3 class="sc-fWHhJj klqdro">Responses</h3><div><button class="sc-hsWlce cNWpqa"><svg class="sc-eDVOW fnHxaZ" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg><strong class="sc-gUJzAE igtTCx">400<!-- --> </strong><div html="&lt;p&gt;An unknown error ocurred. Returns information about the error.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK sc-cjicoQ hQQoLI"><p>An unknown error ocurred. Returns information about the error.</p>
+</div></button></div><div><button class="sc-hsWlce euftIA"><svg class="sc-eDVOW hpUShJ" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg><strong class="sc-gUJzAE igtTCx">default<!-- --> </strong><div html="&lt;p&gt;Successful operation, the response array will contain a list of anonymized objects. This list will maintain the same order as the one that was received.&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK sc-cjicoQ hQQoLI"><p>Successful operation, the response array will contain a list of anonymized objects. This list will maintain the same order as the one that was received.</p>
+</div></button></div></div></div><div class="sc-jSVask sc-gKPSgB hzAXSB cnGjiW"><div class="sc-bQmNJW bgWHWO"><button class="sc-EJzvH jeVGmx"><span type="post" class="sc-jWgUhk hlCGpN http-verb post">post</span><span class="sc-fWQJKu iVHqZk">/objects</span><svg class="sc-eDVOW uCKit" style="margin-right:-25px" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div aria-hidden="true" class="sc-eDZJSx dEUCXg"><div class="sc-fmZqlu fgjeWP"><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div><div tabindex="0" role="button"><div class="sc-lknPvD exHLoS"><span>https://localhost:8080/api</span>/objects</div></div></div></div></div><div><h3 class="sc-kDvuXt gIPEzB"> <!-- -->Request samples<!-- --> </h3><div class="sc-cwSeNB gvVaQR" data-rttabs="true"><ul class="react-tabs__tab-list" role="tablist"><li class="react-tabs__tab react-tabs__tab--selected" role="tab" id="react-tabs-6" aria-selected="true" aria-disabled="false" aria-controls="react-tabs-7" tabindex="0" data-rttab="true">Payload</li></ul><div class="react-tabs__tab-panel react-tabs__tab-panel--selected" role="tabpanel" id="react-tabs-7" aria-labelledby="react-tabs-6"><div><div class="sc-cOxXdx JAcDr"><span class="sc-bCfuNu bAlDXI">Content type</span><div class="sc-dPWqtL DtSWF">application/json</div></div><div class="sc-hTBtIS jLBEgu"><div class="sc-cUENMa gCZNBv"><div class="sc-gikzsm dgvKER"><button><div class="sc-jcMgDF khxxbG">Copy</div></button><button> Expand all </button><button> Collapse all </button></div><div class="sc-iJnacD kWkAGQ sc-jOiSaP hAEZjw"><div class="redoc-json"><code><button class="collapser" aria-label="collapse"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable "><span class="property token string">"data"</span>: <button class="collapser" aria-label="collapse"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"values"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"type"</span>: <span class="token string">&quot;ExampleAttribute&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"value"</span>: <span class="token string">&quot;ExampleValue1&quot;</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"hierarchies"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"type"</span>: <span class="token string">&quot;ExampleAttribute&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"values"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><span class="token string">&quot;ExampleValue*&quot;</span></div></li></ul><span class="token punctuation">]</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span><span class="token punctuation">,</span></div></li><li><div class="hoverable "><span class="property token string">"pets"</span>: <button class="collapser" aria-label="collapse"></button><span class="token punctuation">[</span><span class="ellipsis"></span><ul class="array collapsible"><li><div class="hoverable collapsed"><button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"scheme"</span>: <span class="token string">&quot;k-anonymity&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable collapsed"><span class="property token string">"metadata"</span>: <button class="collapser" aria-label="expand"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable collapsed"><span class="property token string">"k"</span>: <span class="token number">3</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">}</span></div></li></ul><span class="token punctuation">]</span></div></li></ul><span class="token punctuation">}</span></code></div></div></div></div></div></div></div></div><div><h3 class="sc-kDvuXt gIPEzB"> <!-- -->Response samples<!-- --> </h3><div class="sc-cwSeNB gvVaQR" data-rttabs="true"><ul class="react-tabs__tab-list" role="tablist"><li class="tab-error react-tabs__tab--selected" role="tab" id="react-tabs-8" aria-selected="true" aria-disabled="false" aria-controls="react-tabs-9" tabindex="0" data-rttab="true">400</li><li class="tab-success" role="tab" id="react-tabs-10" aria-selected="false" aria-disabled="false" aria-controls="react-tabs-11" data-rttab="true">default</li></ul><div class="react-tabs__tab-panel react-tabs__tab-panel--selected" role="tabpanel" id="react-tabs-9" aria-labelledby="react-tabs-8"><div><div class="sc-cOxXdx JAcDr"><span class="sc-bCfuNu bAlDXI">Content type</span><div class="sc-dPWqtL DtSWF">application/json</div></div><div class="sc-hTBtIS jLBEgu"><div class="sc-cUENMa gCZNBv"><div class="sc-gikzsm dgvKER"><button><div class="sc-jcMgDF khxxbG">Copy</div></button></div><div class="sc-iJnacD kWkAGQ sc-jOiSaP hAEZjw"><div class="redoc-json"><code><button class="collapser" aria-label="collapse"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable "><span class="property token string">"exception"</span>: <span class="token string">&quot;IllegalArgumentException&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable "><span class="property token string">"message"</span>: <span class="token string">&quot;Example exception message&quot;</span></div></li></ul><span class="token punctuation">}</span></code></div></div></div></div></div></div><div class="react-tabs__tab-panel" role="tabpanel" id="react-tabs-11" aria-labelledby="react-tabs-10"></div></div></div></div></div></div><div id="/paths/~1version/get" data-section-id="/paths/~1version/get" class="sc-eDvShL Kudvm"><div class="sc-iBYPxa gDKEpP"><div class="sc-hLBatu gGraJK"><h2 class="sc-pyeOL gRCthN"><a class="sc-csuRvn dOUsBF" href="#/paths/~1version/get" aria-label="/paths/~1version/get"></a>Retrieves the current ARXlet version<!-- --> </h2><div><h3 class="sc-fWHhJj klqdro">Responses</h3><div><button class="sc-hsWlce euftIA"><svg class="sc-eDVOW hpUShJ" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg><strong class="sc-gUJzAE igtTCx">default<!-- --> </strong><div html="&lt;p&gt;ARXlet responds with its version information&lt;/p&gt;
+" class="sc-iJnacD sc-cCjTvn kWkAGQ laPUdK sc-cjicoQ hQQoLI"><p>ARXlet responds with its version information</p>
+</div></button></div></div></div><div class="sc-jSVask sc-gKPSgB hzAXSB cnGjiW"><div class="sc-bQmNJW bgWHWO"><button class="sc-EJzvH jeVGmx"><span type="get" class="sc-jWgUhk deXhbT http-verb get">get</span><span class="sc-fWQJKu iVHqZk">/version</span><svg class="sc-eDVOW uCKit" style="margin-right:-25px" version="1.1" viewBox="0 0 24 24" x="0" xmlns="http://www.w3.org/2000/svg" y="0" aria-hidden="true"><polygon points="17.3 8.3 12 13.6 6.7 8.3 5.3 9.7 12 16.4 18.7 9.7 "></polygon></svg></button><div aria-hidden="true" class="sc-eDZJSx dEUCXg"><div class="sc-fmZqlu fgjeWP"><div html="" class="sc-iJnacD sc-cCjTvn kWkAGQ ioCKjQ"></div><div tabindex="0" role="button"><div class="sc-lknPvD exHLoS"><span>https://localhost:8080/api</span>/version</div></div></div></div></div><div><h3 class="sc-kDvuXt gIPEzB"> <!-- -->Response samples<!-- --> </h3><div class="sc-cwSeNB gvVaQR" data-rttabs="true"><ul class="react-tabs__tab-list" role="tablist"><li class="tab-success react-tabs__tab--selected" role="tab" id="react-tabs-12" aria-selected="true" aria-disabled="false" aria-controls="react-tabs-13" tabindex="0" data-rttab="true">default</li></ul><div class="react-tabs__tab-panel react-tabs__tab-panel--selected" role="tabpanel" id="react-tabs-13" aria-labelledby="react-tabs-12"><div><div class="sc-cOxXdx JAcDr"><span class="sc-bCfuNu bAlDXI">Content type</span><div class="sc-dPWqtL DtSWF">application/json</div></div><div class="sc-hTBtIS jLBEgu"><div class="sc-cUENMa gCZNBv"><div class="sc-gikzsm dgvKER"><button><div class="sc-jcMgDF khxxbG">Copy</div></button></div><div class="sc-iJnacD kWkAGQ sc-jOiSaP hAEZjw"><div class="redoc-json"><code><button class="collapser" aria-label="collapse"></button><span class="token punctuation">{</span><span class="ellipsis"></span><ul class="obj collapsible"><li><div class="hoverable "><span class="property token string">"version"</span>: <span class="token string">&quot;v1.0&quot;</span><span class="token punctuation">,</span></div></li><li><div class="hoverable "><span class="property token string">"major"</span>: <span class="token number">1</span><span class="token punctuation">,</span></div></li><li><div class="hoverable "><span class="property token string">"minor"</span>: <span class="token number">0</span></div></li></ul><span class="token punctuation">}</span></code></div></div></div></div></div></div></div></div></div></div></div></div><div class="sc-jsTgjb ijzmud"></div></div></div>
+      <script>
+      const __redoc_state = {"menu":{"activeItemIdx":-1},"spec":{"data":{"openapi":"3.1.0","info":{"title":"ARXlet - ARX connector","description":"This server allows for interaction with the [ARX](https://arx.deidentifier.org/) anonymization library through a web interface. The server's objective is providing ARX functionality in a language-agnostic manner by way of offering a REST API.","contact":{"email":"ekam.purin@um.es"},"license":{"name":"Apache 2.0","url":"http://www.apache.org/licenses/LICENSE-2.0.html"},"version":"1.0"},"servers":[{"url":"https://localhost:8080/api"}],"tags":[{"name":"attributes","description":"Anonymization of attributes"},{"name":"objects","description":"Anonymization of objects (collections of attributes)"}],"paths":{"/version":{"get":{"summary":"Retrieves the current ARXlet version","responses":{"default":{"description":"ARXlet responds with its version information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/VersionResponse"}}}}}}},"/attributes":{"post":{"tags":["attributes"],"summary":"Applies the specified PETs to a collection of attributes","operationId":"attributes1","requestBody":{"description":"An ordered list of attributes, alongside the PET information to apply.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AttributeRequest"}}},"required":true},"responses":{"200":{"description":"Successful operation, the response array will contain a list of anonymized attributes. This list will maintain the same order as the one that was received.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AttributeResponse"}}}},"400":{"description":"An unknown error occurred. Returns information about the error.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ExceptionResponse"}}}}}}},"/objects":{"post":{"tags":["objects"],"summary":"Applies the specified PETs to a collection of objects","description":"asd","operationId":"objects1","requestBody":{"required":true,"description":"An ordered list of objects, alongside the PET information to apply.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ObjectRequest"}}}},"responses":{"400":{"description":"An unknown error ocurred. Returns information about the error.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ExceptionResponse"}}}},"default":{"description":"Successful operation, the response array will contain a list of anonymized objects. This list will maintain the same order as the one that was received.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ObjectResponse"}}}}}}}},"jsonSchemaDialect":"https://spec.openapis.org/oas/3.1/dialect/base","components":{"schemas":{"Object":{"type":"array","xml":{"name":"object","wrapped":true},"items":{"type":"object","required":["type","value"],"properties":{"type":{"type":"string","description":"The attribute's type","examples":["ExampleAttribute"]},"value":{"type":"string","description":"The attribute's value","examples":["ExampleValue1"]}}}},"ObjectAnonymized":{"type":"array","xml":{"name":"object","wrapped":true},"items":{"type":"object","required":["type","value"],"properties":{"type":{"type":"string","description":"The attribute's type","examples":["ExampleAttribute"]},"value":{"$ref":"#/components/schemas/AttributeAnonymized"}}}},"Attribute":{"type":"string","description":"The attribute's value","examples":["ExampleValue1"]},"AttributeAnonymized":{"type":"string","description":"The attribute's value after being anonymized","examples":["ExampleValue*"]},"AttributeRequest":{"type":"object","required":["data","pets"],"properties":{"data":{"$ref":"#/components/schemas/AttributeData"},"pets":{"$ref":"#/components/schemas/Pets"}}},"ObjectRequest":{"type":"object","required":["data","pets"],"properties":{"data":{"$ref":"#/components/schemas/ObjectData"},"pets":{"$ref":"#/components/schemas/Pets"}}},"AttributeData":{"type":"array","xml":{"name":"data,","wrapped":true},"items":{"type":"object","required":["value","hierarchies"],"properties":{"value":{"$ref":"#/components/schemas/Attribute"},"hierarchies":{"type":"array","items":{"$ref":"#/components/schemas/AttributeAnonymized"}}}}},"ObjectData":{"type":"array","xml":{"name":"data","wrapped":true},"items":{"type":"object","required":["values","hierarchies"],"properties":{"values":{"$ref":"#/components/schemas/Object"},"hierarchies":{"type":"array","xml":{"name":"hierarchies","wrapped":true},"items":{"type":"object","required":["type","values"],"properties":{"type":{"type":"string","examples":["ExampleAttribute"]},"values":{"type":"array","xml":{"name":"values","wrapped":true},"items":{"$ref":"#/components/schemas/AttributeAnonymized"}}}}}}}},"AttributeResponse":{"type":"array","xml":{"name":"data,","wrapped":true},"items":{"$ref":"#/components/schemas/AttributeAnonymized"}},"ObjectResponse":{"type":"array","xml":{"name":"data","wrapped":true},"items":{"$ref":"#/components/schemas/ObjectAnonymized"}},"Pets":{"type":"array","items":{"type":"object","required":["scheme","metadata"],"properties":{"scheme":{"type":"string","description":"The PET schema, indicates the PPT to apply.","examples":["k-anonymity","l-diversity/distinct","l-diversity/entropy","l-diversity/recursive","t-closeness/hierarchical","t-closeness/ordered"]},"metadata":{"type":"object","oneOf":[{"$ref":"#/components/schemas/KAnonMetadata"},{"$ref":"#/components/schemas/LDivMetadata"},{"$ref":"#/components/schemas/RCLDivMetadata"},{"$ref":"#/components/schemas/TCloMetadata"},{"$ref":"#/components/schemas/KMapMetadata"}]}}}},"SensitiveAttributeMetadata":{"type":"object","required":["attribute"],"properties":{"attribute":{"type":"string","description":"If the scheme applies to a sensitive attribute, describes the attribute name","examples":["ExampleAttribute"]}}},"KAnonMetadata":{"type":"object","required":["k"],"properties":{"k":{"type":"integer","description":"If the scheme is k-anonymity, describes the value of k","examples":[3]}}},"LDivMetadata":{"allOf":[{"$ref":"#/components/schemas/SensitiveAttributeMetadata"},{"type":"object","required":["l"],"properties":{"l":{"type":"integer","description":"If the scheme is l-diversity, describes the value of l","format":"int32","examples":[2]}}}]},"RCLDivMetadata":{"allOf":[{"$ref":"#/components/schemas/LDivMetadata"},{"type":"object","required":["c"],"properties":{"c":{"type":"number","description":"If the scheme is recursive (c, l)-diversity, describes the value of c","format":"double","examples":[0.1]}}}]},"TCloMetadata":{"allOf":[{"$ref":"#/components/schemas/SensitiveAttributeMetadata"},{"type":"object","required":["t"],"properties":{"t":{"type":"number","description":"If the scheme is t-closeness, describes the value of t","format":"double","examples":[0.3]}}}]},"KMapMetadata":{"allOf":[{"$ref":"#/components/schemas/KAnonMetadata"},{"type":"object","required":["context"],"properties":{"context":{"type":"array","description":"If the scheme is k-map, contains the object set's context collection","xml":{"name":"context","wrapped":true},"items":{"$ref":"#/components/schemas/ObjectData"}}}}]},"VersionResponse":{"type":"object","required":["version","major","minor"],"properties":{"version":{"type":"string","description":"The complete ARXlet version string","examples":["v1.0"]},"major":{"type":"integer","description":"The major version","format":"int32","examples":[1]},"minor":{"type":"integer","description":"The minor version","format":"int32","examples":[0]}}},"ExceptionResponse":{"type":"object","required":["exception","message"],"properties":{"exception":{"type":"string","description":"The exception class","examples":["IllegalArgumentException"]},"message":{"type":"string","description":"The exception message","examples":["Example exception message"]}}}}}}},"searchIndex":{"store":["tag/attributes","tag/attributes/operation/attributes1","tag/objects","tag/objects/operation/objects1","/paths/~1version/get"],"index":{"version":"2.3.9","fields":["title","description"],"fieldVectors":[["title/0",[0,0.121]],["description/0",[0,0.087,1,0.875]],["title/1",[0,0.071,2,0.712,3,0.712,4,0.712,5,0.438]],["description/1",[0,0.109]],["title/2",[6,0.4]],["description/2",[0,0.062,1,0.621,5,0.383,6,0.204]],["title/3",[2,0.712,3,0.712,4,0.712,5,0.438,6,0.234]],["description/3",[6,0.288,7,1.386]],["title/4",[8,1.258,9,1.258,10,1.258,11,0.794]],["description/4",[11,1.101]]],"invertedIndex":[["anonym",{"_index":1,"title":{},"description":{"0":{},"2":{}}}],["appli",{"_index":2,"title":{"1":{},"3":{}},"description":{}}],["arxlet",{"_index":10,"title":{"4":{}},"description":{}}],["asd",{"_index":7,"title":{},"description":{"3":{}}}],["attribut",{"_index":0,"title":{"0":{},"1":{}},"description":{"0":{},"1":{},"2":{}}}],["collect",{"_index":5,"title":{"1":{},"3":{}},"description":{"2":{}}}],["current",{"_index":9,"title":{"4":{}},"description":{}}],["object",{"_index":6,"title":{"2":{},"3":{}},"description":{"2":{},"3":{}}}],["pet",{"_index":4,"title":{"1":{},"3":{}},"description":{}}],["retriev",{"_index":8,"title":{"4":{}},"description":{}}],["specifi",{"_index":3,"title":{"1":{},"3":{}},"description":{}}],["version",{"_index":11,"title":{"4":{}},"description":{"4":{}}}]],"pipeline":[]}},"options":{}};
+
+      var container = document.getElementById('redoc');
+      Redoc.hydrate(__redoc_state, container);
+
+      </script>
+</body>
+
+</html>

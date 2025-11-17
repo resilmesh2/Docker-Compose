@@ -1,0 +1,30 @@
+{
+    "policies": {
+	"discard_response_on_failure": false
+    },
+    "stages": [
+	{
+	    "name": "1",
+	    "policies": {
+		"optional": [
+		    "1"
+		]
+	    }
+	},
+	"response"
+    ],
+    "jobs": {
+	"1": {
+	    "type": "DummyJob",
+	    "stage": "1",
+	    "args": {
+		"message": "This job should fail, but the stage should not",
+		"fail": true
+	    }
+	},
+	"respond-with-pipeline-results": {
+	    "type": "ResultsPong",
+	    "stage": "response"
+	}
+    }
+}

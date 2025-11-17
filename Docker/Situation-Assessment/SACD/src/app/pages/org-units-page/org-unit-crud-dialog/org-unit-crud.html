@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>{{ title() }}</h2>
+<mat-dialog-content>
+    <mat-label for="orgUnitName">Org unit name:</mat-label>
+    <mat-form-field id="orgUnitName">
+        <input matInput required placeholder="" [(ngModel)]="name" />
+    </mat-form-field>
+    <mat-label for="orgUnit">Parent organizational unit:</mat-label>
+    <mat-form-field id="orgUnit">
+        <mat-select [(value)]="parentOrgUnit">
+            <mat-option value="null">---</mat-option>
+            @for (orgUnit of allOrgUnits(); track orgUnit) {
+            <mat-option [value]="orgUnit.name">{{orgUnit.name}}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+    <chips-contacts [(contacts)]="contacts"></chips-contacts>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    @if (data.mode === 'edit') {
+        <sentinel-button-with-icon
+            color="primary"
+            icon="save"
+            tooltip=""
+            (click)="editOrgUnit()"
+            mat-dialog-close
+            cdkFocusInitial
+        >
+            Save
+        </sentinel-button-with-icon>
+    } @else if (data.mode === 'insert') {
+        <sentinel-button-with-icon
+            color="primary"
+            icon="add"
+            tooltip=""
+            (click)="insertOrgUnit()"
+            cdkFocusInitial
+            [disabled]="!name()"
+        >
+            Insert
+        </sentinel-button-with-icon>
+    }
+</mat-dialog-actions>
+
+
+<style>
+    h2[mat-dialog-title] {
+        font-size: 1.5em;
+    }
+
+    mat-dialog-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        padding: 1em;
+        margin-top: 2em;
+    }
+
+    mat-dialog-actions.mat-mdc-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0px 24px 20px;
+        gap: 1em;
+    }
+
+</style>

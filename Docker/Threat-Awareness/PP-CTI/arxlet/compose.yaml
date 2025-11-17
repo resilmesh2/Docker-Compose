@@ -1,0 +1,11 @@
+services:
+  arxlet:
+    image: arxlet:latest
+    container_name: PP-CTI-ARXlet
+    expose:
+      - 8080
+      - 8000
+    environment:
+      - "JAVA_TOOL_OPTIONS=\"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000\""
+    networks:
+      resilmesh:

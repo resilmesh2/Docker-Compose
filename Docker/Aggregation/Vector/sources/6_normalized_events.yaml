@@ -1,0 +1,5 @@
+type: "nats"
+connection_name: "6_normalized"
+subject: "normalized_events"
+queue: "normalized_events"
+url: "nats://nats:4222"

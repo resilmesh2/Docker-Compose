@@ -1,0 +1,9 @@
+type: "remap"
+# Add here any source which should be pushed to Wazuh/Rsyslog integration
+inputs: ["9_enriched_events", "0_ad_events"]
+source: |
+  . = parse_json!(.message)
+  del(.source_type)
+  del(.subject)
+  del(.message)
+  del(.timestamp)

@@ -1,0 +1,40 @@
+{
+    "policies": {
+	"discard_response_on_failure": false
+    },
+    "stages": [
+	{
+	    "name": "1",
+	    "policies": {
+		"optional": [
+		    "1"
+		]
+	    }
+	},
+	"response"
+    ],
+    "jobs": {
+	"1": {
+	    "type": "DummyGeneratorJob",
+	    "stage": "1",
+	    "args": {
+		"jobs": [
+		    {
+			"name": "1-1",
+			"type": "DummyJob",
+			"args": {
+			    "message": "This generated job should fail.",
+			    "fail": true
+			},
+			"policies": {}
+		    }
+		],
+		"message": "This generator job should generate one job."
+	    }
+	},
+	"respond-with-pipeline-results": {
+	    "type": "ResultsPong",
+	    "stage": "response"
+	}
+    }
+}

@@ -1,0 +1,8 @@
+default_language_version:
+  python: python3.12
+repos:
+- repo: https://github.com/PyCQA/bandit
+  rev: '1.8.2'
+  hooks:
+    - id: bandit
+      args: ['-c', 'bandit.yaml', '-iii', '-r', '.']

@@ -1,0 +1,13 @@
+{:version [0 1 0]
+ :port #or [#env MM_PORT 8002]
+ :isim-host #or [#env ISIM_HOST "resilmesh_isim"]
+ :isim-port #or [#env ISIM_HOST 7687]
+ :isim-username #or [#env ISIM_USERNAME "neo4j"]
+ :isim-password #or [#env ISIM_PASSWORD "supertestovaciheslo"]
+ :nats-host #or [#env MB_HOST "resilmesh_mb"]
+ :nats-port #or [#env MB_PORT 4222]
+ :nats-topic #or [#env MB_TOPIC "alerts"]
+ :minimum-logging-level :debug
+ :disallowed-logging-namespaces ["org.drools.*"
+                                 "org.optaplanner.core.impl.*"
+                                 "org.eclipse.jetty.*"]}

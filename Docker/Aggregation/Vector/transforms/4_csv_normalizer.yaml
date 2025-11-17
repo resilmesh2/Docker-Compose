@@ -1,0 +1,14 @@
+#See the Vector Remap Language reference for more info: https://vrl.dev
+type: "remap"
+inputs: ["3_deduped_csv_events"]
+# @TODO: should we add a 'sanitization' step to remove not allowed chars from the events?
+#    like: (\\.)|[^a-zA-Z0-9\.\;,\/\?\:\@\&\=\+\$\-\_\!\~\*'\(\)#]
+source: |
+  row = parse_csv!(string!(.message))
+  .start_time = get!(value: row, path: [2])
+  .last_time = get!(value: row, path: [3])
+  .attack_category = get!(value: row, path: [4])
+  .source_ip = get!(value: row, path: [7])
+  .destination_ip = get!(value: row, path: [9])
+  .attack_name = get!(value: row, path: [11])
+  del(.message)

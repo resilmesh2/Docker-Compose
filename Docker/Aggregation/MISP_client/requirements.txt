@@ -1,0 +1,4 @@
+nats-py==2.7.2
+pymisp==2.4.190
+python-dotenv==0.21.1
+requests==2.31.0

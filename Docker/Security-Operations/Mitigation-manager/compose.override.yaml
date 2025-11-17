@@ -1,0 +1,15 @@
+services:
+  mitigation_manager:
+    ports:
+      - ${MM_PORT:-8002}:${MM_PORT:-8002}
+  nats:
+    image: nats:latest
+    container_name: ResilMesh-MB
+    ports:
+      - 8222:8222
+      - 4222:4222
+    command: -js
+    networks:
+      resilmesh:
+        aliases:
+          - resilmesh-mb

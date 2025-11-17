@@ -1,0 +1,6 @@
+type: "socket"
+inputs: [ "10_format_syslog" ]
+address: "${RSYSLOG_HOST-rsyslog}:${RSYSLOG_PORT-10514}"
+mode: "tcp"
+encoding:
+  codec: "json"

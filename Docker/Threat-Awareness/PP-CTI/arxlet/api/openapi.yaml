@@ -1,0 +1,360 @@
+openapi: 3.1.0
+info:
+  title: ARXlet - ARX connector
+  description: |-
+    This server allows for interaction with the [ARX](https://arx.deidentifier.org/) anonymization library through a web interface. The server's objective is providing ARX functionality in a language-agnostic manner by way of offering a REST API.
+  contact:
+    email: ekam.purin@um.es
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: "<Automatically generated>"
+servers:
+  - url: https://localhost:8080/api
+tags:
+  - name: attributes
+    description: Anonymization of attributes
+  - name: objects
+    description: Anonymization of objects (collections of attributes)
+paths:
+  /version:
+    get:
+      summary: Retrieves the current ARXlet version
+      responses:
+        default:
+          description: ARXlet responds with its version information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+  /attributes:
+    post:
+      tags:
+        - attributes
+      summary: Applies the specified PETs to a collection of attributes
+      operationId: attributes1
+      requestBody:
+        description: An ordered list of attributes, alongside the PET information to apply.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeRequest'
+        required: true
+      responses:
+        200:
+          description: Successful operation, the response array will contain a list of anonymized attributes. This list will maintain the same order as the one that was received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeResponse'
+        400:
+          description: An unknown error occurred. Returns information about the error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+  /objects:
+    post:
+      tags:
+        - objects
+      summary: Applies the specified PETs to a collection of objects
+      description: asd
+      operationId: objects1
+      requestBody:
+        required: true
+        description: An ordered list of objects, alongside the PET information to apply.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectRequest'
+      responses:
+        200:
+          description: Successful operation, the response array will contain a list of anonymized objects. This list will maintain the same order as the one that was received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResponse'
+        400:
+          description: An unknown error ocurred. Returns information about the error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResponse'
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
+components:
+  schemas:
+    Object:
+      type: array
+      xml:
+        name: object
+        wrapped: true
+      items:
+        type: object
+        required:
+          - type
+          - value
+        properties:
+          type:
+            type: string
+            description: The attribute's type
+            examples:
+              - "ExampleAttribute"
+          value:
+            type: string
+            description: The attribute's value
+            examples:
+              - "ExampleValue1"
+    ObjectAnonymized:
+      type: array
+      xml:
+        name: object
+        wrapped: true
+      items:
+        type: object
+        required:
+          - type
+          - value
+        properties:
+          type:
+            type: string
+            description: The attribute's type
+            examples:
+              - "ExampleAttribute"
+          value:
+            $ref: '#/components/schemas/AttributeAnonymized'
+    Attribute:
+      type: string
+      description: The attribute's value
+      examples:
+        - "ExampleValue1"
+    AttributeAnonymized:
+      type: string
+      description: The attribute's value after being anonymized
+      examples:
+        - "ExampleValue*"
+    AttributeRequest:
+      type: object
+      required:
+        - data
+        - pets
+      properties:
+        data:
+          $ref: '#/components/schemas/AttributeData'
+        pets:
+          $ref: '#/components/schemas/Pets'
+    ObjectRequest:
+      type: object
+      required:
+        - data
+        - pets
+      properties:
+        data:
+          $ref: '#/components/schemas/ObjectData'
+        pets:
+          $ref: '#/components/schemas/Pets'
+    AttributeData:
+      type: array
+      xml:
+        name: data,
+        wrapped: true
+      items:
+        type: object
+        required:
+          - value
+          - hierarchies
+        properties:
+          value:
+            $ref: '#/components/schemas/Attribute'
+          hierarchies:
+            type: array
+            items:
+              $ref: '#/components/schemas/AttributeAnonymized'
+    ObjectData:
+      type: array
+      xml:
+        name: data
+        wrapped: true
+      items:
+        type: object
+        required:
+          - values
+          - hierarchies
+        properties:
+          values:
+            $ref: '#/components/schemas/Object'
+          hierarchies:
+            type: array
+            xml:
+              name: hierarchies
+              wrapped: true
+            items:
+              type: object
+              required:
+                - type
+                - values
+              properties:
+                type:
+                  type: string
+                  examples:
+                    - "ExampleAttribute"
+                values:
+                  type: array
+                  xml:
+                    name: values
+                    wrapped: true
+                  items:
+                    $ref: '#/components/schemas/AttributeAnonymized'
+    AttributeResponse:
+      type: array
+      xml:
+        name: data,
+        wrapped: true
+      items:
+        $ref: '#/components/schemas/AttributeAnonymized'
+    ObjectResponse:
+      type: array
+      xml:
+        name: data
+        wrapped: true
+      items:
+        $ref: '#/components/schemas/ObjectAnonymized'
+    Pets:
+      type: array
+      items:
+        type: object
+        required:
+          - scheme
+          - metadata
+        properties:
+          scheme:
+            type: string
+            description: The PET schema, indicates the PPT to apply.
+            examples:
+              - "k-anonymity"
+              - "l-diversity/distinct"
+              - "l-diversity/entropy"
+              - "l-diversity/recursive"
+              - "t-closeness/hierarchical"
+              - "t-closeness/ordered"
+          metadata:
+            type: object
+            oneOf:
+              - $ref: '#/components/schemas/KAnonMetadata'
+              - $ref: '#/components/schemas/LDivMetadata'
+              - $ref: '#/components/schemas/RCLDivMetadata'
+              - $ref: '#/components/schemas/TCloMetadata'
+              - $ref: '#/components/schemas/KMapMetadata'
+    SensitiveAttributeMetadata:
+      type: object
+      required:
+        - attribute
+      properties:
+        attribute:
+          type: string
+          description: If the scheme applies to a sensitive attribute, describes the attribute name
+          examples:
+            - "ExampleAttribute"
+    KAnonMetadata:
+      type: object
+      required:
+        - k
+      properties:
+        k:
+          type: integer
+          description: If the scheme is k-anonymity, describes the value of k
+          examples:
+            - 3
+    LDivMetadata:
+      allOf:
+        - $ref: '#/components/schemas/SensitiveAttributeMetadata'
+        - type: object
+          required:
+            - l
+          properties:
+            l:
+              type: integer
+              description: If the scheme is l-diversity, describes the value of l
+              format: int32
+              examples:
+                - 2
+    RCLDivMetadata:
+      allOf:
+        - $ref: '#/components/schemas/LDivMetadata'
+        - type: object
+          required:
+            - c
+          properties:
+            c:
+              type: number
+              description: If the scheme is recursive (c, l)-diversity, describes the value of c
+              format: double
+              examples:
+                - 0.1
+    TCloMetadata:
+      allOf:
+        - $ref: '#/components/schemas/SensitiveAttributeMetadata'
+        - type: object
+          required:
+            - t
+          properties:
+            t:
+              type: number
+              description: If the scheme is t-closeness, describes the value of t
+              format: double
+              examples:
+                - 0.3
+    KMapMetadata:
+      allOf:
+        - $ref: '#/components/schemas/KAnonMetadata'
+        - type: object
+          required:
+            - context
+          properties:
+            context:
+              type: array
+              description: If the scheme is k-map, contains the object set's context collection
+              xml:
+                name: context
+                wrapped: true
+              items:
+                $ref: '#/components/schemas/ObjectData'
+    VersionResponse:
+      type: object
+      required:
+        - version
+        - major
+        - minor
+      properties:
+        version:
+          type: string
+          description: The complete ARXlet version string
+          examples:
+            - "v1.0"
+        major:
+          type: integer
+          description: The major version
+          format: int32
+          examples:
+            - 1
+        minor:
+          type: integer
+          description: The minor version
+          format: int32
+          examples:
+            - 0
+    ExceptionResponse:
+      type: object
+      required:
+        - exception
+        - message
+      properties:
+        exception:
+          type: string
+          description: The exception class
+          examples:
+            - "IllegalArgumentException"
+        message:
+          type: string
+          description: The exception message
+          examples:
+            - "Example exception message"

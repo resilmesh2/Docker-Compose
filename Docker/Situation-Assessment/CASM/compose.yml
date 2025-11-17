@@ -1,0 +1,144 @@
+services:
+  resilmesh_sap_casm_postgres:
+    container_name: resilmesh_sap_casm_postgres
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: resilmesh_sap_casm_postgres
+      POSTGRES_DB: amass
+      PG_DATA: /data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./postgresql/install_extensions.sql:/docker-entrypoint-initdb.d/install_extensions.sql
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - resilmesh_network
+
+  resilmesh_sap_casm_worker:
+    container_name: resilmesh_sap_casm_easm-worker
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./docker/config.yaml:/app/config/config.yaml
+      - ./docker/amass_config.yaml:/app/.config/amass/config.yaml
+    depends_on:
+      resilmesh_sap_wo_temporal:
+        condition: service_healthy
+    networks:
+      - resilmesh_network
+
+  resilmesh_sap_casm_metasploitable3:
+    container_name: resilmesh_sap_casm_metasploitable3
+    image: kirscht/metasploitable3-ub1404
+    # use environment variables to set password, enable root and start services
+    entrypoint: /entrypoint.sh
+    environment:
+      PASS: myPass
+      ROOT: yes
+      CUPS: yes
+      FTP: yes
+      HTTP: yes
+      IRC: yes
+      SMB: yes
+      SSH: yes
+      SQL: yes
+    networks:
+      - resilmesh_network
+
+
+#  neo4j:
+#    image: neo4j:5.21.0
+#    environment:
+#      - NEO4J_AUTH=neo4j/supertestovaciheslo
+#      - NEO4J_PLUGINS=["apoc"]
+#      - NEO4J_apoc_export_file_enabled=true
+#      - NEO4J_apoc_import_file_enabled=true
+#      - NEO4J_apoc_import_file_use__neo4j__config=true
+#    volumes:
+#      - neo4j_easyeasm_data:/data
+#    ports:
+#      - 7474:7474
+#      - 7687:7687
+#    healthcheck:
+#      test: ["CMD", "wget", "http://localhost:7474/"]
+#      interval: 10s
+#      timeout: 2s
+#      retries: 10
+#    restart: unless-stopped
+#    networks:
+#      - resilmesh_network
+
+  resilmesh_sap_casm_redis:
+    container_name: resilmesh_sap_casm_redis
+    image: docker.io/redis:7
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - resilmesh_network
+
+  resilmesh_sap_casm_nmap-worker:
+    container_name: resilmesh_sap_casm_nmap-worker
+    build:
+      dockerfile: nmap.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./docker/config.yaml:/app/config/config.yaml
+    depends_on:
+      resilmesh_sap_wo_temporal:
+        condition: service_healthy
+    networks:
+      - resilmesh_network
+    environment:
+      - NVD_KEY
+      - TEMPORAL_HOST=resilmesh_sap_wo_temporal
+      - TEMPORAL_PORT=7233
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=supertestovaciheslo
+      - NEO4J_BOLT=bolt://resilmesh_sap_neo4j:7687
+
+  resilmesh_sap_casm_cve-connector-worker:
+    container_name: resilmesh_sap_casm_cve-connector
+    build:
+      dockerfile: cve-connector.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./docker/config.yaml:/app/config/config.yaml
+    depends_on:
+      resilmesh_sap_wo_temporal:
+        condition: service_healthy
+     # neo4j:
+    networks:
+      - resilmesh_network
+    environment:
+      - NVD_KEY
+      - TEMPORAL_HOST=resilmesh_sap_wo_temporal
+      - TEMPORAL_PORT=7233
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=supertestovaciheslo
+      - NEO4J_BOLT=bolt://resilmesh_sap_neo4j:7687
+
+  resilmesh_sap_casm_slp-enrichment-worker:
+    container_name: resilmesh_sap_casm_slp-enrichment
+    build:
+      dockerfile: slp_enrichment.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./docker/config.yaml:/app/config/config.yaml
+    networks:
+      - resilmesh_network
+    environment:
+      - TEMPORAL_HOST=resilmesh_sap_wo_temporal
+      - TEMPORAL_PORT=7233
+
+# volumes:
+#   neo4j_easyeasm_data:

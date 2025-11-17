@@ -1,0 +1,79 @@
+{
+    "policies": {
+	"discard_response_on_failure": true
+    },
+    "stages": [
+	{
+	    "name": "prepare"
+	},
+	{
+	    "name": "anonymize"
+	},
+	{
+	    "name": "update"
+	},
+	{
+	    "name": "publish"
+	},
+	{
+	    "name": "reply"
+	}
+    ],
+    "jobs": {
+	"read-privacy-policy": {
+	    "type": "policies.ReadPrivacyPolicy",
+	    "stage": "prepare",
+	    "args": {
+		"address": "Privacy-policy",
+		"location": "privacy_policy"
+	    }
+	},
+	"read-hierarchy-policy": {
+	    "type": "policies.ReadHierarchyPolicy",
+	    "stage": "prepare",
+	    "args": {
+		"address": "Hierarchy-policy",
+		"location": "hierarchy_policy"
+	    }
+	},
+	"reply-with-results": {
+	    "type": "ResultsPong",
+	    "stage": "reply"
+	},
+	"apply-policy-dp": {
+	    "type": "flaskdp.FromPrivacyPolicy",
+	    "stage": "anonymize",
+	    "args": {
+		"privacy_policy_location": "privacy_policy"
+	    }
+	},
+	"apply-policy-arxlet": {
+	    "type": "arxlet.FromPrivacyPolicy",
+	    "stage": "anonymize",
+	    "args": {
+		"privacy_policy_location": "privacy_policy",
+		"hierarchy_policy_location": "hierarchy_policy"
+	    }
+	},
+	"store-event-in-context": {
+	    "type": "context.StoreRequest",
+	    "stage": "prepare"
+	},
+	"update_misp_event": {
+	    "type": "misp.UpdateEvent",
+	    "stage": "update",
+	    "args": {
+		"event_location": "body"
+	    }
+	},
+	"publish_misp_event": {
+	    "type": "misp.PostEvent",
+	    "stage": "publish",
+	    "args": {
+		"event_location": "body",
+		"event_anon": true,
+		"publish": false
+	    }
+	}
+    }
+}

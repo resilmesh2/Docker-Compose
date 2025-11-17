@@ -1,0 +1,20 @@
+services:
+  resilmesh_ap_vector:
+    container_name: "Vector"
+    hostname: "vector"
+    restart: unless-stopped
+    env_file:
+      - ".env"
+    build:
+      context: "./"
+    command: "--config-dir /etc/vector"
+    depends_on:
+      resilmesh_ap_silentpush:
+        condition: service_healthy
+        restart: true
+    ports:
+      - 8686:8686
+    networks:
+      - resilmesh_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

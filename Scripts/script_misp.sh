@@ -1,0 +1,568 @@
+#!/bin/bash
+
+
+echo -e "\n\n\n"
+cat <<'EOF'
+ /$$$$$$$                      /$$ /$$ /$$      /$$                     /$$
+| $$__  $$                    |__/| $$| $$$    /$$$                    | $$
+| $$  \ $$  /$$$$$$   /$$$$$$$ /$$| $$| $$$$  /$$$$  /$$$$$$   /$$$$$$$| $$$$$$$
+| $$$$$$$/ /$$__  $$ /$$_____/| $$| $$| $$ $$/$$ $$ /$$__  $$ /$$_____/| $$__  $$
+| $$__  $$| $$$$$$$$|  $$$$$$ | $$| $$| $$  $$$| $$| $$$$$$$$|  $$$$$$ | $$  \ $$
+| $$  \ $$| $$_____/ \____  $$| $$| $$| $$\  $ | $$| $$_____/ \____  $$| $$  | $$
+| $$  | $$|  $$$$$$$ /$$$$$$$/| $$| $$| $$ \/  | $$|  $$$$$$$ /$$$$$$$/| $$  | $$
+|__/  |__/ \_______/|_______/ |__/|__/|__/     |__/ \_______/|_______/ |__/  |__/
+EOF
+echo -e "\n\n\n"
+
+
+
+#################################################
+#####                Proxy              #########
+#################################################
+
+## Are you behind a proxy? Complete the following information
+DOCKER_ORIGINAL_FILE="Docker-Compose/.env.sample"
+DOCKER_COPY_FILE="Docker-Compose/.env"
+
+
+read -n 1 -p "Are you behind a proxy? (y/n): " answer
+
+if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    echo "You said that you have a proxy, let's configure it."
+    # If the answer is yes, ask for the proxy configuration
+    read -p "Enter your http configuration (Example --> http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line1
+    read -p "Enter your https configuration (Example --> https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line2
+
+    # Add the lines at the end of the .env file
+    echo "$line1" >> "$DOCKER_COPY_FILE"
+    echo "$line2" >> "$DOCKER_COPY_FILE"
+
+    echo "Your proxy configuraion has been saved in $fichero"
+else
+    echo -e "\nYou said that you don't have a proxy."
+fi
+
+#################################################
+#####     Resilmesh network creation    #########
+#################################################
+
+echo "The first step of the deployment is creating the resilmesh network where all components will run."
+#echo "Enter to start..."
+read -t 2
+
+docker network create \
+  --driver bridge \
+  --subnet 172.19.0.0/16 \
+  --gateway 172.19.0.1 \
+  resilmesh_network
+
+echo -e "You can see the network from the following list\n"
+docker network ls
+
+echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16. Press enter to continue with the deployment..."
+read -t 2
+
+#### END NETWORK CREATION  ########
+
+###################################################
+#### CLONE THE FULL REPOSITORY FROM GITHUB  #######
+###################################################
+
+#Uncomment the following lines if you want to clone the repositories from this script
+#echo -e "\n\n#####Read the following information carefully#####\n\nBefore we start with the installation process, some important data will be needed from you.\nThe first thing I need is your Personal token >"
+#read GITHUB_TOKEN
+#git clone --recurse-submodules https://$GITHUB_TOKEN@github.com/resilmesh2/Docker-Compose.git
+
+#### END CLONE GITHUB REPOSITORY  ##########
+
+##################################################
+####    WAZUH ENVIRONMENT CONFIGURATION   ########
+##################################################
+
+echo -e "\nLet's continue configuring Wazuh Server!. Press enter to continue..."
+read -t 2
+
+WAZUH_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env.example"
+WAZUH_COPY_FILE="Docker-Compose/Threat-Awareness/wazuh-docker/.env"
+WAZUH_TARGET_LINE=4
+WAZUH_KEY_WORD="MANAGER_IP=" # keep the text and add the Auth key behind
+
+# Check if the file exists
+if [ ! -f "$WAZUH_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$WAZUH_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+echo -e "Please select an IP to configure wazuh manager inside resilmesh_network, example: 172.19.0.100"
+docker network inspect resilmesh_network | grep "Subnet"
+
+echo -e "\nEnter the IP and press enter:"
+read WAZUH_IP
+
+# Create .env file from .env.example
+cp "$WAZUH_ORIGINAL_FILE" "$WAZUH_COPY_FILE"
+
+# Add the Wazuh manager container IP to the .env file where MANAGER IP is located
+sed -i "${WAZUH_TARGET_LINE}s|\(${WAZUH_KEY_WORD} *\).*|\1$WAZUH_IP|" "$WAZUH_COPY_FILE"
+
+echo -e "\nWazuh .env file has been created"
+echo "✅ Line $WAZUH_TARGET_LINE updated in '$WAZUH_COPY_FILE'."
+
+####################################################
+
+
+# Generating server certificates
+if [ ! -d Docker-Compose/Threat-Awareness/wazuh-docker/config ]; then
+   cp -r Docker-Compose/Threat-Awareness/wazuh-docker/base-configuration Docker-Compose/Threat-Awareness/wazuh-docker/config
+fi
+docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml up
+
+echo "Certificates generated correctly. Press Enter to continue with the process..."
+read
+
+# Remove lingering container
+docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
+
+# Generating server configuration files
+docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
+
+echo "Server configuration files generated correctly. Press Enter to continue with the process..."
+read
+
+docker compose --file Docker-Compose/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
+
+# Updating server configuration files
+sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules
+sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/rules/*
+sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo cp -t Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders Docker-Compose/Threat-Awareness/wazuh-docker/decoders/*
+sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations
+#cp -t config/wazuh_integrations integrations/*
+sudo mkdir -p Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_cluster
+
+sudo bash -c 'chmod --reference=Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
+
+sudo chgrp -R systemd-journal Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
+sudo bash -c 'chmod 770 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*'
+# sudo bash -c 'chmod 750 Docker-Compose/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
+
+echo -e "\nLet's start deploying wazuh containers. Enter to start..."
+read
+docker compose -f Docker-Compose/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
+
+
+####### END WAZUH CONFIGURATION  ##########
+
+######################################################
+####      MISP SERVER CONFIGURATION         ##########
+######################################################
+echo -e "\n\nLet's continue configuring and deploying MISP Server!. Press enter to continue..."
+trap 'sleep 4' DEBUG
+
+MISPSERVER_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/MISP_Server-docker/template.env"
+MISPSERVER_COPY_FILE="Docker-Compose/Threat-Awareness/MISP_Server-docker/.env"
+MISPSERVER_TARGET_LINE=60
+MISPSERVER_KEY_WORD="BASE_URL="  # keep the text and add new content behind
+
+# Installation process begins. Let's know the user pick up the Server IP to introduce it in the URL
+echo -e "\n#####  Read the following information carefully  #####\n"
+
+#echo -e "The first component to install will be Misp Server. Once installed, you will have to generate an API Key that will be required during the proccess. I will guide you, just follow my instructions.\n"
+
+echo -e "Pick your Server IP up from the following options (that IP will be used to expose the services of Resilmesh platform):"
+hostname -I
+
+# Ask the user for the service URL
+echo -e "\nEnter your host IP to expose the service (normally the first IP shown above): "
+read SERVER_IP
+mispserver_url="https://${SERVER_IP}:10443"
+#mispclient_url="https://${SERVER_IP}:8443"
+
+# Check if the file exists
+if [ ! -f "$MISPSERVER_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$MISPSERVER_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from template.env
+cp "$MISPSERVER_ORIGINAL_FILE" "$MISPSERVER_COPY_FILE"
+
+# Add the URL to the .env file where BASE_URL is located
+sed -i "${MISPSERVER_TARGET_LINE}s|\(${MISPSERVER_KEY_WORD} *\).*|\1$mispserver_url|" "$MISPSERVER_COPY_FILE"
+
+echo -e "\nMISP Server .env file has been created"
+echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
+
+# Execute docker compose build
+
+echo -e "\n🔧 Executing 'docker compose build'... press enter to start"
+trap 'sleep 4' DEBUG
+#read
+docker compose -f Docker-Compose/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
+
+# Execute docker compose up -d
+echo -e "\n🚀 Executing 'docker compose up -d'... press enter to start"
+read
+docker compose -f Docker-Compose/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
+
+#### END MISP SERVER CONFIGURATION  #######
+
+
+####################################################
+####      MISP CLIENT CONFIGURATION      ###########
+####################################################
+
+echo -e "\n\nLet's continue configuring MISP Client!\nEnter to continue..."
+read
+
+MISPCLIENT_ORIGINAL_FILE="Docker-Compose/Aggregation/MISP_client/.env.sample"
+MISPCLIENT_COPY_FILE="Docker-Compose/Aggregation/MISP_client/.env"
+MISPCLIENT_TARGET_LINE1=2
+MISPCLIENT_TARGET_LINE2=3
+MISPCLIENT_KEY_WORD1="MISP_API_KEY=" # keep the text and add the Auth key behind
+MISPCLIENT_KEY_WORD2="MISP_API_URL=" # keep the text and add the MISP Server url behind
+
+echo -e "Your service IP is '$mispserver_url' .Please, go to your web browser and enter the previous URL (user:admin@admin.test | pass: admin).\nThen go to admin>Mi profile>Auth Keys and generate a new one. \nIf you need more details to generate an Auth key, please follow the next guide: https://www.circl.lu/doc/misp/automation/#automation-key\n\nI will be here waiting for you.\n"
+echo -e "Enter AuthKey:"
+read MISPSERVER_AUTHKEY
+
+# Check if the file exists
+if [ ! -f "$MISPCLIENT_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$MISPCLIENT_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.sample
+cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
+
+# Add the Auth Key to the .env file where MISP_API_KEY is located
+sed -i "${MISPCLIENT_TARGET_LINE1}s|\(${MISPCLIENT_KEY_WORD1} *\).*|\1$MISPSERVER_AUTHKEY|" "$MISPCLIENT_COPY_FILE"
+
+echo -e "\nMISP Client .env file has been created"
+echo "✅ Line $MISPCLIENT_TARGET_LINE1 updated in '$MISPCLIENT_COPY_FILE'."
+
+# Add the URL to the .env file where MISP_API_URL is located
+sed -i "${MISPCLIENT_TARGET_LINE2}s|\(${MISPCLIENT_KEY_WORD2} *\).*|\1$mispserver_url|" "$MISPCLIENT_COPY_FILE"
+
+echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
+
+#### END MISP CLIENT CONFIGURATION  ########
+
+
+#################################################################################################################################################################
+#                                                                                                                                                               #
+#                                               AGGREGATION PLANE	                                                                                        #
+#                                                                                                                                                               #
+#################################################################################################################################################################
+
+#### VECTOR ENVIRONMENT CONFIGURATION ####
+
+echo -e "\n\nLet's continue configuring Vector! Enter to continue..."
+read
+
+VECTOR_ORIGINAL_FILE="Docker-Compose/Aggregation/Vector/.env.sample"
+VECTOR_COPY_FILE="Docker-Compose/Aggregation/Vector/.env"
+VECTOR_TARGET_LINE=2
+VECTOR_KEY_WORD="RSYSLOG_HOST=" # keep the text and add the WAZUH MANAGER IP behind
+
+# Check if the file exists
+if [ ! -f "$VECTOR_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$VECTOR_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$VECTOR_ORIGINAL_FILE" "$VECTOR_COPY_FILE"
+
+# Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
+sed -i "${VECTOR_TARGET_LINE}s|\(${VECTOR_KEY_WORD} *\).*|\1$WAZUH_IP|" "$VECTOR_COPY_FILE"
+
+echo -e "\nVector .env file has been created"
+echo "✅ Line $VECTOR_TARGET_LINE updated in '$VECTOR_COPY_FILE'. Press enter to continue..."
+read
+
+####### END VECTOR CONFIGURATION  ##########
+
+
+#### ENRICHMENT ENVIRONMENT CONFIGURATION ####
+
+echo -e "\nLet's continue configuring Enrichment! Press enter to start..."
+read
+
+ENRICHMENT_ORIGINAL_FILE="Docker-Compose/Aggregation/Enrichment/.env.sample"
+ENRICHMENT_COPY_FILE="Docker-Compose/Aggregation/Enrichment/.env"
+ENRICHMENT_TARGET_LINE=14
+ENRICHMENT_KEY_WORD="API_KEY=" # keep the text and add the WAZUH MANAGER IP behind
+
+# Check if the file exists
+if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$ENRICHMENT_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Introduce silenpush API Key
+echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+read enrich_key
+
+# Create .env file from .env.sample
+cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
+
+# Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
+sed -i "${ENRICHMENT_TARGET_LINE}s|\(${ENRICHMENT_KEY_WORD} *\).*|\1$enrich_key|" "$ENRICHMENT_COPY_FILE"
+
+echo -e "\nEnrichment .env file has been created"
+echo "✅ Line $ENRICHMENT_TARGET_LINE updated in '$ENRICHMENT_COPY_FILE'."
+echo "✅ Aggregation Plane has been configured. Press enter to continue..."
+read
+
+####### END ENRICHMENT CONFIGURATION  ##########
+
+
+#################################################################################################################################################################
+#                                                                                                                                                               #
+#                                               SECURITY OPERATIONS PLANE                                                                                       #
+#                                                                                                                                                               #
+#################################################################################################################################################################
+
+echo -e "\nLet's start with configuring components in Security Operations Plane!"
+echo -e "\nPress enter to start with Playbooks Tool component configuration..."
+read
+
+
+####### WORKFLOW ORCHESTRATOR CONFIGURATION ############
+
+# No preconfiguration needed.
+
+####### END WORKFLOW ORCHESTRATOR CONFIGURATION ############
+
+####### PLAYBOOKS TOOL CONFIGURATION ############
+
+mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/database 
+mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/apps 
+mkdir -p Docker-Compose/Security-Operations/Playbooks-tool/volumes/files
+chown -R 1000:1000 Docker-Compose/Security-Operations/Playbooks-tool/volumes
+chmod -R 755 Docker-Compose/Security-Operations/Playbooks-tool/volumes
+sudo swapoff -a
+
+PBTOOL_ORIGINAL_FILE="Docker-Compose/Security-Operations/Playbooks-tool/.env.example"
+PBTOOL_COPY_FILE="Docker-Compose/Security-Operations/Playbooks-tool/.env"
+
+# Check if the file exists
+if [ ! -f "$PBTOOL_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$PBTOOL_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$PBTOOL_ORIGINAL_FILE" "$PBTOOL_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+####### END PLAYBOOKS TOOL CONFIGURATION ############
+
+####### MITIGATION MANAGER CONFIGURATION ############
+
+echo -e "\nPress enter to continue with Mitigation Manager component configuration..."
+read
+
+MM_ORIGINAL_FILE="Docker-Compose/Security-Operations/Mitigation-manager/.env.example"
+MM_COPY_FILE="Docker-Compose/Security-Operations/Mitigation-manager/.env"
+
+# Check if the file exists
+if [ ! -f "$MM_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh. Press enter to continue..."
+read
+
+echo -e "\nSecurity Operations Plane has been now deployed"
+
+
+#################################################################################################################################################################
+#                                                                                                                                                               #
+#                                               SITUATION ASSESSMENT PLANE                                                                                      #
+#                                                                                                                                                               #
+#################################################################################################################################################################
+#echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
+#echo -e "\nNo configuration needed for ISIM component."
+#echo -e "\nPress enter to start with CASM component configuration..."
+#read
+#echo -e "\nInstalling python3-poetry to create the venv and install all dependencies"
+#sudo apt install python3-poetry
+
+#echo -e "\nNo configuration needed for CSA component. Enter to continue..."
+#read
+#echo -e "\nPress enter to start with NSE component configuration..."
+#npm --prefix Docker-Compose/Situation-Assessment/NSE/ i
+#npm --prefix Docker-Compose/Situation-Assessment/NSE/ start &
+#read
+
+#echo -e "\n Press enter to create .env file..."
+#NSE_FILE=.env
+
+#cat <<EOF >"NSE_FILE"
+#NEO4J_URI=bolt://neo4j:7687
+#NEO4J_USER=neo4j
+#NEO4J_PASSWORD=supertestovaciheslo
+#OS_HOST=https://${SERVER_IP}:9200
+#OS_USER=admin
+#OS_PASSWORD=admin
+#OS_INDEX=wazuh-alerts-*
+#EOF
+
+#echo -e "\n✅ .env file has been created. Enter to continue..."
+#read
+#echo -e "\nPress enter to start with SACD component configuration..."
+#read
+
+#SACD_ENV_PRODTS_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.prod.ts"
+#SACD_ENV_FILE="Docker-Compose/Situation-Assessment/SACD/src/environments/environment.ts"
+
+# Check if the file exists
+#if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
+#  echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."
+#  exit 1
+#fi
+
+
+# Check if the file exists
+#if [ ! -f "$SACD_ENV_FILE" ]; then
+#  echo "❌ The file '$SACD_ENV_FILE' do not exist."
+#  exit 1
+#fi
+
+
+# Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
+#sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE"
+#sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
+
+#echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
+
+#ng server 	# to run the dashboard
+#read
+
+#NDR FALTA.
+
+
+#################################################################################################################################################################
+#                                                                                                                                                               #
+#                                               THREAT AWARENESS PLANE		                                                                                #
+#                                                                                                                                                               #
+#################################################################################################################################################################
+echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
+echo -e "\nPress enter to start with Federated Learning component configuration..."
+read
+
+####### FEDERATED LEARNING CONFIGURATION  ##########
+FLAD_AGENT_ORIGINAL_FILE="Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/config/fl_agent.conf"
+FLAD_AGENT_ORIGINAL_FILE2="Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/config/ai_detection_engine.conf"
+
+# Check if the file exists
+if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$FLAD_AGENT_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE2" ]; then
+  echo "❌ The file '$FLAD_AGENT_ORIGINAL_FILE2' do not exist."
+  exit 1
+fi
+
+# Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
+sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE"
+sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE2"
+
+echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
+
+#Build ai-detection-engine component
+#docker build -t ai-detection-engine -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile Docker-Compos>
+
+#Build fl-aggregator component
+#docker build -t fl-aggregator -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile Docker-Compose/Threat-Awa>
+
+#Build fl-agent component
+#docker build -t fl-agent -f Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile Docker-Compose/Threat-Awareness/Ano>
+
+#Executing the components
+#docker run -p "9998:9998" -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
+#docker run -p "9999:9999" -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
+#docker run -d Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
+
+#### Add ssh connection to the second server where a new agent need to be deployed in #####
+#echo "A second Federated Learning Agent needs to be deployed in another server, please go there and deploy it"
+#echo "Follow the next steps:"
+#echo "1. Copy the Docker-Compose/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent folder to the new server"
+#echo "2. Build the agent image and run it using the these commands: docker build -t fl-agent / docker run -d fl-agent"
+
+####### END FEDERATED LEARNING CONFIGURATION  ##########
+
+
+#######################################################################################################################################
+#																      #
+#						COMPOSE FILES EXECUTION								      #
+#																      #
+#######################################################################################################################################
+
+#echo -e "\nEnter to start docker compose build..."
+#read
+
+#docker compose -f Docker-Compose/Dockerfile build
+
+echo -e "\nEnter to start docker compose up..."
+read
+docker compose -f Docker-Compose/docker-compose.yml up -d
+
+
+
+
+######################################################################################################################################
+#																     #
+#						CONFIGURATION WAZUH DOCKER CONTAINER						     #
+#																     #
+######################################################################################################################################
+
+
+CONTAINER="ResilMesh-Wazuh-Manager"
+
+echo -e "\nUpdating repositories in the $CONTAINER..."
+docker exec -u 0 -it "$CONTAINER" yum update -y
+
+echo -e "\nInstalling telnet in the $CONTAINER..."
+docker exec -u 0 -it "$CONTAINER" yum install -y telnet
+
+echo -e "\nInstalling rsyslog in the $CONTAINER..."
+docker exec -u 0 -it "$CONTAINER" yum install -y rsyslog
+
+echo -e "\nInstalling nano in the $CONTAINER..."
+docker exec -u 0 -it "$CONTAINER" yum install -y nano
+
+echo -e "\nCreating Resilmesh.conf and adding the content to it in the $CONTAINER..."
+docker exec -u 0 -it "$CONTAINER" bash -c 'cat <<"EOF" > /etc/rsyslog.d/Resilmesh.conf
+module(load="imptcp" threads="3")
+input(type="imptcp" port="10514"
+ruleset="writeResilmeshEvents")
+ruleset(name="writeResilmeshEvents"
+queue.type="fixedArray"
+queue.size="250000"
+queue.dequeueBatchSize="4096"
+queue.workerThreads="4"
+queue.workerThreadMinimumMessages="60000"
+) {
+action(type="omfile" file="/var/log/Resilmesh.log"
+ioBufferSize="64k" flushOnTXEnd="off"
+asyncWriting="on")
+}
+EOF'
+
+echo -e "\nStarting rsyslogd now"
+docker exec -u 0 "$CONTAINER" rsyslogd
+echo -e "\nReady."
+
+##############  END WAZUH CONTAINER CONFIGURATION  ###############################################

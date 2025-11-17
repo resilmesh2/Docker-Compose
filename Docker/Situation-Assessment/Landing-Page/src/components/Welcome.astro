@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import Card from '../components/Card.astro';
+import { ACTIVE_ENTRIES } from '../data/ACTIVE_ENTRIES';
+
+
+const entries = await getCollection('entries').then((collection) => {
+	return collection[0].data.filter((entry) => ACTIVE_ENTRIES.includes(entry.id) || ACTIVE_ENTRIES.includes('*'));
+});
+
+---
+
+
+<div class="w-full h-screen flex flex-col items-center justify-start text-center">
+	<img src="/resilmesh-logo-transparent.png" alt="Resilmesh Logo" class="w-full md:w-1/2 lg:w-1/3 h-auto" />
+	<!-- <h2 class="text-4xl pb-8 px-4 font-poppins">Welcome to the Resilmesh landing page!</h2> -->
+	<ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-8">
+		{entries.map(entry => (
+			<Card title={entry.title} description={entry.description} link={entry.link} icon={entry.icon} />
+		))}
+	</ul>
+</div>

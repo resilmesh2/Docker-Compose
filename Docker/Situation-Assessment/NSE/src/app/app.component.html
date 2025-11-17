@@ -1,0 +1,99 @@
+<div class="container">
+  <div class="header" #headerElement>
+    <h1>{{title}}</h1>
+    <p *ngIf="!isLoading && networkStatus !== 'unknown'" class="network-status-indicator">
+    </p>
+  </div>
+
+  <div class="stats" *ngIf="!isLoading">
+    <div class="stat-card">
+      <div class="stat-value">{{stats.totalSubnets | number}}</div>
+      <div class="stat-label">Total Subnets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{stats.totalDevices | number}}</div>
+      <div class="stat-label">Total Devices</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{stats.highRiskSubnets | number}}</div>
+      <div class="stat-label">High Risk Subnets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{stats.avgRiskScore | number:'1.1-1'}}</div>
+      <div class="stat-label">Avg Risk Score</div>
+    </div>
+  </div>
+
+  <div class="tabs" *ngIf="!isLoading && !isRoutedPage">
+    <button 
+      class="tab" 
+      [class.active]="activeView === 'graph' && !isRoutedPage"
+      (click)="switchView('graph')">
+      Network Graph
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeView === 'treemap' && !isRoutedPage"
+      (click)="switchView('treemap')">
+      Risk Treemap
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeView === 'table' || isDeviceTablePage"
+      (click)="switchView('table')">
+      Table View
+    </button>
+    <button 
+    class="tab" 
+    [class.active]="activeView === 'designer' && !isRoutedPage"
+    (click)="switchView('designer')">
+    Risk Calculation Configurator
+  </button>
+  <button 
+    class="tab" 
+    [class.active]="activeView === 'components' && !isRoutedPage"
+    (click)="switchView('components')">
+    Component Scheduling
+  </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <h4>Loading Network Data</h4>
+  </div>
+
+  <!-- Main Dashboard Views -->
+  <div *ngIf="!isLoading && !isRoutedPage">
+    <app-network-graph 
+      *ngIf="activeView === 'graph'" 
+      [networkData]="networkData"
+      (subnetClick)="onSubnetClick($event)">
+    </app-network-graph>
+    
+    <app-treemap 
+      *ngIf="activeView === 'treemap'" 
+      [networkData]="networkData"
+      (subnetClick)="onSubnetClick($event)">
+    </app-treemap>
+    
+    <app-data-table 
+      *ngIf="activeView === 'table'" 
+      [networkData]="networkData"
+      (subnetClick)="onSubnetClick($event)">
+    </app-data-table>
+
+    <app-drag-drop-designer 
+    *ngIf="activeView === 'designer'">
+    </app-drag-drop-designer>
+    
+    <app-component-configuration 
+      *ngIf="activeView === 'components'">
+    </app-component-configuration>
+  </div>
+
+  <!-- Device Popup Component -->
+  <app-device-popup #devicePopup *ngIf="!isRoutedPage"></app-device-popup>
+</div>
+
+<router-outlet></router-outlet>

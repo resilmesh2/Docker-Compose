@@ -1,0 +1,102 @@
+[{:description "Test - ncat to ransomware",
+  :nodes
+  ({:id #uuid "d422d11d-1667-4bc3-93e0-8a36f2a64654",
+    :description "Remote connection using ncat",
+    :mitre-ids ("T1041"),
+    :conditions (),
+    :next (#uuid "bf4f7379-a0b1-4f87-8771-e43af18ca6c8"),
+    :previous ()}
+   {:id #uuid "bf4f7379-a0b1-4f87-8771-e43af18ca6c8",
+    :description "Python script execution permission change",
+    :mitre-ids ("T1222.002"),
+    :conditions
+    ({:description "File is a Python script",
+      :params {},
+      :args {:path :file-path},
+      :query (and (:path *args*)
+                  (clojure.string/ends-with? (:path *args*) ".py"))}
+     {:description "File is executable",
+      :params {},
+      :args {:permissions :file-permissions},
+      :query (and (:path *args*)
+                  (clojure.string/includes? (:path *args*) "x"))}),
+    :previous (#uuid "d422d11d-1667-4bc3-93e0-8a36f2a64654"),
+    :next (#uuid "f4c86f49-1a00-4dbd-a165-ca8f91c6d48c")}
+   {:id #uuid "f4c86f49-1a00-4dbd-a165-ca8f91c6d48c",
+    :description "Ransomware script download",
+    :mitre-ids ("T1204.002"),
+    :conditions
+    ({:description "File is a Python script",
+      :params {},
+      :args {:path :file-path},
+      :query (and (:path *args*)
+                  (clojure.string/ends-with? (:path *args*) ".py"))}
+     {:description "File is ransomware",
+      :params {},
+      :args {:path :file-path},
+      :query (and (:path *args*)
+                  (clojure.string/includes? (:path *args*) "zerologon"))}),
+    :next (),
+    :previous (#uuid "bf4f7379-a0b1-4f87-8771-e43af18ca6c8")}),
+  :attacks {},
+  :initial-node #uuid "d422d11d-1667-4bc3-93e0-8a36f2a64654"}
+ {:description "Pilot 1 - CARM - DoS",
+  :nodes
+  ({:id #uuid "69573b91-b21e-4df4-8714-36514ddd46be",
+    :description "DoS attack using Slowloris",
+    :mitre-ids ("T1499"),
+    :conditions
+    ({:description "Firewall available",
+      :params {:firewall-network "10.185.2.96/28"},
+      :args {:victim-ip :flow-destination-ip},
+      :query (and (:victim-ip *args*)
+                  (let [ip->long #(reduce (fn [acc b] (+ (bit-shift-left acc 8) (bit-and b 0xFF)))
+                                          0
+                                          (.getAddress (java.net.InetAddress/getByName %)))
+                        [net mask-bits] (clojure.string/split (:firewall-network *args*) #"/")
+                        mask-bits (Integer/parseInt mask-bits)
+                        ip-long (ip->long (:victim-ip *args*))
+                        net-long (ip->long net)
+                        mask (bit-shift-left -1 (- 32 mask-bits))]
+                    (= (bit-and ip-long mask)
+                       (bit-and net-long mask))))},
+     {:description "DoS alert type",
+      :params {:valid-identifiers ("Slowloris")},
+      :args {:attack-type :flow-attack-type},
+      :query (and (:attack-type *args*)
+                  (some #(= (:attack-type *args*) %)
+                        (:valid-identifiers *args*)))}),
+    :next (),
+    :previous ()}),
+  :attacks {},
+  :initial-node #uuid "69573b91-b21e-4df4-8714-36514ddd46be"}
+ {:description "Pilot 1 - CARM - Bruteforce",
+  :nodes
+  ({:id #uuid "81e4d895-502a-4a15-84e7-c142392062a5",
+    :description "Bruteforce attack using Hydra",
+    :mitre-ids ("T1110"),
+    :conditions
+    ({:description "Firewall available",
+      :params {:firewall-network "10.185.2.96/28"},
+      :args {:victim-ip :flow-destination-ip},
+      :query (and (:victim-ip *args*)
+                  (let [ip->long #(reduce (fn [acc b] (+ (bit-shift-left acc 8) (bit-and b 0xFF)))
+                                          0
+                                          (.getAddress (java.net.InetAddress/getByName %)))
+                        [net mask-bits] (clojure.string/split (:firewall-network *args*) #"/")
+                        mask-bits (Integer/parseInt mask-bits)
+                        ip-long (ip->long (:victim-ip *args*))
+                        net-long (ip->long net)
+                        mask (bit-shift-left -1 (- 32 mask-bits))]
+                    (= (bit-and ip-long mask)
+                       (bit-and net-long mask))))},
+     {:description "Bruteforce alert type",
+      :params {:valid-identifiers ("Bruteforce")},
+      :args {:attack-type :flow-attack-type},
+      :query (and (:attack-type *args*)
+                  (some #(= (:attack-type *args*) %)
+                        (:valid-identifiers *args*)))}),
+    :next (),
+    :previous ()}),
+  :attacks {},
+  :initial-node #uuid "81e4d895-502a-4a15-84e7-c142392062a5"}]

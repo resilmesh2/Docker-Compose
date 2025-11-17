@@ -1,0 +1,160 @@
+<h1>Subnets Graph</h1>
+<div class="top-bar">
+    <mat-button-toggle-group
+        [(ngModel)]="ipVersion"
+        aria-label="IP version selection"
+        (change)="onIpVersionChange()"
+    >          
+        <mat-button-toggle value="v4" checked>IPv4</mat-button-toggle>
+        <mat-button-toggle value="v6">IPv6</mat-button-toggle>
+    </mat-button-toggle-group>
+</div>
+
+<sentinel-card class="graph-card" [controls]="controls">
+  <div class="content-container">
+    <div class="graph-wrapper">
+      @if (graphLoading) {
+        <ng-container>
+          <div class="loader">
+            <mat-spinner></mat-spinner>
+          </div>
+        </ng-container>
+      } @else if (!graphLoading && errorMessage) {
+        <ng-container>
+          <p class="error-message">{{ errorMessage }}</p>
+        </ng-container>
+      } @else if (subnets().length > 0 && !graphLoading && !errorMessage && nodes() && edges()) {
+        <ngx-graph
+            [autoCenter]="true"
+            [autoZoom]="true"
+            [center$]="center$"
+            class="missions-graph"
+            [links]="edges()"
+            [nodes]="nodes()"
+            [layout]="customLayout"
+            (select)="selectNode($event)"
+            style="width: 100%; height: 100%;"
+        >
+            <ng-template #defsTemplate>
+                <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+                <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+                </svg:marker>
+            </ng-template>
+
+            <ng-template #clusterTemplate let-cluster>
+                <svg:g
+                class="node cluster"
+                matTooltip="{{ cluster.label }}"
+                matTooltipPosition="above">
+                >
+                <svg:rect
+                    rx="5"
+                    ry="5"
+                    [attr.width]="cluster.dimension.width"
+                    [attr.height]="cluster.dimension.height"
+                    [attr.fill]="cluster.data.color"
+                />
+                </svg:g>
+            </ng-template>
+
+            <ng-template #nodeTemplate let-node>
+                <svg:g
+                    class="node"
+                    matTooltip="{{ node.data.note ?? '---' }}"
+                    matTooltipPosition="above"
+                    [style.cursor]="'pointer'"
+                >
+                <svg:rect
+                    [attr.width]="node.dimension.width"
+                    [attr.height]="node.dimension.height"
+                    [attr.fill]="node.data.disabled ? 'red' : node.data.customColor"
+                    [attr.stroke]="'transparent'"
+                    [attr.rx]="4"
+                    [attr.ry]="4"
+                />
+                <svg:text
+                    [attr.fill]="node.data.disabled ? '#fff' : node.data.textColor"
+                    dominant-baseline="middle" 
+                    text-anchor="middle" 
+                    [attr.x]="node.dimension.width / 2" 
+                    [attr.y]="node.dimension.height / 2"
+                >
+                    {{ node.label }}
+                </svg:text>
+                </svg:g>
+            </ng-template>
+
+            <ng-template #linkTemplate let-link>
+                <svg:g class="edge">
+                <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+                <svg:text class="edge-label" text-anchor="middle">
+                    <textPath
+                        class="text-path"
+                        [attr.href]="'#' + link.id"
+                        [style.dominant-baseline]="link.dominantBaseline"
+                        startOffset="50%"
+                    >
+                    {{ link.label }}
+                    </textPath>
+                </svg:text>
+                </svg:g>
+            </ng-template>
+        </ngx-graph>
+      } @else {
+        <p class="empty">No subnets available.</p>
+      }
+    </div>
+    <div class="node-wrapper">
+        <ng-container>
+          <div class="node-detail">
+            @if (selectedNode() && selectedNode()?.id !== '') {
+              <div class="badge" [style.background-color]="selectedNode()?.data.customColor" [style.color]="selectedNode()?.data.textColor">
+                <span>{{ selectedNode()?.data.type }}</span>
+              </div>
+              <h2>{{ selectedNode()?.label }}</h2>
+              <hr />
+              <p class="attributes-title">Attributes:</p>
+              <ul class="node-attributes">
+                <li>
+                  <strong>Name:</strong>
+                  @if (selectedNode()?.data?.note && selectedNode()?.data?.note != "" && selectedNode()?.data?.note != null && selectedNode()?.data?.note != "---") {
+                    <span class="badge attribute">
+                      {{ selectedNode()?.data.note }}
+                    </span>
+                  } @else {
+                    <span class="badge attribute">---</span>
+                  }
+                </li>
+                <li>
+                  <strong>Parent subnet:</strong>
+                  <a class="badge attribute" (click)="navigateToSubnetDetail(selectedNode()?.data.parentSubnet)">
+                     {{selectedNode()?.data?.parentSubnet != "" ?  selectedNode()?.data.parentSubnet : "---"}}
+                  </a>
+                </li>
+                <li>
+                  <strong>Organization unit:</strong>
+                  <a class="badge attribute" (click)="navigateToOrgUnitDetail(selectedNode()?.data.organizationUnit)">
+                     {{selectedNode()?.data?.organizationUnit ?? "---"}}
+                  </a>
+                </li>
+                <li>
+                  <strong>Contacts:</strong>
+                    @if(selectedNode()?.data.contacts && selectedNode()?.data.contacts.length > 0) {
+                      @for (contact of selectedNode()?.data.contacts || []; track contact; let index = $index) {
+                        <a href="mailto:{{ contact }}" class="badge attribute contact-link">
+                          {{ contact }}
+                        </a>
+                      }
+                    } @else {
+                      <span class="badge attribute"> --- </span>
+                    }
+                </li>
+              </ul>
+            } @else {
+              <p class="vertical-center">No node selected.</p>
+            }
+          </div>
+        </ng-container>
+    </div>
+  </div>
+</sentinel-card>

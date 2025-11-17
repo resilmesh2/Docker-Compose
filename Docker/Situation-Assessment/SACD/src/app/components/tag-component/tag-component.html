@@ -1,0 +1,57 @@
+@if (editOn()) {
+  <div class="form-styles">
+    <mat-form-field class="chip-list">
+      <mat-label>Favorite tags</mat-label>
+      <mat-chip-grid #chipGrid aria-label="tag selection">
+        @for (tag of tags(); track $index) {
+          <mat-chip-row (removed)="remove(tag)">
+            {{tag}}
+            <button matChipRemove [attr.aria-label]="'remove ' + tag">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        }
+        <input
+          name="currentTag"
+          placeholder="New tag..."
+          #tagInput
+          [(ngModel)]="currentTag"
+          [matChipInputFor]="chipGrid"
+          [matAutocomplete]="auto"
+          [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+          (matChipInputTokenEnd)="add($event)"
+        />
+      </mat-chip-grid>
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event); tagInput.value = ''">
+        @for (tag of filteredTags(); track tag) {
+          <mat-option [value]="tag">{{tag}}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+    <div class="button-group">
+      <button
+        mat-icon-button class="save-btn"
+        (click)="saveChanges()"
+        matTooltip="Save changes"
+        matTooltipPosition="above"
+      >
+        <mat-icon>check</mat-icon>
+      </button>
+      <button
+        mat-icon-button 
+        class="cancel-btn" 
+        (click)="discardChanges()"
+        matTooltip="Discard changes"
+        matTooltipPosition="above"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+} @else {
+  <mat-chip-set class="chip-container" (dblclick)="changeEditStatus()" aria-label="Fish selection">
+    @for (tag of tags(); track $index) {
+      <mat-chip>{{tag}}</mat-chip>
+    }
+  </mat-chip-set>
+}

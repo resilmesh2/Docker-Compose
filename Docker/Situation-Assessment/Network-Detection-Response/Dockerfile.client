@@ -1,0 +1,23 @@
+FROM ubuntu:20.04
+
+# Set environment variable for non-interactive frontend
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install necessary dependencies
+RUN apt-get update && \
+    apt-get install -y git wget cmake gcc g++ cpp curl software-properties-common
+
+# Install Node.js and npm
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
+# Install serve globally
+RUN npm install -g serve
+
+COPY . /ndr-app
+WORKDIR /ndr-app/src/client
+RUN npm install -f
+RUN npm run build
+EXPOSE 3000
+WORKDIR /ndr-app/src/client/build
+CMD ["serve", "-s", "."]

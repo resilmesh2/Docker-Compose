@@ -1,0 +1,79 @@
+version: "3"
+services:
+    attacker:
+        image: kalilinux/kali-rolling
+        volumes:
+            - ./payload:/etc/payload
+        restart: always
+        tty: true
+        cap_add:
+        - NET_ADMIN
+        - NET_RAW
+        networks:
+            resilmesh:
+                ipv4_address: 192.168.0.2
+        ports:
+        - "4444:4444"
+    solution:
+        image: debian:latest
+        volumes:
+            - ./app:/etc/app
+        restart: always
+        tty: true
+        networks:
+            resilmesh:
+                ipv4_address: 192.168.0.3
+    orchestrator:
+        image: debian:latest
+        restart: always
+        tty: true
+        networks:
+            resilmesh:
+                ipv4_address: 192.168.0.4
+    plc:
+        image: tuttas/openplc_v3
+        ports:
+            - "8080:8080"                               #user:openplc password:openplc
+            - "502:502"
+        restart: always
+        networks:
+            resilmesh:
+                ipv4_address: 192.168.0.5
+    robot:
+        image: debian:9
+        restart: always
+        tty: true
+        networks:
+            resilmesh:
+                ipv4_address: 192.168.0.6
+    neo4j:
+        image: neo4j:5.14
+        container_name: neo4j
+        restart: unless-stopped
+        ports:
+            - "7474:7474"   # HTTP interface (Neo4j Browser)
+            - "7687:7687"   # Bolt protocol (for drivers)
+        environment:
+            NEO4J_AUTH: neo4j/testtest
+            NEO4J_PLUGINS: '["apoc"]'  # Optional: APOC procedures
+            NEO4J_dbms_memory_pagecache_size: 1G
+            NEO4J_dbms_memory_heap_initial__size: 512M
+            NEO4J_dbms_memory_heap_max__size: 1G
+        volumes:
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+            - neo4j_plugins:/plugins
+            - neo4j_import:/var/lib/neo4j/import
+
+networks:
+    resilmesh:
+        ipam:
+            driver: default
+            config:
+                - subnet: "192.168.0.0/24"
+
+volumes:
+    neo4j_data:
+    neo4j_logs:
+    neo4j_plugins:
+    neo4j_import:

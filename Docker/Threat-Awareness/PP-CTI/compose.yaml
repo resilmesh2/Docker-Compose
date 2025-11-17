@@ -1,0 +1,14 @@
+include:
+  - path: arxlet/compose.yaml
+    project_directory: arxlet
+  - path: anonymizer/compose.yaml
+    project_directory: anonymizer
+  - path: flaskdp/compose.yaml
+    project_directory: flaskdp
+  - path: frontend/compose.yaml
+    project_directory: frontend
+
+networks:
+  resilmesh:
+    external: true
+    name: resilmesh_network

@@ -1,0 +1,176 @@
+
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+
+@use '@angular/material' as mat;
+@use '@sentinel/layout/theming' as sentinel;
+@use '@sentinel/layout/sentinel-layout-theme' as layout;
+@use '@sentinel/layout/notification-card-mixin' as notification-card;
+@use '@sentinel/layout/sidebar-mixin' as sidebar;
+@use 'material-symbols';
+
+$resilmesh-palette: (
+  50: "#e8ebee",
+  100: "#c5ccd8",
+  200: "#a1abbd",
+  300: "#7f8aa1",
+  400: "#64718e",
+  500: "#4a5a7e",
+  600: "#435276",
+  700: "#3b486a",
+  800: "#343f5d",
+  900: "#2a2f43",
+ contrast: (
+   50: rgba(black, 0.87),
+   100: rgba(black, 0.87),
+   200: rgba(black, 0.87),
+   300: rgba(black, 0.87),
+   400: white,
+   500: white,
+   600: white,
+   700: white,
+   800: white,
+   900: white
+ )
+);
+
+$resilmesh-palette-accent: (
+  50: "#e0f4fc",
+  100: "#b0e3f7",
+  200: "#7bd1f1",
+  300: "#44bfec",
+  400: "#01b2ea",
+  500: "#00a5e8",
+  600: "#0097da",
+  700: "#0084c7",
+  800: "#0073b3",
+  900: "#005493",
+ contrast: (
+   100: rgba(black, 0.87),
+   200: rgba(black, 0.87),
+   400: white,
+ )
+);
+
+$resilmesh-palette-accent-test: (
+  50: "#dcf0fb",
+  100: "#bad7e1",
+  200: "#98bac7",
+  300: "#749dad",
+  400: "#5a8899",
+  500: "#3d7387",
+  600: "#326576",
+  700: "#245261",
+  800: "#173f4c",
+  900: "#052a35",
+  contrast: (
+   50: rgba(black, 0.87),
+   100: rgba(black, 0.87),
+   200: rgba(black, 0.87),
+   300: rgba(black, 0.87),
+   400: rgba(black, 0.87),
+   500: white,
+   600: white,
+   700: white,
+   800: white,
+   900: white
+ )
+);
+
+$resilmesh-palette-warn: (
+  50: "#fae5e9",
+  100: "#f5bfc8",
+  200: "#ed97a4",
+  300: "#e57282",
+  400: "#dd5b6a",
+  500: "#d54d55",
+  600: "#c54752",
+  700: "#b0414e",
+  800: "#9c3b4b",
+  900: "#763243"
+);
+
+
+$resilmesh-primary-palette: mat.m2-define-palette($resilmesh-palette, 700, 600, 500); // mat.$m2-indigo-palette,
+$resilmesh-accent-palette:  mat.m2-define-palette($resilmesh-palette-accent, 200, 100, 400); //mat.$m2-blue-palette, A200, A100, A400
+$resilmesh-warn-palette:    mat.m2-define-palette(mat.$m2-red-palette);
+
+$resilmesh-theme: mat.m2-define-light-theme((
+    color: (
+      primary: $resilmesh-primary-palette,
+      accent: $resilmesh-accent-palette,
+      warn: $resilmesh-warn-palette
+    ),
+    density: 0
+));
+
+
+@include mat.core();
+@include mat.all-component-themes($resilmesh-theme);
+@include mat.all-component-typographies(sentinel.$m2-sentinel-typography);
+@include layout.sentinel-layout-theme($resilmesh-theme);
+@include sidebar.sidebar-page-layout-theme($resilmesh-theme);
+@include notification-card.notification-card-theme($resilmesh-theme);
+
+// :root {
+//   --color-primary: #{map-get(map-get($resilmesh-theme, 'primary'), 700)};
+//   --color-accent: #{map-get(map-get($resilmesh-theme, 'accent'), 200)};
+//   // --color-warn: #{mat-color($resilmesh-warn-palette)};
+//   // --color-success: #{mat-color($app-success)};
+// }
+
+:root {
+  font-family: sentinel.$sentinel-base-font;
+
+  @include mat.snack-bar-overrides((
+    button-color: #FFFFFF,
+    container-color: #343F5D,
+  ));
+
+  @include mat.button-toggle-overrides((
+    selected-state-text-color: #FFFFFF,
+    selected-state-background-color: #E4295F, //#E4295F, //#3f51b5, //#44BFEC,
+    disabled-state-background-color: #CACACA,
+    disabled-selected-state-background-color: red,
+    label-text-weight: bold,
+  ));
+
+  --mat-divider-color : #777680;
+
+  // Width of the custom nav
+  mat-drawer.mat-drawer {
+      width: 12em !important;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+.mat-toolbar.mat-primary {
+  --mat-toolbar-container-background-color: #E4295F; //#324376; //#44BFEC;
+}
+
+.nav-drawer.mat-drawer {
+  background-color: #343F5D; //#212951
+  background-image: none;
+}
+
+.mat-mdc-row .mat-mdc-cell {
+  font-size: 1.2em;
+}
+
+.sentinel-logo {
+  width: 75%;
+}
+
+mat-drawer .mat-drawer-inner-container {
+    overflow-x: hidden;
+}
+
+.mat-icon {
+    font-variation-settings: 'FILL' 1 !important;
+}

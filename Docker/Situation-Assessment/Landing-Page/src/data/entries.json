@@ -1,0 +1,88 @@
+{
+    "entries": [
+        {
+            "id": "sacd",
+            "title": "SACD",
+            "link": "http://localhost:4200",
+            "description": "SACD dashboard and management interface",
+            "icon": "material-symbols:dashboard-rounded"
+        },
+        {
+            "id": "wazuh",
+            "title": "Wazuh",
+            "link": "http://localhost:443",
+            "description": "Open source SIEM",
+            "icon": "material-symbols:dashboard-rounded"
+        },
+        {
+            "id": "nse",
+            "title": "NSE",
+            "link": "https://localhost:3002",
+            "description": "Provides a risk assessment status for the network as a whole and allows to drill down to examine risk",
+            "icon": "mdi:network"
+        },
+        {
+            "id": "ndr",
+            "title": "NDR",
+            "link": "http://localhost:3000",
+            "description": "Provides an anomaly detection and response capability for network traffic.",
+            "icon": "material-symbols:crisis-alert-rounded"
+        },
+        {
+            "id": "mm",
+            "title": "Mitigation Manager",
+            "link": "http://localhost:8002",
+            "description": "Mitigates Alerts, subscribes to specific NATS topic. Uses playbooks tool",
+            "icon": "mdi:shield"
+        },
+        {
+            "id": "temporal",
+            "title": "Temporal",
+            "link": "http://localhost:8000",
+            "description": "Temporal component",
+            "icon": "simple-icons:temporal"
+        },
+        {
+            "id": "neo4j",
+            "title": "Neo4j",
+            "link": "http://localhost:7474",
+            "description": "Neo4j graph database web UI",
+            "icon": "simple-icons:neo4j"
+        },
+        {
+            "id": "isim-rest-api",
+            "title": "ISIM REST API",
+            "link": "http://localhost:8000",
+            "description": "Handles data from the scans (bbdd), several API",
+            "icon": "material-symbols:api-rounded"
+        },
+        {
+            "id": "isim-graphql",
+            "title": "ISIM GraphQL",
+            "link": "http://localhost:4001",
+            "description": "GraphQL API",
+            "icon": "simple-icons:graphql"
+        },
+        {
+            "id": "resilmesh-docs",
+            "title": "Resilmesh Docs",
+            "link": "https://docs.resilmesh.eu/",
+            "description": "Documentation for Resilmesh components",
+            "icon": "mdi:book-open-page-variant"
+        },
+        {
+            "id": "resilmesh-github",
+            "title": "Resilmesh GitHub",
+            "link": "https://github.com/resilmesh2",
+            "description": "Source code and repositories for Resilmesh projects",
+            "icon": "mdi:github"
+        },
+        {
+            "id": "resilmesh-website",
+            "title": "Resilmesh Website",
+            "link": "https://resilmesh.eu/",
+            "description": "Official Resilmesh website",
+            "icon": "mdi:web"
+        }
+    ]
+}

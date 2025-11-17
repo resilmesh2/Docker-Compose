@@ -1,0 +1,4 @@
+include:
+  - path: ./Mitigation-manager/compose.yaml
+  - path: ./Playbooks-tool/compose.yaml
+  - path: ./Workflow-Orchestrator/compose.yml

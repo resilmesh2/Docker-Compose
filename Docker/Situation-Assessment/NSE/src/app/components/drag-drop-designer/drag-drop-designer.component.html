@@ -1,0 +1,906 @@
+<div class="risk-calculator-designer">
+  <div class="designer-header">
+    <h3>Risk Calculation Configurator</h3>
+    <p>Customize how risk scores are calculated using ISIM data components</p>
+    
+    <div class="designer-actions">
+      <button class="btn btn-info" (click)="scanForNeo4jComponents()" [disabled]="isLoadingComponents" title="Scan Neo4j for new component properties">
+        <i class="bi bi-search"></i> Scan ISIM
+      </button>
+      <button class="btn btn-outline" (click)="saveCurrentFormulaAsCustom()" [disabled]="riskFormula.length === 0">
+        Save as Custom Formula
+      </button>
+      <button class="btn btn-secondary" (click)="clearFormula()">Clear Formula</button>
+      <button class="btn btn-primary" (click)="saveConfiguration()">Save Configuration</button>
+    </div>
+  </div>
+
+  <!-- Workflow Mode Header -->
+<div *ngIf="automationWorkflowMode && selectedAutomation" class="automation-workflow-header">
+  <h4>Editing Automation: {{ getComponentName(selectedAutomation) }}</h4>
+  <p style="margin: 0; font-size: 14px; color: #666;">
+    Modify the components and workflow of this automation. Changes will be saved to the automation configuration.
+  </p>
+  <div class="workflow-actions">
+    <button class="btn btn-success btn-workflow" (click)="saveAutomationWorkflow()">
+      Save Workflow Changes
+    </button>
+    <button class="btn btn-secondary btn-workflow" (click)="exitAutomationWorkflowMode()">
+      Exit Without Saving
+    </button>
+  </div>
+</div>
+
+  <div class="designer-workspace">
+    <!-- Components Palette -->
+    <div class="components-palette">
+      <div class="palette-header">
+        <h4>Available Risk Components</h4>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoadingComponents" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Components...</div>
+      </div>
+
+      <!-- COMPONENTS VIEW -->
+      <div *ngIf="!isLoadingComponents" class="components-list">
+        
+        <!-- Components Grid -->
+        <div class="component-list" 
+            cdkDropList 
+            #componentList="cdkDropList"
+            [cdkDropListData]="availableComponents"
+            [cdkDropListConnectedTo]="[formulaArea]"
+            (cdkDropListDropped)="drop($event)">
+          
+          <div *ngFor="let component of availableComponents" 
+              class="component-item" 
+              [attr.data-type]="component.type"
+              cdkDrag>
+            <div class="component-preview">
+              <span class="component-icon">{{component.icon}}</span>
+              <div class="component-info">
+                <span class="component-name">{{component.name}}</span>
+                <span class="component-desc">{{component.description}}</span>
+                <span class="component-type">{{component.type.toUpperCase()}}</span>
+                
+                <!-- Show if composite -->
+                <div *ngIf="component.isComposite" class="component-composite">
+                  Composite: {{component.compositeOf?.join(' + ')}}
+                </div>
+                
+                <!-- Show statistics -->
+                <div class="component-stats">
+                  {{getComponentStatistics(component)}}
+                </div>
+                
+                <!-- Show ISIM property -->
+                <div class="component-property">
+                  Property: {{component.neo4jProperty}}
+                </div>
+              </div>
+              
+              <!-- Delete button for custom components -->
+              <div *ngIf="component.type === 'custom'" class="component-actions">
+                <button 
+                  class="btn btn-danger btn-xs" 
+                  (click)="deleteCustomComponent(component); $event.stopPropagation()"
+                  title="Delete custom component">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculation Methods -->
+        <div class="calculation-methods">
+          <h5>Calculation Method</h5>
+          <div class="method-selector">
+            <div *ngFor="let method of availableMethods" 
+                 class="method-option"
+                 [class.selected]="selectedMethod === method.id"
+                 (click)="onMethodChange(method.id)">
+              <span class="method-icon">{{method.icon}}</span>
+              <div class="method-info">
+                <span class="method-name">{{method.name}}</span>
+                <span class="method-desc">{{method.description}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Automations Section -->
+        <div class="automations-management" style="margin-top: 20px; border-top: 1px solid #dee2e6; padding-top: 15px;">
+          <div class="automations-header-simple">
+            <h5 style="margin: 0 0 10px 0; display: flex; justify-content: space-between; align-items: center;">
+              <span>Active Automations</span>
+              <button (click)="loadActiveAutomations()" class="btn btn-outline-primary btn-xs" [disabled]="isLoadingAutomations">
+                <span *ngIf="isLoadingAutomations">...</span>
+                <span *ngIf="!isLoadingAutomations">Refresh</span>
+              </button>
+            </h5>
+            
+            <div class="automation-filters-simple" style="margin-bottom: 10px;">
+              <button 
+                (click)="automationFilter = 'all'" 
+                class="btn btn-xs filter-btn"
+                [class.active]="automationFilter === 'all'">
+                All ({{ activeAutomations.length }})
+              </button>
+              <button 
+                (click)="automationFilter = 'enabled'" 
+                class="btn btn-xs filter-btn"
+                [class.active]="automationFilter === 'enabled'">
+                Active ({{ getActiveAutomationsCount() }})
+              </button>
+              <button 
+                (click)="automationFilter = 'disabled'" 
+                class="btn btn-xs filter-btn"
+                [class.active]="automationFilter === 'disabled'">
+                Paused ({{ getDisabledAutomationsCount() }})
+              </button>
+              <button 
+                (click)="viewAutomationsInTreemap()" 
+                class="btn btn-xs filter-btn"
+                style="margin-left: 8px; background: #28a745; color: white; border-color: #28a745;">
+                View All in Treemap
+              </button>
+            </div>
+          </div>
+
+          <div class="automations-list-compact" *ngIf="!isLoadingAutomations">
+            <div *ngIf="getFilteredAutomations().length === 0" class="no-automations-compact">
+              <p style="font-size: 12px; color: #6c757d; margin: 10px 0; text-align: center;">
+                No automations match current filter
+              </p>
+            </div>
+
+            <div 
+              *ngFor="let automation of getFilteredAutomations()" 
+              class="automation-card-compact"
+              [class.disabled]="!automation.enabled"
+              [class.clickable]="true"
+              (click)="loadAutomationWorkflow(automation, $event)"
+              style="cursor: pointer;">
+              
+              <div class="automation-info-compact">
+                <div class="automation-name-compact">{{ getComponentName(automation) }}</div>
+                <div class="automation-details-compact">
+                  <span class="automation-status-compact" [class]="getAutomationStatusClass(automation)">
+                    {{ getAutomationStatusText(automation) }}
+                  </span>
+                  <span class="automation-frequency-compact">{{ formatUpdateFrequency(automation.update_frequency || automation.updateFrequency) }}</span>
+                  <span class="automation-target-compact">{{ getAutomationTarget(automation) }}</span>
+                </div>
+                <div class="automation-timing-compact" *ngIf="getAutomationStatusText(automation) !== 'Paused'">
+                <span class="automation-timer-compact">⏱️ {{ getAutomationTimerDisplay(automation) }}</span>
+                <span class="automation-last-run-compact">Last: {{ formatLastRun(automation.last_run || automation.lastRun) }}</span>
+                <span class="automation-nodes-compact" *ngIf="getNodesUpdated(automation)">{{ getNodesUpdated(automation) }}</span>
+              </div>
+              </div>
+              
+              <div class="automation-actions-compact">
+                <button 
+                  (click)="configureAutomationSchedule(automation)"
+                  class="btn btn-xs btn-secondary"
+                  title="Configure Schedule">
+                  ⚙️
+                </button>
+                
+                <button 
+                  *ngIf="automation.enabled" 
+                  (click)="pauseAutomation(automation)"
+                  class="btn btn-xs btn-warning"
+                  title="Pause">
+                  ⏸
+                </button>
+                <button 
+                  *ngIf="!automation.enabled" 
+                  (click)="resumeAutomation(automation)"
+                  class="btn btn-xs btn-success"
+                  title="Resume">
+                  ▶
+                </button>
+                <button 
+                  (click)="deleteAutomation(automation)"
+                  class="btn btn-xs btn-danger"
+                  title="Delete">
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="isLoadingAutomations" class="loading-automations">
+            <p style="font-size: 12px; color: #6c757d; text-align: center;">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Create Custom Component Button -->
+        <div class="config-section" style="margin-top: 20px; border-top: 1px solid #dee2e6; padding-top: 15px;">
+          <label>Add Custom Component:</label>
+          <button class="btn btn-outline" (click)="addCustomComponent()">+ Add Custom</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Formula Builder -->
+    <div class="formula-builder">
+      <h4>Risk Calculation Formula</h4>
+      <div class="formula-area" 
+           cdkDropList 
+           #formulaArea="cdkDropList"
+           [cdkDropListData]="riskFormula"
+           [cdkDropListConnectedTo]="[componentList]"
+           (cdkDropListDropped)="drop($event)">
+        
+        <div *ngFor="let component of riskFormula; let i = index" 
+          class="formula-component enhanced" 
+          cdkDrag>
+        <div class="component-header">
+          <div class="component-title-section">
+            <span class="component-icon">{{component.icon}}</span>
+            <div class="title-info">
+              <span class="component-title">{{component.name}}</span>
+              <span class="component-type">{{component.type || 'Risk Factor'}}</span>
+            </div>
+          </div>
+          <button class="remove-btn" (click)="removeFromFormula(i)">×</button>
+        </div>
+        
+        <div class="component-body">
+          <div class="weight-section">
+            <div class="weight-control">
+              <label class="weight-label">Weight</label>
+              <div class="weight-input-group">
+                <input type="number" 
+                      [value]="component.weight" 
+                      (input)="updateWeight(component, $event)"
+                      step="0.1" 
+                      min="0" 
+                      max="1"
+                      class="weight-input">
+                <span class="weight-percentage">{{(component.weight * 100).toFixed(1)}}%</span>
+              </div>
+            </div>
+            
+            <div class="weight-bar-container">
+              <div class="weight-bar">
+                <div class="weight-fill" 
+                    [style.width.%]="component.weight * 100"
+                    [class.weight-high]="component.weight > 0.4"
+                    [class.weight-medium]="component.weight > 0.2 && component.weight <= 0.4"
+                    [class.weight-low]="component.weight <= 0.2">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="component-description" *ngIf="component.description">
+            {{component.description}}
+          </div>
+        </div>
+      </div>
+
+        <!-- Empty state -->
+        <div *ngIf="riskFormula.length === 0" class="empty-formula">
+          <div class="empty-icon">🧮</div>
+          <h5>Build Your Risk Formula</h5>
+          <p>Drag risk components from the left panel to create your custom calculation</p>
+          <p class="empty-hint">Or load a predefined formula from the right panel</p>
+        </div>
+      </div>
+
+      <!-- Formula Preview -->
+      <div class="formula-preview" *ngIf="riskFormula.length > 0">
+        <h5>Formula Preview</h5>
+        <div class="preview-calculation">
+          <div class="calculation-display">
+            <div class="method-label">{{selectedMethod.replace('_', ' ').toUpperCase()}}:</div>
+            <div class="formula-expression">
+              <span *ngIf="selectedMethod === 'weighted_avg'">
+                {{getWeightedFormulaExpression()}}
+              </span>
+              <span *ngIf="selectedMethod === 'max'">
+                {{getMaxFormulaExpression()}}
+              </span>
+              <span *ngIf="selectedMethod === 'sum'">
+                {{getSumFormulaExpression()}}
+              </span>
+              <span *ngIf="selectedMethod === 'custom_formula'">
+                <div class="custom-formula-input">
+                  <label for="customFormulaField">Custom Formula:</label>
+                  <textarea 
+                    id="customFormulaField"
+                    [(ngModel)]="customFormula"
+                    placeholder="Components will auto-populate when dragged. Edit operators as needed."
+                    class="form-control"
+                    rows="2"
+                    style="margin-top: 5px; font-family: 'Courier New', monospace; resize: vertical;">
+                  </textarea>
+                  
+                  <div class="formula-hint" style="font-size: 11px; color: #666; margin-top: 5px;">
+                    Components auto-populate with + operators. Edit manually for custom calculations.
+                    <br>Example: <code>(CVSS Score * 0.6) + (Threat Score * 0.4)</code>
+                    <span *ngIf="isCustomFormulaEdited()" style="color: #007bff; font-weight: bold;">
+                      <br>✏️ Custom formula detected
+                    </span>
+                  </div>
+                </div>
+              </span>
+              <span *ngIf="selectedMethod !== 'weighted_avg' && selectedMethod !== 'max' && selectedMethod !== 'sum' && selectedMethod !== 'custom_formula'">
+                {{getGenericFormulaExpression()}}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formula Summary -->
+        <div class="formula-summary" *ngIf="riskFormula.length > 0">
+          <div class="total-weight">
+            <strong>Total Weight: {{ getTotalWeight().toFixed(3) }}</strong>
+            <span 
+              class="weight-status" 
+              [class.valid]="isValidWeight()" 
+              [class.invalid]="!isValidWeight()">
+              {{ isValidWeight() ? 'Valid' : 'Must equal 1.0' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Panel -->
+    <div class="config-panel">
+      <h4>Available Formulas</h4>
+      
+      <!-- Loading State -->
+      <div *ngIf="isLoadingFormulas" class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Formulas...</div>
+      </div>
+
+      <!-- Formulas Content -->
+      <div *ngIf="!isLoadingFormulas">
+        
+        <!-- Active Formula Display -->
+        <div class="active-formula-indicator" *ngIf="activeFormula">
+          <div class="active-label">Currently Active:</div>
+          <div class="active-formula-name">{{ activeFormula.name }}</div>
+          <div class="active-formula-type">{{ activeFormula.type.toUpperCase() }}</div>
+        </div>
+
+        <!-- Predefined Formulas -->
+        <div class="formula-category" *ngIf="predefinedFormulas.length > 0">
+          <h5>Predefined Formulas</h5>
+          <div 
+            *ngFor="let formula of predefinedFormulas" 
+            class="formula-item"
+            [class.active-formula]="isActiveFormula(formula)"
+            (click)="loadFormulaFromLeftPanel(formula)">
+            
+            <div class="formula-header">
+              <div class="formula-name">{{ formula.name }}</div>
+              <div class="formula-badge predefined">PREDEFINED</div>
+            </div>
+            
+            <div class="formula-description">{{ formula.description }}</div>
+            
+            <div class="formula-components-mini">
+              <span *ngFor="let component of getFormulaComponentsArray(formula)" 
+                    class="component-mini">
+                {{ getComponentDisplayName(component.key) }}: {{ (component.value * 100).toFixed(0) }}%
+              </span>
+            </div>
+            
+            <div class="formula-actions">
+              <button 
+                class="btn btn-success btn-xs" 
+                (click)="setActiveFormula(formula); $event.stopPropagation()"
+                [disabled]="isActiveFormula(formula)">
+                {{ isActiveFormula(formula) ? 'Active' : 'Set Active' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Formulas -->
+        <div class="formula-category" *ngIf="customFormulas.length > 0">
+          <h5>Custom Formulas</h5>
+          <div 
+            *ngFor="let formula of customFormulas" 
+            class="formula-item custom-formula"
+            [class.active-formula]="isActiveFormula(formula)"
+            (click)="loadFormulaFromLeftPanel(formula)">
+            
+            <div class="formula-header">
+              <div class="formula-name">{{ formula.name }}</div>
+              <div class="formula-badge custom">CUSTOM</div>
+            </div>
+            
+            <div class="formula-description">{{ formula.description }}</div>
+            
+            <div class="formula-components-mini">
+              <span *ngFor="let component of getFormulaComponentsArray(formula)" 
+                    class="component-mini">
+                {{ getComponentDisplayName(component.key) }}: {{ (component.value * 100).toFixed(0) }}%
+              </span>
+            </div>
+            
+            <div class="formula-actions">
+              <button 
+                class="btn btn-success btn-xs" 
+                (click)="setActiveFormula(formula); $event.stopPropagation()"
+                [disabled]="isActiveFormula(formula)">
+                {{ isActiveFormula(formula) ? 'Active' : 'Set Active' }}
+              </button>
+              <button 
+                class="btn btn-danger btn-xs" 
+                (click)="deleteCustomFormula(formula); $event.stopPropagation()">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Formulas State -->
+        <div *ngIf="predefinedFormulas.length === 0 && customFormulas.length === 0" class="no-formulas">
+          <div class="empty-icon">📋</div>
+          <p>No formulas available</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hierarchical Network Selection Modal -->
+<div class="modal-overlay" *ngIf="showIpModal" (click)="closeIpModal()">
+  <div class="network-selector-modal" (click)="$event.stopPropagation()">
+    <div class="network-selector-header">
+      <h3>Select Networks, Subnets, or IP Addresses</h3>
+      <button (click)="closeIpModal()" class="close-btn">×</button>
+    </div>
+    
+    <div class="network-selector-content">
+      <div class="selector-description">
+        <p>Click network ranges to select entire networks, subnet ranges to select all IPs in that subnet, or individual IP addresses for precise selection.</p>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-bar">
+          <input type="text" 
+                 id="networkSearchInput" 
+                 class="search-input" 
+                 placeholder="Search IPs, hostnames, subnets, or networks..." 
+                 [(ngModel)]="networkSearchTerm"
+                 (keyup)="performNetworkSearch()" 
+                 autocomplete="off">
+          <div class="search-icon">🔍</div>
+          <button class="clear-search" 
+                  *ngIf="networkSearchTerm" 
+                  (click)="clearNetworkSearch()">✕</button>
+        </div>
+        
+        <div class="search-filters">
+          <button class="filter-btn" 
+                  [class.active]="networkSearchFilter === 'all'" 
+                  (click)="setNetworkSearchFilter('all')">All</button>
+          <button class="filter-btn" 
+                  [class.active]="networkSearchFilter === 'networks'" 
+                  (click)="setNetworkSearchFilter('networks')">Networks</button>
+          <button class="filter-btn" 
+                  [class.active]="networkSearchFilter === 'subnets'" 
+                  (click)="setNetworkSearchFilter('subnets')">Subnets</button>
+          <button class="filter-btn" 
+                  [class.active]="networkSearchFilter === 'ips'" 
+                  (click)="setNetworkSearchFilter('ips')">IPs Only</button>
+          <button class="filter-btn" 
+                  [class.active]="networkSearchFilter === 'high-risk'" 
+                  (click)="setNetworkSearchFilter('high-risk')">High Risk</button>
+        </div>
+        
+        <div class="search-results" 
+             *ngIf="networkSearchTerm && networkSearchResults.length > 0">
+          <div class="results-header">
+            <span class="results-count">{{networkSearchResults.length}} results found</span>
+            <button class="expand-all-btn" (click)="expandAllNetworkResults()">Expand All Results</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Hierarchical Network Tree -->
+      <div class="network-tree">
+        <div *ngFor="let network of hierarchicalNetworks; let networkIndex = index" 
+             class="network-node" 
+             [class.expanded]="network.expanded"
+             [class.search-hidden]="network.hidden"
+             [class.search-match]="network.isMatch"
+             [attr.data-network]="network.prefix">
+          
+          <div class="network-header" (click)="toggleNetworkNode(networkIndex)">
+            <span class="expand-icon" (click)="toggleNetworkExpansion(networkIndex, $event)">
+              {{network.expanded ? '▼' : '▶'}}
+            </span>
+            <input type="checkbox" 
+                   class="selection-checkbox" 
+                   [(ngModel)]="network.selected"
+                   (change)="selectEntireNetwork(networkIndex)"
+                   (click)="$event.stopPropagation()">
+            <span class="node-icon">🌐</span>
+            <span class="node-label">{{network.prefix}}.x.x</span>
+            <span class="node-stats">{{network.subnets.length}} subnets</span>
+            <span class="node-stats">{{network.totalDevices}} devices</span>
+            <span class="selection-indicator">{{network.selected ? '✔' : ''}}</span>
+          </div>
+          
+          <div class="subnet-list" *ngIf="network.expanded">
+            <div *ngFor="let subnet of network.subnets; let subnetIndex = index" 
+                class="subnet-container"
+                [class.search-hidden]="subnet.hidden">
+              
+              <!-- Subnet Header Row -->
+              <div class="subnet-item" 
+                  [class.expanded]="subnet.expanded"
+                  [class.selected]="subnet.selected"
+                  [class.search-match]="subnet.isMatch"
+                  [attr.data-subnet]="subnet.subnet">
+                
+                <span class="subnet-expand" 
+                      (click)="toggleSubnetExpansion(networkIndex, subnetIndex, $event)">
+                  {{subnet.expanded ? '▼' : '▶'}}
+                </span>
+                <input type="checkbox" 
+                      class="subnet-checkbox" 
+                      [(ngModel)]="subnet.selected"
+                      (change)="selectEntireSubnet(networkIndex, subnetIndex)"
+                      (click)="$event.stopPropagation()">
+                <span class="subnet-icon">🔗</span>
+                <span class="subnet-name">{{subnet.subnet}}</span>
+                <span class="subnet-stats">{{(subnet.devices?.length || subnet.deviceCount || 0)}} IPs</span>
+                <div class="risk-indicator" 
+                    [class.risk-high]="(subnet.riskScore || 0) >= 7"
+                    [class.risk-medium]="(subnet.riskScore || 0) >= 4 && (subnet.riskScore || 0) < 7"
+                    [class.risk-low]="(subnet.riskScore || 0) < 4"></div>
+              </div>
+              
+              <!-- IP Devices List - Individual rows -->
+              <div class="ip-devices-list" *ngIf="subnet.expanded && subnet.visibleDevices && subnet.visibleDevices.length > 0">
+                <div *ngFor="let ip of subnet.visibleDevices; let ipIndex = index" 
+                    class="ip-item" 
+                    [class.selected]="ip.selected"
+                    [class.search-hidden]="ip.hidden"
+                    [class.search-match]="ip.isMatch"
+                    [attr.data-ip]="ip.ip">
+                  
+                  <input type="checkbox" 
+                        class="ip-checkbox" 
+                        [(ngModel)]="ip.selected"
+                        (change)="selectIndividualIP(networkIndex, subnetIndex, ipIndex)"
+                        (click)="$event.stopPropagation()">
+                  <span class="ip-icon">💻</span>
+                  <span class="ip-address">{{ip.ip}}</span>
+                  <span class="ip-info">{{ip.hostname || 'Unknown'}}</span>
+                  <div class="device-status" [class.inactive]="!ip.isActive"></div>
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="load-more-ips" 
+                    *ngIf="subnet.devices && subnet.devices.length > 0 && subnet.visibleDevices && subnet.visibleDevices.length < subnet.devices.length">
+                  <button (click)="loadMoreIPs(networkIndex, subnetIndex)" class="load-more-btn">
+                    Load More ({{subnet.devices.length - subnet.visibleDevices.length}} remaining)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="selection-summary">
+          <div class="selection-count">{{getNetworkSelectionSummary()}}</div>
+          <div class="selection-details">{{getNetworkSelectionDetails()}}</div>
+        </div>
+        <div>
+          <button (click)="clearAllNetworkSelections()" class="btn btn-secondary">Clear All</button>
+          <button (click)="closeIpModal()" class="btn btn-secondary">Cancel</button>
+          <button (click)="applyToSelectedHierarchy()" 
+                  [disabled]="getTotalSelectedCount() === 0" 
+                  class="btn btn-primary">Apply Configuration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Component Modal -->
+<div class="modal-overlay" *ngIf="showCustomComponentModal" (click)="closeCustomComponentModal()">
+  <div class="custom-component-modal" (click)="$event.stopPropagation()">
+    <div class="custom-component-modal-header">
+      <h3>Add Custom Risk Component</h3>
+      <button (click)="closeCustomComponentModal()" class="close-btn">×</button>
+    </div>
+    <div class="custom-component-modal-content">
+      <form (ngSubmit)="saveCustomComponent()" #customForm="ngForm">
+        <div class="form-group">
+          <label for="componentName">Component Name *</label>
+          <input 
+            type="text" 
+            id="componentName"
+            name="componentName"
+            [(ngModel)]="customComponent.name"
+            #componentName="ngModel"
+            required
+            maxlength="50"
+            placeholder="e.g., Network Latency Score"
+            class="form-input">
+          <div class="form-hint">A descriptive name for your risk component</div>
+          <div *ngIf="componentName.invalid && componentName.touched" class="form-error">
+            Component name is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="componentMaxValue">Maximum Value *</label>
+          <input 
+            type="number" 
+            id="componentMaxValue"
+            name="componentMaxValue"
+            [(ngModel)]="customComponent.maxValue"
+            #componentMaxValue="ngModel"
+            required
+            min="1"
+            max="10"
+            step="0.1"
+            class="form-input">
+          <div class="form-hint">The highest possible score for this component (1-10)</div>
+          <div *ngIf="componentMaxValue.invalid && componentMaxValue.touched" class="form-error">
+            Max value must be between 1 and 10
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <h5>Component Preview</h5>
+          <div class="component-preview-card">
+            <div class="preview-icon">🔧</div>
+            <div class="preview-details">
+              <div class="preview-name">{{customComponent.name || 'Component Name'}}</div>
+              <div class="preview-desc">Custom component for risk assessment</div>
+            </div>
+            <div class="preview-values">
+              <div class="preview-value">Max: {{customComponent.maxValue}}</div>
+              <div class="preview-value">Weight: 0.2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeCustomComponentModal()" class="btn btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="customForm.invalid" class="btn btn-primary">Add Component</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+  <div class="confirmation-modal" (click)="$event.stopPropagation()">
+    <div class="confirmation-modal-header">
+      <h3>{{confirmModalData.title}}</h3>
+    </div>
+    <div class="confirmation-modal-content">
+      <div class="confirmation-message" [innerHTML]="confirmModalData.message"></div>
+    </div>
+    <div class="confirmation-modal-actions">
+      <button (click)="confirmModalData.onCancel()" class="btn btn-secondary">{{confirmModalData.cancelText}}</button>
+      <button *ngIf="confirmModalData.thirdButtonText" (click)="confirmModalData.onThirdButton?.()" class="btn btn-outline">{{confirmModalData.thirdButtonText}}</button>
+      <button (click)="confirmModalData.onConfirm()" class="btn btn-primary">{{confirmModalData.confirmText}}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Modal -->
+<div class="modal-overlay" *ngIf="showAlertModal" (click)="closeAlertModal()">
+  <div class="alert-modal" (click)="$event.stopPropagation()">
+    <div class="alert-modal-header">
+      <h3>{{alertModalData.title}}</h3>
+    </div>
+    <div class="alert-modal-content">
+      <div class="alert-message" [innerHTML]="alertModalData.message"></div>
+    </div>
+    <div class="alert-modal-actions">
+      <button (click)="alertModalData.onClose()" class="btn btn-primary">{{alertModalData.buttonText}}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="notification-container">
+  <div *ngFor="let notification of notifications" 
+       class="notification"
+       [ngClass]="'notification-' + notification.type">
+    <div class="notification-header">
+      <span class="notification-icon">{{getNotificationIcon(notification.type)}}</span>
+      <span class="notification-title">{{notification.title}}</span>
+      <button class="notification-close" (click)="dismissNotification(notification.id)">×</button>
+    </div>
+    <div class="notification-message">{{notification.message}}</div>
+  </div>
+</div>
+
+<!-- Frequency Modal -->
+<div class="modal-overlay" *ngIf="showFrequencyModal" (click)="cancelFrequencyModal()">
+  <div class="selector-modal" (click)="$event.stopPropagation()">
+    <div class="selector-modal-header">
+      <h3>How often should this risk calculation run automatically?</h3>
+      <button (click)="cancelFrequencyModal()" class="close-btn">×</button>
+    </div>
+    <div class="selector-modal-content">
+      <div class="modal-section" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+          Automation Name
+        </label>
+        <input 
+          type="text" 
+          [(ngModel)]="currentFormulaName"
+          placeholder="e.g., Production Network Risk, Critical Assets Only"
+          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+        />
+        <p style="font-size: 11px; color: #666; margin-top: 4px;">
+          Give this automation a descriptive name to identify it later
+        </p>
+      </div>
+      <div class="frequency-options">
+        <div *ngFor="let freq of updateFrequencies" 
+             class="frequency-option"
+             [class.selected]="updateFrequency === freq.value"
+             (click)="updateFrequency = freq.value">
+          <div class="radio-wrapper">
+            <input 
+              type="radio" 
+              name="frequency" 
+              [value]="freq.value"
+              [checked]="updateFrequency === freq.value"
+              (click)="$event.stopPropagation()">
+          </div>
+          <div class="option-content">
+            <div class="option-label">{{ freq.label }}</div>
+            <div class="option-description" [ngSwitch]="freq.value">
+              <span *ngSwitchCase="'manual'">Run only when triggered by user</span>
+              <!-- <span *ngSwitchCase="'minute'">For testing (not recommended for production)</span> -->
+              <span *ngSwitchCase="'hourly'">Run every hour</span>
+              <span *ngSwitchCase="'daily'">Run once every 24 hours</span>
+              <span *ngSwitchCase="'weekly'">Run once per week</span>
+              <span *ngSwitchCase="'monthly'">Run once per month</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button (click)="cancelFrequencyModal()" class="btn btn-secondary">Cancel</button>
+        <button (click)="selectUpdateFrequency(updateFrequency)" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Formula Input Modal -->
+<div class="modal-overlay" *ngIf="showFormulaInputModal" (click)="closeFormulaInputModal()">
+  <div class="confirmation-modal" (click)="$event.stopPropagation()">
+    <div class="confirmation-modal-header">
+      <h3>{{ formulaInputModalData.title }}</h3>
+    </div>
+    <div class="confirmation-modal-content">
+      <div class="form-group">
+        <label>{{ formulaInputModalData.nameLabel }} <span style="color: red;">*</span></label>
+        <input 
+          type="text" 
+          class="form-control" 
+          [(ngModel)]="formulaInputModalData.name"
+          placeholder="Enter formula name"
+          maxlength="50">
+      </div>
+      <div class="form-group" style="margin-top: 15px;">
+        <label>{{ formulaInputModalData.descriptionLabel }}</label>
+        <textarea 
+          class="form-control" 
+          [(ngModel)]="formulaInputModalData.description"
+          placeholder="Enter description (optional)"
+          rows="3"
+          maxlength="200"></textarea>
+      </div>
+    </div>
+    <div class="confirmation-modal-actions">
+      <button class="btn btn-secondary" (click)="formulaInputModalData.onCancel?.()">
+        Cancel
+      </button>
+      <button class="btn btn-primary" (click)="formulaInputModalData.onSave?.()">
+        Save Formula
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Automation Schedule Configuration Modal -->
+<div *ngIf="showAutomationConfigModal" class="modal-overlay" (click)="closeAutomationConfigModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>Configure Automation Schedule</h3>
+      <button class="modal-close" (click)="closeAutomationConfigModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <p style="margin-bottom: 20px; color: #666;">
+        Update how often "{{ getComponentName(selectedAutomationForConfig!) }}" runs
+      </p>
+      
+      <div class="frequency-options">
+        <div 
+          *ngFor="let freq of updateFrequencies" 
+          class="frequency-option"
+          [class.selected]="automationConfigFrequency === freq.value"
+          (click)="automationConfigFrequency = freq.value">
+          <div class="frequency-label">{{ freq.label }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAutomationConfigModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveAutomationScheduleConfig()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Neo4j Component Discovery Modal -->
+<div *ngIf="showDiscoveryModal" class="modal-overlay" (click)="closeDiscoveryModal()">
+  <div class="modal-content discovery-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Discovered Neo4j Properties</h2>
+      <button class="close-btn" (click)="closeDiscoveryModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="info-text">
+        Found {{ discoveredProperties.length }} properties in Neo4j that are not in your configuration.
+        Select the ones you want to import as components:
+      </p>
+      
+      <div class="properties-list">
+        <div *ngFor="let prop of discoveredProperties" class="property-item">
+          <input 
+            type="checkbox" 
+            [id]="'prop-' + prop.neo4jProperty"
+            [checked]="selectedPropertiesToImport.has(prop.neo4jProperty)"
+            (change)="togglePropertySelection(prop.neo4jProperty)">
+          <label [for]="'prop-' + prop.neo4jProperty">
+            <div class="property-name">{{ prop.name }}</div>
+            <div class="property-details">
+              <span>Neo4j Property: {{ prop.neo4jProperty }}</span>
+              <span>Nodes: {{ prop.nodeCount }}</span>
+              <span>Avg: {{ prop.avgValue | number:'1.2-2' }}</span>
+              <span>Range: {{ prop.minValue | number:'1.0-0' }} - {{ prop.maxValue | number:'1.0-0' }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDiscoveryModal()">Cancel</button>
+      <button 
+        class="btn btn-primary" 
+        (click)="importSelectedProperties()"
+        [disabled]="selectedPropertiesToImport.size === 0">
+        Import {{ selectedPropertiesToImport.size }} Properties
+      </button>
+    </div>
+  </div>
+</div>

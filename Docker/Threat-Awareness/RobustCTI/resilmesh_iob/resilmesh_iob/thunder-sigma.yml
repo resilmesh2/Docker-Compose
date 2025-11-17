@@ -1,0 +1,27 @@
+date: 2021/06/07
+detection:
+  selection:
+    EventID: '1'
+    Creator_Process_Name|contains:
+      - outlook
+      - thunderbird
+      - mail
+    New_Process_Name|contains:
+      - edge
+      - chrome
+      - firefox
+    condition: selection
+    level: high
+    author: tus
+    description: Detects browser launched from email client.
+    id: spearphishing
+    falsepositives:
+      - Low
+    title: Spearphishing with Link
+    logsource:
+      product: windows
+      service: sysmon
+      category: process_event
+    tags:
+      - attack.initial_access
+      - attack.t1566.002

@@ -1,0 +1,5 @@
+type: "nats"
+connection_name: "0_ad_events"
+subject: "ad_events"
+queue: "ad_events"
+url: "nats://nats:4222"
