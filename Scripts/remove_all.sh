@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOCKER_BASE_PATH="../Docker"
+DOCKER_BASE_PATH=".."
 
 # Stop and delete all containers
 docker ps -aq | xargs -r docker stop

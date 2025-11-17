@@ -4,7 +4,7 @@
 #                                                                                                                                                               #
 #################################################################################################################################################################
 #!/bin/bash
-DOCKER_BASE_PATH="../Docker"
+DOCKER_BASE_PATH=".."
 
 echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
 echo -e "\nNo configuration needed for ISIM component."

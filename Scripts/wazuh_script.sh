@@ -2,7 +2,7 @@
 #####     Resilmesh network creation    #########
 #################################################
 #!/bin/bash
-DOCKER_BASE_PATH="../Docker"
+DOCKER_BASE_PATH=".."
 
 echo "The first step of the deployment is creating the resilmesh network where all components will run."
 echo "Enter to start..."

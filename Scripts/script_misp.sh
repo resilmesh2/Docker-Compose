@@ -21,7 +21,7 @@ echo -e "\n\n\n"
 #################################################
 
 ## Are you behind a proxy? Complete the following information
-DOCKER_BASE_PATH="../Docker"
+DOCKER_BASE_PATH=".."
 DOCKER_ORIGINAL_FILE="$DOCKER_BASE_PATH/.env.sample"
 DOCKER_COPY_FILE="$DOCKER_BASE_PATH/.env"
 
