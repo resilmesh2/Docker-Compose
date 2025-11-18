@@ -407,7 +407,7 @@ sudo apt install python3-poetry -y
 echo -e "\nCreating the virtual environment and install all dependencies..."
 read -t 2
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs ng-common
+sudo apt-get install -y nodejs npm ng-common
 
 #echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 #read
