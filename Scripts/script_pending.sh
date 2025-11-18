@@ -406,15 +406,20 @@ sudo apt install python3-poetry -y
 
 echo -e "\nCreating the virtual environment and install all dependencies..."
 read -t 2
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs npm ng-common
 
+sudo apt remove npm nodejs
+sudo apt autoremove
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+
+#sudo apt-get install -y nodejs npm ng-common
+sudo apt install -y nodejs ng-common
 #echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 #read
 echo -e "\nStarting with NSE component configuration..."
 read -t 2
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 echo -e "\nCreating .env file..."
 read -t 2
 
