@@ -1,4 +1,0 @@
-neo4j:
-  password: supertestovaciheslo
-  bolt: bolt://localhost:7687
-  user: neo4j

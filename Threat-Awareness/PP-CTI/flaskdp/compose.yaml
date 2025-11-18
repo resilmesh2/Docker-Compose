@@ -1,9 +1,0 @@
-services:
-  flaskdp:
-    build:
-      context: .
-    container_name: PP-CTI-FlaskDP
-    expose:
-      - 8000
-    networks:
-      resilmesh:

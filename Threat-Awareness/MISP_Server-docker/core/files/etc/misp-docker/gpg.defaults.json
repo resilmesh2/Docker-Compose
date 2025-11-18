@@ -1,8 +1,0 @@
-{
-  "GnuPG.onlyencrypted": {
-    "default_value": false
-  },
-  "SMIME.enabled": {
-    "default_value": false
-  }
-}

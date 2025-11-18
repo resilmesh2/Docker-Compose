@@ -1,8 +1,0 @@
-services:
-  resilmesh_sap_sacd:
-    build:
-      context: .
-    ports:
-      - 4200:4200
-    networks:
-      - resilmesh_network

@@ -7,6 +7,10 @@
 [submodule "Threat-Awareness"]
 	path = Threat-Awareness
 	url = https://github.com/resilmesh2/Threat-Awareness
+	branch = main
+[submodule "Infrastructure"]
+	path = Infrastructure
+	url = https://github.com/resilmesh2/Infrastructure
 [submodule "Situation-Assessment"]
 	path = Situation-Assessment
 	url = https://github.com/resilmesh2/Situation-Assessment

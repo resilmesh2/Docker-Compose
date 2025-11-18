@@ -1,4 +1,0 @@
-services:
-  pt:
-    ports:
-      - 5001:5001

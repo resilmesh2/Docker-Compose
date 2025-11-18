@@ -1,5 +1,0 @@
-include:
-  - ./Vector/docker-compose.yaml
-  - ./NATS/docker-compose.yaml
-  - ./Enrichment/docker-compose.yaml
-  - ./MISP_client/docker-compose.yaml

@@ -1,8 +1,0 @@
-{
-  "MISP.external_baseurl": {
-    "default_value": "${BASE_URL}"
-  },
-  "Security.rest_client_baseurl": {
-    "default_value": "${BASE_URL}"
-  }
-}
