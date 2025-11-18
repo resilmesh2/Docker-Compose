@@ -528,7 +528,7 @@ read -t 2
 echo -e "\nEnter to start docker compose build..."
 read
 
-docker compose -f $DOCKER_BASE_PATH/Dockerfile build
+docker compose -f $DOCKER_BASE_PATH/docker-compose.yml build
 
 echo -e "\nEnter to start main docker compose up..."
 read
