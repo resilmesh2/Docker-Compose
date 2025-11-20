@@ -65,17 +65,6 @@ read -t 2
 
 #### END NETWORK CREATION  ########
 
-###################################################
-#### CLONE THE FULL REPOSITORY FROM GITHUB  #######
-###################################################
-
-#Uncomment the following lines if you want to clone the repositories from this script
-#echo -e "\n\n#####Read the following information carefully#####\n\nBefore we start with the installation process, some important data will be needed from you.\nThe first thing I need is your Personal token >"
-#read GITHUB_TOKEN
-#git clone --recurse-submodules https://$GITHUB_TOKEN@github.com/resilmesh2/Docker-Compose.git
-
-#### END CLONE GITHUB REPOSITORY  ##########
-
 ##################################################
 ####    WAZUH ENVIRONMENT CONFIGURATION   ########
 ##################################################
@@ -147,15 +136,15 @@ sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/co
 sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
 # sudo bash -c 'chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
 
-echo -e "\nLet's start deploying wazuh containers. Enter to start..."
-read
+echo -e "\nLet's start deploying wazuh containers."
+read -t 2
 # docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
 read -t 2
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
-echo -e "\nWazuh has been already deployed. Enter to start..."
-read
+echo -e "\nWazuh has been already deployed."
+read -t 2
 
 ####### END WAZUH CONFIGURATION  ##########
 
@@ -219,8 +208,8 @@ read -t 2
 ####      MISP CLIENT CONFIGURATION      ###########
 ####################################################
 
-echo -e "\n\nLet's continue configuring MISP Client!\nEnter to continue..."
-read
+echo -e "\n\nLet's continue configuring MISP Client!\n"
+read -t 2
 
 MISPCLIENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env.sample"
 MISPCLIENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env"
@@ -406,22 +395,27 @@ sudo apt install python3-poetry -y
 
 echo -e "\nCreating the virtual environment and install all dependencies..."
 read -t 2
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs npm ng-common
 
+sudo apt remove npm nodejs
+sudo apt autoremove
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+
+#sudo apt-get install -y nodejs npm ng-common
+sudo apt install -y nodejs ng-common
 #echo -e "\nNo configuration needed for CSA component. Enter to continue..."
 #read
 echo -e "\nStarting with NSE component configuration..."
 read -t 2
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 echo -e "\nCreating .env file..."
 read -t 2
 
 NSE_FILE=.env
 
 cat <<EOF >"$NSE_FILE"
-NEO4J_URI=bolt://resilmesh_sap_neo4j:7687
+NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
 OS_HOST=https://${SERVER_IP}:9200
@@ -459,8 +453,6 @@ sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 read -t 2
 
-# ng server       # to run the dashboard
-# read -t 2
 
 #NDR FALTA.
 
@@ -550,19 +542,19 @@ read
 # echo -e "\nUpdating repositories in the $CONTAINER..."
 # docker exec -u 0 -it "$CONTAINER" yum update -y
 echo -e "\nInstalling telnet in the $CONTAINER..."
-read
+read -t 2
 docker exec -u 0 -it "$CONTAINER" yum install -y telnet
 
 echo -e "\nInstalling rsyslog in the $CONTAINER..."
-read
+read -t 2
 docker exec -u 0 -it "$CONTAINER" yum install -y rsyslog
 
 echo -e "\nInstalling nano in the $CONTAINER..."
-read
+read -t 2
 docker exec -u 0 -it "$CONTAINER" yum install -y nano
 
 echo -e "\nCreating Resilmesh.conf and adding the content to it in the $CONTAINER..."
-read
+read -t 2
 docker exec -u 0 -it "$CONTAINER" bash -c 'cat <<"EOF" > /etc/rsyslog.d/Resilmesh.conf
 module(load="imptcp" threads="3")
 input(type="imptcp" port="10514"
@@ -582,8 +574,8 @@ EOF'
 
 echo -e "\nStarting rsyslogd now"
 docker exec -u 0 "$CONTAINER" rsyslogd
-echo -e "\nReady."
-
+echo -e "\nAll Wazuh container configuration are now ready."
+read -t 2
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
