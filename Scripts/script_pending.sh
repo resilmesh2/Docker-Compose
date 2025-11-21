@@ -43,12 +43,31 @@ else
     echo -e "\nYou said that you don't have a proxy."
 fi
 
+read -n 1 -p "Are you going to deploy in AWS Cloud? (y/n): " answer
+read -t 1
+#######################################################
+#                IP'S COLLECTION                      #
+#######################################################
+if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    echo -e "\n\nYou said yes, could you enter the Public IP of your EC2?: \n"
+    read SERVER_IP_PUBLIC
+    echo -e "\nCould you enter the Private IP of your EC2?: \n"
+    read SERVER_IP
+
+    echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
+else
+    echo -e "\nCould you enter the Private IP of your EC2?: \n"
+    read SERVER_IP
+
+    echo -e "\nYour Private IP is: '$SERVER_IP'\n"
+fi
+read -t 2
+
 #################################################
 #####     Resilmesh network creation    #########
 #################################################
 
 echo "The first step of the deployment is creating the resilmesh network where all components will run."
-#echo "Enter to start..."
 read -t 2
 
 docker network create \
@@ -57,11 +76,11 @@ docker network create \
   --gateway 172.19.0.1 \
   resilmesh_network
 
-echo -e "You can see the network from the following list\n"
+echo -e "\n\nYou can see the network in the following list\n"
 docker network ls
 
 echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16."
-read -t 2
+read -t 5
 
 #### END NETWORK CREATION  ########
 
@@ -168,9 +187,9 @@ echo -e "Pick your Server IP up from the following options (that IP will be used
 hostname -I
 
 # Ask the user for the service URL
-echo -e "\nEnter your host IP to expose the service (normally the first IP shown above or Public IP on Cloud): "
-read SERVER_IP
-mispserver_url="https://${SERVER_IP}:10443"
+#echo -e "\nEnter your host IP to expose the service (normally the first IP shown above or Public IP on Cloud): "
+#read SERVER_IP
+mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
 #mispclient_url="https://${SERVER_IP}:8443"
 
 # Check if the file exists
@@ -246,9 +265,7 @@ echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
 
 
 #################################################################################################################################################################
-#                                                                                                                                                               #
 #                                               AGGREGATION PLANE                                                                                               #
-#                                                                                                                                                               #
 #################################################################################################################################################################
 
 #### VECTOR ENVIRONMENT CONFIGURATION ####
@@ -315,9 +332,7 @@ read -t 2
 
 
 #################################################################################################################################################################
-#                                                                                                                                                               #
 #                                               SECURITY OPERATIONS PLANE                                                                                       #
-#                                                                                                                                                               #
 #################################################################################################################################################################
 
 echo -e "\nLet's start with configuring components in Security Operations Plane!"
@@ -375,16 +390,14 @@ fi
 cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
-echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh. Press enter to continue..."
+echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh."
 read -t 2
 
 echo -e "\nSecurity Operations Plane has been now deployed"
 read -t 2
 
 #################################################################################################################################################################
-#                                                                                                                                                               #
 #                                               SITUATION ASSESSMENT PLANE                                                                                      #
-#                                                                                                                                                               #
 #################################################################################################################################################################
 echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
 #echo -e "\nNo configuration needed for ISIM component."
@@ -402,14 +415,12 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 
 #sudo apt-get install -y nodejs npm ng-common
 sudo apt install -y nodejs ng-common
-#echo -e "\nNo configuration needed for CSA component. Enter to continue..."
-#read
+#echo -e "\nNo configuration needed for CSA component."
+
 echo -e "\nStarting with NSE component configuration..."
 read -t 2
 
-# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
-echo -e "\nCreating .env file..."
+echo -e "\nCreating NSE .env file..."
 read -t 2
 
 NSE_FILE=.env
@@ -426,8 +437,8 @@ EOF
 
 echo -e "\n✅ .env file has been created."
 read -t 2
-echo -e "\nPress enter to start with SACD component configuration..."
-read
+echo -e "\nLet's start with SACD component configuration..."
+read -t 2
 
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
@@ -453,15 +464,33 @@ sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 read -t 2
 
+#########   NETWORK AND DETECTION RESPONSE   ################
+echo -e "\nLet's start with Network and Detection Response..."
+read -t 2
 
-#NDR FALTA.
+git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response fetch --tags --force
+LATEST_TAG=$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response describe --tags "$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response rev-list --tags --max-count=1)")
+git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response checkout "$LATEST_TAG"
+read -t 2
 
+# Create and edit the .env file (see env.example)
+NDR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/env.example"
+NDR_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/.env"
 
-#################################################################################################################################################################
-#                                                                                                                                                               #
-#                                               THREAT AWARENESS PLANE                                                                                          #
-#                                                                                                                                                               #
-#################################################################################################################################################################
+# Check if the file exists
+if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$NDR_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+##############################################################################
+#                           THREAT AWARENESS PLANE                           #                                                               #
+##############################################################################
 echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
 echo -e "\nPress enter to start with Federated Learning component configuration..."
 read
@@ -510,12 +539,9 @@ read -t 2
 
 ####### END FEDERATED LEARNING CONFIGURATION  ##########
 
-
-#######################################################################################################################################
-#                                                                                                          #
-#                                               COMPOSE FILES EXECUTION                                    #
-#                                                                                                          #
-#######################################################################################################################################
+##################################################################################
+#                     COMPOSE FILES EXECUTION                                    #
+##################################################################################
 
 # echo -e "\nEnter to start docker compose build..."
 # read
@@ -526,15 +552,9 @@ echo -e "\nEnter to start main docker compose up..."
 read
 docker compose -f $DOCKER_BASE_PATH/docker-compose.yml up -d
 
-
-
-
-######################################################################################################################################
-#                                                                                                         #
-#                                               CONFIGURATION WAZUH DOCKER CONTAINER                      #
-#                                                                                                         #
-######################################################################################################################################
-
+#################################################################################
+#                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
+#################################################################################
 
 CONTAINER="ResilMesh-Wazuh-Manager"
 echo -e "\nStarting Wazuh Manager container configuration. Press enter to start..."
@@ -579,6 +599,36 @@ read -t 2
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
-echo -e "\nInjecting test data from Vector to test rsyslog configuration. Press enter to start..."
-read
+echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
+read -t 5
 docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
+
+echo -e "\nData already inyected."
+
+######### NSE SERVICE EXECUTION  ################################################################
+echo -e "\nStarting NSE Service..."
+read -t 2
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+
+echo -e "\nNSE Service running."
+read -t 2
+#############  FINAL SUMMARY  ###################################################################
+echo -e "\nThis is a summary of all the changes made during the execution:\n"
+echo -e "\n- resilmesh_network has been created: IP 172.19.0.0"
+echo -e "\n- resilmesh_network_misp has been created: IP 172.20.0.0"
+echo -e "\n- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager,\n PBTools, SACD and NSE."
+echo -e "\n- Your have entered Misp AuthKey: $MISPSERVER_AUTHKEY"
+echo -e "\n- Your have entered SLP key: $enrich_key"
+echo -e "\n\nBelow you can find the URLs to access the services:\n"
+echo -e "\nThe component MISP Server is accessible on: $mispserver_url"
+echo -e "\nThe component Wazuh Server is accesible on: http://$SERVER_IP:4433"
+echo -e "\nThe component ISIM (neo4j) is accesible on: http://$SERVER_IP:7474"
+echo -e "\nThe component Workflow Orchestrator (Temporal) is accesible on: http://$SERVER_IP:8080"
+echo -e "\nThe component ISIM Graphql is accesible on: http://$SERVER_IP:4001/graphql"
+echo -e "\nThe component SACD is accesible on: http://$SERVER_IP:4200"
+echo -e "\nThe component CASM is accesible on: http://$SERVER_IP:8000"
+echo -e "\nThe component NDR is accesible on: http://$SERVER_IP:3000"
+echo -e "\nThe component Playbooks Tool (Shuffle) is accesible on: http://$SERVER_IP:3443"
+echo -e "\nThe component NSE Angular frontend is accesible on: http://$SERVER_IP:4201"
+echo -e "\nThe component NSE Flask Risk API is accesible on: http://$SERVER_IP:5000"
