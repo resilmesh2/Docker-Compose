@@ -40,7 +40,7 @@ if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
 
     echo "Your proxy configuraion has been saved in $fichero"
 else
-    echo -e "\nYou said that you don't have a proxy."
+    echo -e "\nYou said that you don't have a proxy.\n\n"
 fi
 
 read -n 1 -p "Are you going to deploy in AWS Cloud? (y/n): " answer
@@ -53,22 +53,22 @@ if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
     read SERVER_IP_PUBLIC
     echo -e "\nCould you enter the Private IP of your EC2?: \n"
     read SERVER_IP
-
+    mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
 else
     echo -e "\nCould you enter the Private IP of your EC2?: \n"
     read SERVER_IP
-
+    mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
 fi
-read -t 2
+read -t 3
 
 #################################################
 #####     Resilmesh network creation    #########
 #################################################
 
 echo "The first step of the deployment is creating the resilmesh network where all components will run."
-read -t 2
+read -t 3
 
 docker network create \
   --driver bridge \
@@ -78,9 +78,10 @@ docker network create \
 
 echo -e "\n\nYou can see the network in the following list\n"
 docker network ls
+read -t 4
 
 echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16."
-read -t 5
+read -t 4
 
 #### END NETWORK CREATION  ########
 
@@ -183,13 +184,13 @@ echo -e "\n#####  Read the following information carefully  #####\n"
 
 #echo -e "The first component to install will be Misp Server. Once installed, you will have to generate an API Key that will be required during the proccess. I will guide you, just follow my instructions.\n"
 
-echo -e "Pick your Server IP up from the following options (that IP will be used to expose the services of Resilmesh platform). If you are on Cloud, please make sure you enter you PUBLIC IP:"
-hostname -I
+#echo -e "Pick your Server IP up from the following options (that IP will be used to expose the services of Resilmesh platform). If you are on Cloud, please make sure you enter you PUBLIC IP:"
+#hostname -I
 
 # Ask the user for the service URL
 #echo -e "\nEnter your host IP to expose the service (normally the first IP shown above or Public IP on Cloud): "
 #read SERVER_IP
-mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
+
 #mispclient_url="https://${SERVER_IP}:8443"
 
 # Check if the file exists
