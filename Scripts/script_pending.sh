@@ -43,12 +43,12 @@ else
     echo -e "\nYou said that you don't have a proxy.\n\n"
 fi
 
-read -n 1 -p "Are you going to deploy in AWS Cloud? (y/n): " answer
+read -n 1 -p "Are you going to deploy in AWS Cloud? (y/n): " answer_Cloud
 read -t 1
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
-if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
     echo -e "\n\nYou said yes, could you enter the Public IP of your EC2?: \n"
     read SERVER_IP_PUBLIC
     echo -e "\nCould you enter the Private IP of your EC2?: \n"
@@ -103,11 +103,12 @@ if [ ! -f "$WAZUH_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
-echo -e "Please select an IP to configure wazuh manager inside resilmesh_network, example: 172.19.0.100"
-docker network inspect resilmesh_network | grep "Subnet"
+#echo -e "Please select an IP to configure wazuh manager inside resilmesh_network, example: 172.19.0.100"
+#docker network inspect resilmesh_network | grep "Subnet"
 
-echo -e "\nEnter the IP and press enter:"
-read WAZUH_IP
+#echo -e "\nEnter the IP and press enter:"
+#read WAZUH_IP
+WAZUH_IP=172.19.0.100
 
 # Create .env file from .env.example
 cp "$WAZUH_ORIGINAL_FILE" "$WAZUH_COPY_FILE"
@@ -615,6 +616,9 @@ npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 echo -e "\nNSE Service running."
 read -t 2
 #############  FINAL SUMMARY  ###################################################################
+if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
+    SERVER_IP=$SERVER_IP_PUBLIC
+fi
 echo -e "\nThis is a summary of all the changes made during the execution:\n"
 echo -e "\n- resilmesh_network has been created: IP 172.19.0.0"
 echo -e "\n- resilmesh_network_misp has been created: IP 172.20.0.0"
