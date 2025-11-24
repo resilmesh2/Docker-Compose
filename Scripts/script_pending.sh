@@ -638,6 +638,7 @@ fi
 #echo -e "\nThe component NSE Angular frontend is accesible on: http://$SERVER_IP:4201"
 #echo -e "\nThe component NSE Flask Risk API is accesible on: http://$SERVER_IP:5000"
 
+cat << 'EOF' > ./output_summary.txt
 
  echo -e "\nThis is a summary of all the changes made during the execution:\n"
  echo -e "\n- resilmesh_network has been created: IP 172.19.0.0"
@@ -673,3 +674,5 @@ fi
  printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
  printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NSE Flask Risk API" "HTTPS" "$SERVER_IP" "5000" "https://$SERVER_IP:5000"
  printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
+ 
+ EOF
