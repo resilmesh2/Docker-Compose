@@ -56,7 +56,7 @@ if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
 else
-    echo -e "\nCould you enter the Private IP of your EC2?: \n"
+    echo -e "\nCould you enter the on-premise Server IP?: \n"
     read SERVER_IP
     mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
