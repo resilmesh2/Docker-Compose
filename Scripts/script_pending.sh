@@ -541,6 +541,25 @@ read -t 2
 
 ####### END FEDERATED LEARNING CONFIGURATION  ##########
 
+#######   IoB Configuration  ###########################
+
+echo -e "\nLet's continue with IoB component configuration..."
+read -t 2
+
+IOB_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example"
+IOB_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
+
+# Check if the file exists
+if [ ! -f "$IOB_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$IOB_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$IOB_ORIGINAL_FILE" "$IOB_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
 ##################################################################################
 #                     COMPOSE FILES EXECUTION                                    #
 ##################################################################################
