@@ -559,6 +559,9 @@ fi
 cp "$IOB_ORIGINAL_FILE" "$IOB_COPY_FILE"
 
 echo -e "\n✅ File .env created."
+read -t 2
+
+#######   END IoB Configuration  ###########################
 
 ##################################################################################
 #                     COMPOSE FILES EXECUTION                                    #
