@@ -19,6 +19,8 @@ rm $DOCKER_BASE_PATH/Aggregation/MISP_client/.env
 rm $DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env
 rm $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/.env
 rm -rf $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/
+sudo rm -rf $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config
+rm $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env
 
 # Display final Docker status
 echo
