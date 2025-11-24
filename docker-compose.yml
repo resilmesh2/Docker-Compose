@@ -3,7 +3,7 @@ include:
   - ./Aggregation/docker-compose.yml
   - ./Security-Operations/compose.yaml
   - ./Situation-Assessment/docker-compose.yml
-#  - ./Threat-Awareness/docker-compose.yaml  # TODO: docker-compose.yaml to be created
+  - ./Threat-Awareness/docker-compose.yml
 
 services:
   resilmesh_ap_silentpush_redis:
