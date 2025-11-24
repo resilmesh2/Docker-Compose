@@ -547,7 +547,7 @@ echo -e "\nLet's continue with IoB component configuration..."
 read -t 2
 
 IOB_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example"
-IOB_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
+IOB_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env"
 
 # Check if the file exists
 if [ ! -f "$IOB_ORIGINAL_FILE" ]; then
