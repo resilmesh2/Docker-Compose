@@ -11,8 +11,8 @@ services:
     restart: unless-stopped
     image: redis
     container_name: redis
-    ports:
-      - 6378:6378
+    expose:
+      - 6379
     networks:
       resilmesh_network:
 
