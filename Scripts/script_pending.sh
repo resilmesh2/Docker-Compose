@@ -567,10 +567,10 @@ if ! command -v npm >/dev/null 2>&1; then
   sudo apt install nodejs npm -y
 fi
 
-export NODE_OPTIONS="--openssl-legacy-provider"
+# export NODE_OPTIONS="--openssl-legacy-provider"
 
-npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install
-npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" run build
+NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install
+NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" run build
 
 #######   END IoB Configuration  ###########################
 
