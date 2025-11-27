@@ -179,6 +179,8 @@ MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/
 MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
 MISPSERVER_TARGET_LINE=60
 MISPSERVER_KEY_WORD="BASE_URL="  # keep the text and add new content behind
+MISPSERVER_TARGET_LINE2=48
+MISPSERVER_KEY_WORD2="ADMIN_KEY="
 
 # Installation process begins. Let's know the user pick up the Server IP to introduce it in the URL
 echo -e "\n#####  Read the following information carefully  #####\n"
@@ -203,25 +205,31 @@ fi
 # Create .env file from template.env
 cp "$MISPSERVER_ORIGINAL_FILE" "$MISPSERVER_COPY_FILE"
 
+# Generamos authkey misp server y la guardamos en la variable CLAVE
+CLAVE=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)
+echo "$CLAVE"
+
 # Add the URL to the .env file where BASE_URL is located
 sed -i "${MISPSERVER_TARGET_LINE}s|\(${MISPSERVER_KEY_WORD} *\).*|\1$mispserver_url|" "$MISPSERVER_COPY_FILE"
+sed -i "${MISPSERVER_TARGET_LINE2}s|\(${MISPSERVER_KEY_WORD2} *\).*|\1$CLAVE|" "$MISPSERVER_COPY_FILE"
 
 echo -e "\nMISP Server .env file has been created"
 echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
+echo "✅ Line $MISPSERVER_TARGET_LINE2 updated in '$MISPSERVER_COPY_FILE'."
 
 # Execute docker compose build
 
-echo -e "\n🔧 Executing 'docker compose build'..."
-read -t 2
-docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
+# echo -e "\n🔧 Executing 'docker compose build'..."
+# read -t 2
+# docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml build
 
-# Execute docker compose up -d
-echo -e "\n🚀 Executing 'docker compose up -d'..."
-read -t 2
-docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
+# # Execute docker compose up -d
+# echo -e "\n🚀 Executing 'docker compose up -d'..."
+# read -t 2
+# docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/docker-compose.yml up -d
 
-echo -e "\nMisp Server has been already deployed."
-read -t 2
+# echo -e "\nMisp Server has been already deployed."
+# read -t 2
 #### END MISP SERVER CONFIGURATION  #######
 
 
@@ -239,9 +247,9 @@ MISPCLIENT_TARGET_LINE2=3
 MISPCLIENT_KEY_WORD1="MISP_API_KEY=" # keep the text and add the Auth key behind
 MISPCLIENT_KEY_WORD2="MISP_API_URL=" # keep the text and add the MISP Server url behind
 
-echo -e "Your service IP is '$mispserver_url' .Please, go to your web browser and enter the previous URL (user:admin@admin.test | pass: admin).\nThen go to admin>Mi profile>Auth Keys and generate a new one. \nIf you need more details to generate an Auth key, please follow the next guide: https://www.circl.lu/doc/misp/automation/#automation-key\n\nI will be here waiting for you.\n"
-echo -e "Enter AuthKey:"
-read MISPSERVER_AUTHKEY
+# echo -e "Your service IP is '$mispserver_url' .Please, go to your web browser and enter the previous URL (user:admin@admin.test | pass: admin).\nThen go to admin>Mi profile>Auth Keys and generate a new one. \nIf you need more details to generate an Auth key, please follow the next guide: https://www.circl.lu/doc/misp/automation/#automation-key\n\nI will be here waiting for you.\n"
+# echo -e "Enter AuthKey:"
+# read MISPSERVER_AUTHKEY
 
 # Check if the file exists
 if [ ! -f "$MISPCLIENT_ORIGINAL_FILE" ]; then
@@ -253,7 +261,7 @@ fi
 cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
 
 # Add the Auth Key to the .env file where MISP_API_KEY is located
-sed -i "${MISPCLIENT_TARGET_LINE1}s|\(${MISPCLIENT_KEY_WORD1} *\).*|\1$MISPSERVER_AUTHKEY|" "$MISPCLIENT_COPY_FILE"
+sed -i "${MISPCLIENT_TARGET_LINE1}s|\(${MISPCLIENT_KEY_WORD1} *\).*|\1$CLAVE|" "$MISPCLIENT_COPY_FILE"
 
 echo -e "\nMISP Client .env file has been created"
 echo "✅ Line $MISPCLIENT_TARGET_LINE1 updated in '$MISPCLIENT_COPY_FILE'."
@@ -306,7 +314,7 @@ read -t 2
 
 ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
 ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
-ENRICHMENT_TARGET_LINE=14
+ENRICHMENT_TARGET_LINE=15
 ENRICHMENT_KEY_WORD="API_KEY=" # keep the text and add the WAZUH MANAGER IP behind
 
 # Check if the file exists
@@ -577,22 +585,22 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 #######   PP-CTI Configuration   ###########################
 
-echo -e "\nLet's continue with PP-CTI component configuration..."
+# echo -e "\nLet's continue with PP-CTI component configuration..."
 
-echo -e "\nInstalling Java dependencies...\n"
+# echo -e "\nInstalling Java dependencies...\n"
 
-sudo apt update
-sudo apt install openjdk-21-jdk
+# sudo apt update
+# sudo apt install openjdk-21-jdk -y
 
-echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
+# echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
 
-docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
+# docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
 
-echo -e "\n✅ FlaskDP image built.\n"
+# echo -e "\n✅ FlaskDP image built.\n"
 
-./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
+# ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
 
-echo -e "\n✅ ARXlet image built.\n"
+# echo -e "\n✅ ARXlet image built.\n"
 
 #######   END PP-CTI Configuration   #######################
 
@@ -664,13 +672,13 @@ docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.c
 echo -e "\nData already inyected."
 
 ######### NSE SERVICE EXECUTION  ################################################################
-echo -e "\nStarting NSE Service..."
-read -t 2
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+# echo -e "\nStarting NSE Service..."
+# read -t 2
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 
-echo -e "\nNSE Service running."
-read -t 2
+# echo -e "\nNSE Service running."
+# read -t 2
 #############  FINAL SUMMARY  ###################################################################
 if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
     SERVER_IP=$SERVER_IP_PUBLIC
@@ -696,47 +704,48 @@ fi
 
 cat << EOF > ./output_summary.txt
 
-echo -e "\nThis is a summary of all the changes made during the execution:\n"
-echo -e "\n- resilmesh_network has been created: IP 172.19.0.0"
-echo -e "\n- resilmesh_network_misp has been created: IP 172.20.0.0"
-echo -e "\n- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager,\n PBTools, SACD and NSE."
-echo -e "\n- Your have entered Misp AuthKey: $MISPSERVER_AUTHKEY"
-echo -e "\n- Your have entered SLP key: $enrich_key"
+This is a summary of all the changes made during the execution:
+- resilmesh_network has been created: IP 172.19.0.0
+- resilmesh_network_misp has been created: IP 172.20.0.0
+- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager,\n PBTools, SACD and NSE.
+- Your have entered Misp AuthKey: $MISPSERVER_AUTHKEY
+- Your have entered SLP key: $enrich_key
+- MISP Server Authkey autogenerated: $CLAVE
 
-printf "+--------------------------------------------------------------------------------------------------------------------------+\n"
-printf "|                                                        Components                                                        |\n"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| Plane                | Service               | Protocol | IP Address      | Port  | URL                                  |\n"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "Wazuh Server" "HTTPS" "$SERVER_IP" "4433" "https://$SERVER_IP:4433"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "MISP Server" "HTTPS" "$SERVER_IP" "10443" "https://$SERVER_IP:10443"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Security Operations" "Workflow Orchestrator" "HTTPS" "$SERVER_IP" "8080" "https://$SERVER_IP:8080"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Security Operations" "Playbooks Tool" "HTTPS" "$SERVER_IP" "3443" "https://$SERVER_IP:3443"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "CASM" "HTTPS" "$SERVER_IP" "8000" "https://$SERVER_IP:8000"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "ISIM Neo4j" "HTTPS" "$SERVER_IP" "7474" "https://$SERVER_IP:7474"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "ISIM Graphql" "HTTPS" "$SERVER_IP" "4001" "https://$SERVER_IP:4001/graphql"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NDR" "HTTPS" "$SERVER_IP" "3000" "https://$SERVER_IP:3000"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "SACD" "HTTPS" "$SERVER_IP" "4200" "https://$SERVER_IP:4200"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NSE Angular Frontend" "HTTPS" "$SERVER_IP" "4201" "https://$SERVER_IP:4201"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NSE Flask Risk API" "HTTPS" "$SERVER_IP" "5000" "https://$SERVER_IP:5000"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB Attack Flow Builder" "HTTP" "$SERVER_IP" "9080" "http://$SERVER_IP:9080"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB Sanic Web Server" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB STIX Modeler" "HTTP" "$SERVER_IP" "3400" "http://$SERVER_IP:3400"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
-printf "| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html"
-printf "+----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+\n"
++--------------------------------------------------------------------------------------------------------------------------+
+|                                                        Components                                                        |
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| Plane                | Service               | Protocol | IP Address      | Port  | URL                                  |
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "MISP Server" "HTTPS" "$SERVER_IP" "10443" "https://$SERVER_IP:10443
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Security Operations" "Workflow Orchestrator" "HTTPS" "$SERVER_IP" "8080" "https://$SERVER_IP:8080
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Security Operations" "Playbooks Tool" "HTTPS" "$SERVER_IP" "3443" "https://$SERVER_IP:3443
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "CASM" "HTTPS" "$SERVER_IP" "8000" "https://$SERVER_IP:8000
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "ISIM Neo4j" "HTTPS" "$SERVER_IP" "7474" "https://$SERVER_IP:7474
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "ISIM Graphql" "HTTPS" "$SERVER_IP" "4001" "https://$SERVER_IP:4001/graphql
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NDR" "HTTPS" "$SERVER_IP" "3000" "https://$SERVER_IP:3000
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "SACD" "HTTPS" "$SERVER_IP" "4200" "https://$SERVER_IP:4200
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NSE Angular Frontend" "HTTPS" "$SERVER_IP" "4201" "https://$SERVER_IP:4201
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Situation Assessment" "NSE Flask Risk API" "HTTPS" "$SERVER_IP" "5000" "https://$SERVER_IP:5000
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB Attack Flow Builder" "HTTP" "$SERVER_IP" "9080" "http://$SERVER_IP:9080
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB Sanic Web Server" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB STIX Modeler" "HTTP" "$SERVER_IP" "3400" "http://$SERVER_IP:3400
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
+| %-20s | %-21s | %-8s | %-15s | %-5s | %-36s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html
++----------------------+-----------------------+----------+-----------------+-------+--------------------------------------+
 
 EOF
