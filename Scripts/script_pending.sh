@@ -49,7 +49,7 @@ fi
 #######################################################
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
 SERVER_IP=$(hostname -i)
-if [[ "$Cloud" == "Amazon EC2"]]; then
+if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP_PUBLIC=$(curl https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
@@ -659,7 +659,7 @@ echo -e "\nData already inyected."
 # echo -e "\nNSE Service running."
 # read -t 2
 #############  FINAL SUMMARY  ###################################################################
-if [[ "$Cloud" == "Amazon EC2"]]; then
+if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP=$SERVER_IP_PUBLIC
 fi
 echo -e "\nA new file output_summary.txt has been created with a summary of the changes.\n"
