@@ -43,25 +43,31 @@ else
     echo -e "\nYou said that you don't have a proxy.\n\n"
 fi
 
-read -n 1 -p "Are you going to deploy in AWS Cloud? (y/n): " answer_Cloud
-read -t 1
+
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
-if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
-    echo -e "\n\nYou said yes, could you enter the Public IP of your EC2?: \n"
-    read SERVER_IP_PUBLIC
-    echo -e "\nCould you enter the Private IP of your EC2?: \n"
-    read SERVER_IP
+Cloud=$(cat /sys/class/dmi/id/sys_vendor)
+SERVER_IP=$(hostname -i)
+if [[ "$Cloud" == "Amazon EC2"]]; then
+    SERVER_IP_PUBLIC=$(curl https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
 else
-    echo -e "\nCould you enter the on-premise Server IP?: \n"
-    read SERVER_IP
     mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
 fi
 read -t 3
+
+# if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
+#     SERVER_IP_PUBLIC=$(curl https://checkip.amazonaws.com)
+#     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
+#     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
+# else
+#     mispserver_url="https://${SERVER_IP}:10443"
+#     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
+# fi
+# read -t 3
 
 #################################################
 #####     Resilmesh network creation    #########
@@ -653,7 +659,7 @@ echo -e "\nData already inyected."
 # echo -e "\nNSE Service running."
 # read -t 2
 #############  FINAL SUMMARY  ###################################################################
-if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
+if [[ "$Cloud" == "Amazon EC2"]]; then
     SERVER_IP=$SERVER_IP_PUBLIC
 fi
 echo -e "\nA new file output_summary.txt has been created with a summary of the changes.\n"
