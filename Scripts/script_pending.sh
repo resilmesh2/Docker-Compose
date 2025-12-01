@@ -50,7 +50,7 @@ fi
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
 SERVER_IP=$(hostname -i)
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    SERVER_IP_PUBLIC=$(curl https://checkip.amazonaws.com)
+    SERVER_IP_PUBLIC=$(curl -s https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
 else
