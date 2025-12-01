@@ -168,10 +168,10 @@ read -t 2
 # docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
 read -t 2
-docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
+# docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
-echo -e "\nWazuh has been already deployed."
-read -t 2
+# echo -e "\nWazuh has been already deployed."
+# read -t 2
 
 ####### END WAZUH CONFIGURATION  ##########
 
@@ -459,10 +459,10 @@ read -t 2
 echo -e "\nLet's start with Network and Detection Response..."
 read -t 2
 
-git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response fetch --tags --force
-LATEST_TAG=$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response describe --tags "$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response rev-list --tags --max-count=1)")
-git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response checkout "$LATEST_TAG"
-read -t 2
+# git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response fetch --tags --force
+# LATEST_TAG=$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response describe --tags "$(git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response rev-list --tags --max-count=1)")
+# git -C $DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response checkout "$LATEST_TAG"
+# read -t 2
 
 # Create and edit the .env file (see env.example)
 NDR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/env.example"
@@ -509,18 +509,18 @@ echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files
 read -t 2
 
 #Build ai-detection-engine component
-#docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile Docker-Compos>
+docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile
 
 #Build fl-aggregator component
-#docker build -t fl-aggregator -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile $DOCKER_BASE_PATH/Threat-Awa>
+docker build -t fl-aggregator -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile
 
 #Build fl-agent component
-#docker build -t fl-agent -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Ano>
+docker build -t fl-agent -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile
 
 #Executing the components
-#docker run -p "9998:9998" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
-#docker run -p "9999:9999" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
-#docker run -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
+docker run -p "9998:9998" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
+docker run -p "9999:9999" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
+docker run -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
 
 #### Add ssh connection to the second server where a new agent need to be deployed in #####
 #echo "A second Federated Learning Agent needs to be deployed in another server, please go there and deploy it"
