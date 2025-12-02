@@ -59,15 +59,9 @@ else
 fi
 read -t 3
 
-# if [[ "$answer_Cloud" == "y" || "$answer_Cloud" == "Y" ]]; then
-#     SERVER_IP_PUBLIC=$(curl https://checkip.amazonaws.com)
-#     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
-#     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
-# else
-#     mispserver_url="https://${SERVER_IP}:10443"
-#     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
-# fi
-# read -t 3
+# Introduce silenpush API Key
+echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+read enrich_key
 
 #################################################
 #####     Resilmesh network creation    #########
@@ -168,10 +162,10 @@ read -t 2
 # docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
 read -t 2
-# docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
+docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
-# echo -e "\nWazuh has been already deployed."
-# read -t 2
+echo -e "\nWazuh has been already deployed."
+read -t 2
 
 ####### END WAZUH CONFIGURATION  ##########
 
@@ -305,9 +299,9 @@ if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
-# Introduce silenpush API Key
-echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
-read enrich_key
+# # Introduce silenpush API Key
+# echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+# read enrich_key
 
 # Create .env file from .env.sample
 cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
@@ -483,6 +477,27 @@ echo -e "\n✅ File .env created."
 #                           THREAT AWARENESS PLANE                           #                                                               
 ##############################################################################
 echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
+read -t 1
+
+####### AI BASED DETECTOR CONFIGURATION  ##########
+echo -e "\nStarting with AI Based Detector component configuration..."
+read -t 2
+AI_AD_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env.example"
+AI_AD_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env"
+
+# Check if the file exists
+if [ ! -f "$AI_AD_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$AI_AD_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$AI_AD_ORIGINAL_FILE" "$AI_AD_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+read -t 2
+####### END AI BASED DETECTOR CONFIGURATION  ##########
+
 echo -e "\nStarting with Federated Learning component configuration..."
 read -t 2
 
