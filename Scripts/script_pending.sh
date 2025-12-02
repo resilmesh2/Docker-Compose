@@ -480,7 +480,7 @@ cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
 echo -e "\n✅ File .env created."
 
 ##############################################################################
-#                           THREAT AWARENESS PLANE                           #                                                               #
+#                           THREAT AWARENESS PLANE                           #                                                               
 ##############################################################################
 echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
 echo -e "\nStarting with Federated Learning component configuration..."
@@ -518,9 +518,9 @@ docker build -t fl-aggregator -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Dete
 docker build -t fl-agent -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/
 
 #Executing the components
-docker run -p "9998:9998" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/ai-detection-engine
-docker run -p "9999:9999" -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/fl-aggregator
-docker run -d $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/fl-agent
+docker run -p "9998:9998" -d ai-detection-engine
+docker run -p "9999:9999" -d fl-aggregator
+docker run -d fl-agent
 
 #### Add ssh connection to the second server where a new agent need to be deployed in #####
 #echo "A second Federated Learning Agent needs to be deployed in another server, please go there and deploy it"
@@ -709,7 +709,7 @@ echo -e "\nA new file output_summary.txt has been created with a summary of the 
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
-
+    printf "\n\n"
 } > ./output_summary.txt
 
 
