@@ -482,7 +482,7 @@ read -t 1
 ####### AI BASED DETECTOR CONFIGURATION  ##########
 echo -e "\nStarting with AI Based Detector component configuration..."
 read -t 2
-AI_AD_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env.example"
+AI_AD_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env.sample"
 AI_AD_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env"
 
 # Check if the file exists
