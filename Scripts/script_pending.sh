@@ -43,6 +43,13 @@ else
     echo -e "\nYou said that you don't have a proxy.\n\n"
 fi
 
+#######################################################
+#               SilentPush API Key                    #
+#######################################################
+
+# Introduce silenpush API Key
+echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+read enrich_key
 
 #######################################################
 #                IP'S COLLECTION                      #
@@ -59,9 +66,7 @@ else
 fi
 read -t 3
 
-# Introduce silenpush API Key
-echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
-read enrich_key
+
 
 #################################################
 #####     Resilmesh network creation    #########
@@ -157,15 +162,15 @@ sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/co
 sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
 # sudo bash -c 'chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
 
-echo -e "\nLet's start deploying wazuh containers."
+echo -e "\nLet's start building wazuh containers."
 read -t 2
 # docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
-docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" build
+docker build -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/Dockerfile" "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker"
 read -t 2
-docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
+# docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
 
-echo -e "\nWazuh has been already deployed."
-read -t 2
+# echo -e "\nWazuh has been already deployed."
+# read -t 2
 
 ####### END WAZUH CONFIGURATION  ##########
 
@@ -298,10 +303,6 @@ if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
   echo "❌ The file '$ENRICHMENT_ORIGINAL_FILE' do not exist."
   exit 1
 fi
-
-# # Introduce silenpush API Key
-# echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
-# read enrich_key
 
 # Create .env file from .env.sample
 cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
@@ -666,13 +667,13 @@ docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.c
 echo -e "\nData already inyected."
 
 ######### NSE SERVICE EXECUTION  ################################################################
-# echo -e "\nStarting NSE Service..."
-# read -t 2
-# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-# npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
+echo -e "\nStarting NSE Service..."
+read -t 2
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
+npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
 
-# echo -e "\nNSE Service running."
-# read -t 2
+echo -e "\nNSE Service running."
+read -t 2
 #############  FINAL SUMMARY  ###################################################################
 if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP=$SERVER_IP_PUBLIC
