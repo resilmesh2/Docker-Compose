@@ -409,10 +409,10 @@ read -t 2
 echo -e "\nCreating NSE .env file..."
 read -t 2
 
-NSE_FILE=.env
+NSE_FILE=$DOCKER_BASE_PATH/Situation-Assessment/NSE/.env
 
 cat <<EOF >"$NSE_FILE"
-NEO4J_URI=bolt://localhost:7687
+NEO4J_URI=bolt://neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
 OS_HOST=https://${SERVER_IP}:9200
@@ -665,14 +665,6 @@ read -t 5
 docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
-
-######### NSE SERVICE EXECUTION  ################################################################
-echo -e "\nStarting NSE Service..."
-read -t 2
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ i
-npm --prefix $DOCKER_BASE_PATH/Situation-Assessment/NSE/ start &
-
-echo -e "\nNSE Service running."
 read -t 2
 #############  FINAL SUMMARY  ###################################################################
 if [[ "$Cloud" == "Amazon EC2" ]]; then
