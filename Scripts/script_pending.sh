@@ -423,6 +423,33 @@ EOF
 
 echo -e "\n✅ .env file has been created."
 read -t 2
+
+echo -e "\nModifying NSE environment.ts file..."
+NSE_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.prod.ts"
+NSE_ENV_TS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.ts"
+read -t 2
+
+# Check if the file exists
+if [ ! -f "$NSE_ENV_PRODTS_FILE" ]; then
+ echo "❌ The file '$NSE_ENV_PRODTS_FILE' do not exist."
+ exit 1
+fi
+
+
+# Check if the file exists
+if [ ! -f "$NSE_ENV_TS_FILE" ]; then
+ echo "❌ The file '$NSE_ENV_TS_FILE' do not exist."
+ exit 1
+fi
+
+
+# Add the Server IP to environment files where Server IP should be allocated instead localhost.
+sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_PRODTS_FILE"
+sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_TS_FILE"
+
+echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
+read -t 2
+
 echo -e "\nLet's start with SACD component configuration..."
 read -t 2
 
