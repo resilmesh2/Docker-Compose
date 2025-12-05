@@ -1,0 +1,22 @@
+# IT Domain Resilmesh Platform
+include:
+  - ./Aggregation/docker-compose-IT_Domain.yml
+  - ./Security-Operations/docker-compose-IT_Domain.yaml
+  - ./Situation-Assessment/docker-compose-IT_Domain.yml
+  - ./Threat-Awareness/docker-compose-IT_Domain.yml
+
+services:
+  resilmesh_redis:
+    hostname: "redis"
+    restart: unless-stopped
+    image: valkey/valkey:7.2
+    container_name: redis
+    expose:
+      - 6379
+    networks:
+      resilmesh_network:
+
+networks:
+  resilmesh_network:
+    external: true
+    name: resilmesh_network
