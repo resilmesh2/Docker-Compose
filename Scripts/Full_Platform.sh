@@ -1,48 +1,10 @@
 #!/bin/bash
-echo "4) Full platform executing"
 
+#######################################################
+#                   VARIABLES                         #
+#######################################################
 
-echo -e "\n\n\n"
-cat <<'EOF'
- /$$$$$$$                      /$$ /$$ /$$      /$$                     /$$
-| $$__  $$                    |__/| $$| $$$    /$$$                    | $$
-| $$  \ $$  /$$$$$$   /$$$$$$$ /$$| $$| $$$$  /$$$$  /$$$$$$   /$$$$$$$| $$$$$$$
-| $$$$$$$/ /$$__  $$ /$$_____/| $$| $$| $$ $$/$$ $$ /$$__  $$ /$$_____/| $$__  $$
-| $$__  $$| $$$$$$$$|  $$$$$$ | $$| $$| $$  $$$| $$| $$$$$$$$|  $$$$$$ | $$  \ $$
-| $$  \ $$| $$_____/ \____  $$| $$| $$| $$\  $ | $$| $$_____/ \____  $$| $$  | $$
-| $$  | $$|  $$$$$$$ /$$$$$$$/| $$| $$| $$ \/  | $$|  $$$$$$$ /$$$$$$$/| $$  | $$
-|__/  |__/ \_______/|_______/ |__/|__/|__/     |__/ \_______/|_______/ |__/  |__/
-EOF
-echo -e "\n\n\n"
-
-
-
-#################################################
-#####                Proxy              #########
-#################################################
-
-## Are you behind a proxy? Complete the following information
 DOCKER_BASE_PATH=".."
-DOCKER_ORIGINAL_FILE="$DOCKER_BASE_PATH/.env.sample"
-DOCKER_COPY_FILE="$DOCKER_BASE_PATH/.env"
-
-
-read -n 1 -p "Are you behind a proxy? (y/n): " answer
-
-if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-    echo "You said that you have a proxy, let's configure it."
-    # If the answer is yes, ask for the proxy configuration
-    read -p "Enter your http configuration (Example --> http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line1
-    read -p "Enter your https configuration (Example --> https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line2
-
-    # Add the lines at the end of the .env file
-    echo "$line1" >> "$DOCKER_COPY_FILE"
-    echo "$line2" >> "$DOCKER_COPY_FILE"
-
-    echo "Your proxy configuraion has been saved in $fichero"
-else
-    echo -e "\nYou said that you don't have a proxy.\n\n"
-fi
 
 #######################################################
 #               SilentPush API Key                    #
