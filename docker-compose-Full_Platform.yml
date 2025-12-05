@@ -1,7 +1,7 @@
 # Full Resilmesh Platform
 include:
   - ./Aggregation/docker-compose-Full_Platform.yml
-  - ./Security-Operations/docker-compose-Full_Platform.yaml
+  - ./Security-Operations/docker-compose-Full_Platform.yml
   - ./Situation-Assessment/docker-compose-Full_Platform.yml
   - ./Threat-Awareness/docker-compose-Full_Platform.yml
 
