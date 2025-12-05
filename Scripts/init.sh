@@ -5,6 +5,7 @@
 #################################################
 
 menu() {
+  echo
   echo "1) IT Domain (ICERT)"
   echo "2) IoT Domain (ALIAS)"
   echo "3) Domain (CARM)"
@@ -15,8 +16,8 @@ menu() {
 }
 
 confirmation() {
-  read -n 1 -p "Are you sure you want to proceed? (y/n): " confirm
   echo
+  read -n 1 -p "Are you sure you want to proceed? (y/n): " confirm
   if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
     return 0  # User confirmed
   else
@@ -72,68 +73,68 @@ fi
 #####                Main               #########
 #################################################
 
-echo -e "\nWelcome to the step-by-step Resilmesh deployment guide. Select an option based on the deployment you want and your environment:\n"
+echo -e "\nWelcome to the step-by-step Resilmesh deployment guide. Select an option based on the deployment you want and your environment:"
 
 while true; do
   menu
 
   case $option in
     1)
-      echo "You have selected: IT Domain"
+      echo -e "\nYou have selected: IT Domain"
       if confirmation; then
-        echo "Proceeding with IT Domain deployment..."
+        echo -e "\nProceeding with IT Domain deployment..."
         ./IT_Domain.sh
         break
       else
-        echo "Operation cancelled. Returning to menu."
+        echo -e "\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     2)
-      echo "You have selected: IoT Domain"
+      echo -e "\nYou have selected: IoT Domain"
       if confirmation; then
-        echo "Proceeding with IoT Domain deployment..."
+        echo -e "\nProceeding with IoT Domain deployment..."
         ./IoT_Domain.sh
         break
       else
-        echo "Operation cancelled. Returning to menu."
+        echo -e "\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     3)
-      echo "You have selected: Domain"
+      echo -e "\nYou have selected: Domain"
       if confirmation; then
-        echo "Proceeding with Domain deployment..."
+        echo -e "\nProceeding with Domain deployment..."
         ./Domain.sh
         break
       else
-        echo "Operation cancelled. Returning to menu."
+        echo -e "\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     4)
-      echo "You have selected: Full Platform"
+      echo -e "\nYou have selected: Full Platform"
       if confirmation; then
-        echo "Proceeding with Full Platform deployment..."
-        ./script_pending.sh
+        echo -e "\nProceeding with Full Platform deployment..."
+        ./Full_Platform.sh
         break
       else
-        echo "Operation cancelled. Returning to menu."
+        echo -e "\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     5)
-      echo "You have selected: Exit"
+      echo -e "\nYou have selected: Exit"
       if confirmation; then
-        echo "Exiting..."
+        echo -e "\nExiting..."
         exit 0
       else
-        echo "Operation cancelled. Returning to menu."
+        echo -e "\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     *)
-      echo "❌ Invalid option. Please, try again with a number between 1 to 5."
+      echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 5."
       sleep 2
       ;;
   esac
