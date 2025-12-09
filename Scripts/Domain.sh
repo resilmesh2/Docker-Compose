@@ -532,7 +532,7 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 echo -e "\nEnter to start main docker compose up..."
 read
-docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
+docker compose -f $DOCKER_BASE_PATH/docker-compose-Domain.yml up -d
 
 #################################################################################
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
