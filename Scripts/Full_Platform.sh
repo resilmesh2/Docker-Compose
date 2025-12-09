@@ -469,6 +469,8 @@ if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
+sed -i "s/localhost/${SERVER_IP}/g" "$NDR_ORIGINAL_FILE"
+
 # Create .env file from .env.example
 cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
 
@@ -609,6 +611,42 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 #######   END PP-CTI Configuration   #######################
 
+#######   Threat-Hunting-And-Forensics Configuration   ###########################
+
+echo -e "\nLet's continue with Threat-Hunting-And-Forensics component configuration..."
+read -t 2
+echo -e "\nCreating DFIR .env file..."
+read -t 2
+DFIR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+DFIR_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env"
+
+# Check if the file exists
+if [ ! -f "$DFIR_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$DFIR_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$DFIR_ORIGINAL_FILE" "$DFIR_COPY_FILE"
+
+echo -e "\nCreating THF .env file..."
+read -t 2
+
+THF_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/THF/.env.example"
+THF_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/THF/.env"
+
+# Check if the file exists
+if [ ! -f "$THF_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$THF_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+cp "$THF_ORIGINAL_FILE" "$THF_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+read -t 2
+
+#######   END Threat-Hunting-And-Forensics Configuration   #######################
 
 ##################################################################################
 #                     COMPOSE FILES EXECUTION                                    #
