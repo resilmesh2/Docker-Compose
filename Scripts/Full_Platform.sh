@@ -261,8 +261,6 @@ read -t 2
 
 ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
 ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
-ENRICHMENT_TARGET_LINE=15
-ENRICHMENT_KEY_WORD="API_KEY=" # keep the text and add the WAZUH MANAGER IP behind
 
 # Check if the file exists
 if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
@@ -274,10 +272,9 @@ fi
 cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
 
 # Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
-sed -i "${ENRICHMENT_TARGET_LINE}s|\(${ENRICHMENT_KEY_WORD} *\).*|\1$enrich_key|" "$ENRICHMENT_COPY_FILE"
+sed -i "s/^API_KEY=.*/API_KEY=$enrich_key/" "../Aggregation/Enrichment/.env"
 
 echo -e "\nEnrichment .env file has been created"
-echo "✅ Line $ENRICHMENT_TARGET_LINE updated in '$ENRICHMENT_COPY_FILE'."
 echo "✅ Aggregation Plane has been configured."
 read -t 2
 
@@ -364,6 +361,8 @@ sudo apt install python3-poetry -y
 
 echo -e "\nCreating the virtual environment and install all dependencies..."
 read -t 2
+
+sed -i "s/x_api_key: \"\"/x_api_key: \"$enrich_key\"/" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
 
 sudo apt remove npm nodejs
 sudo apt autoremove
