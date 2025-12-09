@@ -10,3 +10,6 @@
 [submodule "Situation-Assessment"]
 	path = Situation-Assessment
 	url = https://github.com/resilmesh2/Situation-Assessment
+[submodule "THF"]
+	path = THF
+	url = https://github.com/resilmesh2/THF
