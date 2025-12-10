@@ -621,22 +621,22 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 #######   PP-CTI Configuration   ###########################
 
-# echo -e "\nLet's continue with PP-CTI component configuration..."
+echo -e "\nLet's continue with PP-CTI component configuration..."
 
-# echo -e "\nInstalling Java dependencies...\n"
+echo -e "\nInstalling Java dependencies...\n"
 
-# sudo apt update
-# sudo apt install openjdk-21-jdk -y
+sudo apt update
+sudo apt install openjdk-21-jdk -y
 
-# echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
+echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
 
-# docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
+docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
 
-# echo -e "\n✅ FlaskDP image built.\n"
+echo -e "\n✅ FlaskDP image built.\n"
 
-# ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
+./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
 
-# echo -e "\n✅ ARXlet image built.\n"
+echo -e "\n✅ ARXlet image built.\n"
 
 #######   END PP-CTI Configuration   #######################
 
