@@ -414,8 +414,18 @@ fi
 
 
 # Add the Server IP to environment files where Server IP should be allocated instead localhost.
-sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_PRODTS_FILE"
-sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_TS_FILE"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NSE_ENV_PRODTS_FILE"
+   else
+    sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_PRODTS_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NSE_ENV_TS_FILE"
+   else
+    sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_TS_FILE" 
+fi
+
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 read -t 2
@@ -443,8 +453,18 @@ fi
 
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE"
-sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s/127\.0\.0\.1/${SERVER_IP_PUBLIC}/g" "$SACD_ENV_PRODTS_FILE"
+   else
+    sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s/127\.0\.0\.1/${SERVER_IP_PUBLIC}/g" "$SACD_ENV_FILE"
+   else
+    sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE" 
+fi
+
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 read -t 2
@@ -468,7 +488,12 @@ if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
-sed -i "s/localhost/${SERVER_IP}/g" "$NDR_ORIGINAL_FILE"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NDR_ORIGINAL_FILE"
+   else
+    sed -i "s/localhost/${SERVER_IP}/g" "$NDR_ORIGINAL_FILE" 
+fi
+
 
 # Create .env file from .env.example
 cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
@@ -477,9 +502,14 @@ echo -e "\n✅ File .env created."
 
 ###########   LANDING PAGE CONFIGURATION  ####################################
   
-sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+    echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
+   else
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json" 
+    echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
+fi
 
-echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
 ###########   END LANDING PAGE CONFIGURATION  ################################
 
@@ -712,7 +742,10 @@ docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.c
 echo -e "\nData already inyected."
 read -t 2
 
-
+### Executing CASM scans ##########################################################################
+docker exec -u 0 resilmesh_sap_casm_easm-worker bash -c 'python -m temporal.easm.parent_workflow'
+docker exec -it resilmesh_sap_casm_nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh_sap_casm_nmap-worker python -m temporal.nmap.basic.workflow
+docker exec -it resilmesh_sap_casm_slp-enrichment python -m temporal.slp_enrichment.workflow
 
 #############  FINAL SUMMARY  ###################################################################
 
