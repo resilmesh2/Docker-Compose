@@ -627,7 +627,7 @@ PPCTI_ANONYMIZER_CONFIGFILE=$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/anonymizer
 sed -i "s/<YOUR_MISP_KEY>/$CLAVE/g" "$PPCTI_ANONYMIZER_CONFIGFILE"
 sed -i "s#https://<YOUR_MISP_URL>#$mispserver_url#g" "$PPCTI_ANONYMIZER_CONFIGFILE"
 
-echo -e "\n✅ Config.yaml updated with Misp Server configuration.
+echo -e "\n✅ Config.yaml updated with Misp Server configuration."
 
 echo -e "\nInstalling Java dependencies...\n"
 
