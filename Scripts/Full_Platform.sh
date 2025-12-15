@@ -18,7 +18,7 @@ read enrich_key
 #                IP'S COLLECTION                      #
 #######################################################
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
-SERVER_IP=$(hostname -i)
+SERVER_IP=$(hostname -I | awk '{print $1}')
 if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP_PUBLIC=$(curl -s https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
@@ -122,8 +122,9 @@ sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_clust
 sudo bash -c "chmod --reference=$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
 
 sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
-sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
+# sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
 # sudo bash -c 'chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
+sudo chmod -R 775 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config
 
 echo -e "\nLet's start building wazuh containers."
 read -t 2
@@ -364,8 +365,8 @@ read -t 2
 
 sed -i "s/x_api_key: \"\"/x_api_key: \"$enrich_key\"/" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
 
-sudo apt remove npm nodejs
-sudo apt autoremove
+sudo apt remove npm nodejs -y
+sudo apt autoremove -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 
 sudo apt install nodejs ng-common -y

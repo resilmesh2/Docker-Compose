@@ -12,7 +12,7 @@ menu() {
   echo "4) Full Platform"
   echo "5) Exit"
   echo
-  read -p "Enter the number of your choice (1-4): " option
+  read -p "Enter the number of your choice (1-5): " option
 }
 
 confirmation() {
