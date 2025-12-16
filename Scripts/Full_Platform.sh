@@ -114,13 +114,13 @@ fi
 
 #echo -e "\nEnter the IP and press enter:"
 #read WAZUH_IP
-WAZUH_IP=172.19.0.100
+# WAZUH_IP=172.19.0.100
 
 # Create .env file from .env.example
 cp "$WAZUH_ORIGINAL_FILE" "$WAZUH_COPY_FILE"
 
 # Add the Wazuh manager container IP to the .env file where MANAGER IP is located
-sed -i "${WAZUH_TARGET_LINE}s|\(${WAZUH_KEY_WORD} *\).*|\1$WAZUH_IP|" "$WAZUH_COPY_FILE"
+# sed -i "${WAZUH_TARGET_LINE}s|\(${WAZUH_KEY_WORD} *\).*|\1$WAZUH_IP|" "$WAZUH_COPY_FILE"
 
 echo -e "\nWazuh .env file has been created"
 echo "✅ Line $WAZUH_TARGET_LINE updated in '$WAZUH_COPY_FILE'."
@@ -272,7 +272,7 @@ fi
 cp "$VECTOR_ORIGINAL_FILE" "$VECTOR_COPY_FILE"
 
 # Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
-sed -i "${VECTOR_TARGET_LINE}s|\(${VECTOR_KEY_WORD} *\).*|\1$WAZUH_IP|" "$VECTOR_COPY_FILE"
+# sed -i "${VECTOR_TARGET_LINE}s|\(${VECTOR_KEY_WORD} *\).*|\1$WAZUH_IP|" "$VECTOR_COPY_FILE"
 
 echo -e "\nVector .env file has been created"
 echo "✅ Line $VECTOR_TARGET_LINE updated in '$VECTOR_COPY_FILE'."
