@@ -411,6 +411,7 @@ cp "$ISIM_ORIGINAL_FILE" "$ISIM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
 
+read
 ##################### NSE #################
 
 echo -e "\nStarting with NSE component configuration..."
