@@ -38,14 +38,17 @@ while true; do
     1)
       echo -e "\nYou have selected: Alias API key"
       sed -i "s/^ALIAS_API_KEY=.*/ALIAS_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      break
       ;;
     2)
       echo -e "\nYou have selected: OpenAI API key"
       sed -i "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      break
       ;;
     3)
       echo -e "\nYou have selected: Anthropic API key"
       sed -i "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      break
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 3."
