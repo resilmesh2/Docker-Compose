@@ -58,7 +58,6 @@ while true; do
 
 done
 
-read
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
@@ -373,7 +372,6 @@ cp "$ISIM_ORIGINAL_FILE" "$ISIM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
 
-read
 ##################### NSE #################
 
 echo -e "\nStarting with NSE component configuration..."
@@ -671,8 +669,7 @@ echo -e "\n✅ File .env created."
 
 # docker compose -f $DOCKER_BASE_PATH/Dockerfile build
 
-echo -e "\nEnter to start main docker compose up..."
-read
+echo -e "\nStarting main docker compose up..."
 docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 
 #################################################################################
