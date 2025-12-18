@@ -37,17 +37,17 @@ while true; do
   case $option in
     1)
       echo -e "\nYou have selected: Alias API key"
-      sed -i "s/^ALIAS_API_KEY=.*/ALIAS_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      sed -i "s|^ALIAS_API_KEY=.*|ALIAS_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
       break
       ;;
     2)
       echo -e "\nYou have selected: OpenAI API key"
-      sed -i "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
       break
       ;;
     3)
       echo -e "\nYou have selected: Anthropic API key"
-      sed -i "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=$api_key/" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
+      sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
       break
       ;;
     *)
@@ -258,7 +258,7 @@ fi
 cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
 
 # Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
-sed -i "s/^API_KEY=.*/API_KEY=$enrich_key/" "../Aggregation/Enrichment/.env"
+sed -i "s|^API_KEY=.*|API_KEY=$enrich_key|" "../Aggregation/Enrichment/.env"
 
 echo -e "\nEnrichment .env file has been created"
 echo "✅ Aggregation Plane has been configured."
@@ -339,7 +339,7 @@ sudo apt install python3-poetry -y
 
 echo -e "\nCreating the virtual environment and install all dependencies..."
 
-sed -i "s/x_api_key: \"\"/x_api_key: \"$enrich_key\"/" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
+sed -i "s|x_api_key: \"\"|x_api_key: \"$enrich_key\"|" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
 
 sudo apt remove npm nodejs -y
 sudo apt autoremove -y
@@ -362,9 +362,9 @@ if [ ! -f "$ISIM_ORIGINAL_FILE" ]; then
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$ISIM_ORIGINAL_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$ISIM_ORIGINAL_FILE"
 else
-    sed -i "s/localhost/${SERVER_IP}/g" "$ISIM_ORIGINAL_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_ORIGINAL_FILE" 
 fi
 
 
@@ -414,15 +414,15 @@ fi
 
 # Add the Server IP to environment files where Server IP should be allocated instead localhost.
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NSE_ENV_PRODTS_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_PRODTS_FILE"
 else
-    sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_PRODTS_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_PRODTS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NSE_ENV_TS_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_TS_FILE"
 else
-    sed -i "s/localhost/${SERVER_IP}/g" "$NSE_ENV_TS_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_TS_FILE" 
 fi
 
 
@@ -451,15 +451,15 @@ fi
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/127\.0\.0\.1/${SERVER_IP_PUBLIC}/g" "$SACD_ENV_PRODTS_FILE"
+    sed -i "s|127\.0\.0\.1|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_PRODTS_FILE"
 else
-    sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE" 
+    sed -i "s|127\.0\.0\.1|${SERVER_IP}|g" "$SACD_ENV_PRODTS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/127\.0\.0\.1/${SERVER_IP_PUBLIC}/g" "$SACD_ENV_FILE"
+    sed -i "s|127\.0\.0\.1|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE"
 else
-    sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE" 
+    sed -i "s|127\.0\.0\.1|${SERVER_IP}|g" "$SACD_ENV_FILE" 
 fi
 
 
@@ -479,9 +479,9 @@ if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$NDR_ORIGINAL_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_ORIGINAL_FILE"
 else
-    sed -i "s/localhost/${SERVER_IP}/g" "$NDR_ORIGINAL_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NDR_ORIGINAL_FILE" 
 fi
 
 
@@ -543,8 +543,8 @@ if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE2" ]; then
 fi
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE"
-sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE2"
+sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE"
+sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE2"
 
 echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
 
@@ -607,7 +607,7 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 echo -e "\nLet's continue with PP-CTI component configuration..."
 PPCTI_ANONYMIZER_CONFIGFILE=$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/anonymizer/config.yaml
 
-sed -i "s/<YOUR_MISP_KEY>/$CLAVE/g" "$PPCTI_ANONYMIZER_CONFIGFILE"
+sed -i "s|<YOUR_MISP_KEY>|$CLAVE|g" "$PPCTI_ANONYMIZER_CONFIGFILE"
 sed -i "s#https://<YOUR_MISP_URL>#$mispserver_url#g" "$PPCTI_ANONYMIZER_CONFIGFILE"
 
 echo -e "\n✅ Config.yaml updated with Misp Server configuration."
