@@ -43,6 +43,13 @@ EOF
 echo -e "\n\n\n"
 
 #################################################
+#####      Remove before deployment     #########
+#################################################
+
+echo -e "\nRemoving any previous Docker containers, images, networks, volumes, and configuration files...\n"
+./remove_all.sh
+
+#################################################
 #####                Proxy              #########
 #################################################
 
@@ -55,7 +62,7 @@ DOCKER_COPY_FILE="$DOCKER_BASE_PATH/.env"
 read -n 1 -p "Are you behind a proxy? (y/n): " answer
 
 if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-    echo "You said that you have a proxy, let's configure it."
+    echo "\nYou said that you have a proxy, let's configure it."
     # If the answer is yes, ask for the proxy configuration
     read -p "Enter your http configuration (Example --> http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line1
     read -p "Enter your https configuration (Example --> https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>):\n " line2
@@ -64,9 +71,9 @@ if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
     echo "$line1" >> "$DOCKER_COPY_FILE"
     echo "$line2" >> "$DOCKER_COPY_FILE"
 
-    echo "Your proxy configuration has been saved in /Docker-Compose/.env"
+    echo -e "\nYour proxy configuration has been saved in /Docker-Compose/.env\n"
 else
-    echo -e "\nYou said that you don't have a proxy.\n\n"
+    echo -e "\nYou said that you don't have a proxy.\n"
 fi
 
 #################################################
@@ -82,54 +89,54 @@ while true; do
     1)
       echo -e "\nYou have selected: IT Domain"
       if confirmation; then
-        echo -e "\nProceeding with IT Domain deployment..."
+        echo -e "\n\nProceeding with IT Domain deployment..."
         ./IT_Domain.sh
         break
       else
-        echo -e "\nOperation cancelled. Returning to menu..."
+        echo -e "\n\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     2)
       echo -e "\nYou have selected: IoT Domain"
       if confirmation; then
-        echo -e "\nProceeding with IoT Domain deployment..."
+        echo -e "\n\nProceeding with IoT Domain deployment..."
         ./IoT_Domain.sh
         break
       else
-        echo -e "\nOperation cancelled. Returning to menu..."
+        echo -e "\n\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     3)
       echo -e "\nYou have selected: Domain"
       if confirmation; then
-        echo -e "\nProceeding with Domain deployment..."
+        echo -e "\n\nProceeding with Domain deployment..."
         ./Domain.sh
         break
       else
-        echo -e "\nOperation cancelled. Returning to menu..."
+        echo -e "\n\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     4)
       echo -e "\nYou have selected: Full Platform"
       if confirmation; then
-        echo -e "\nProceeding with Full Platform deployment..."
+        echo -e "\n\nProceeding with Full Platform deployment..."
         ./Full_Platform.sh
         break
       else
-        echo -e "\nOperation cancelled. Returning to menu..."
+        echo -e "\n\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;
     5)
       echo -e "\nYou have selected: Exit"
       if confirmation; then
-        echo -e "\nExiting..."
+        echo -e "\n\nExiting..."
         exit 0
       else
-        echo -e "\nOperation cancelled. Returning to menu..."
+        echo -e "\n\nOperation cancelled. Returning to menu..."
         sleep 2
       fi
       ;;

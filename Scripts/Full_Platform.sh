@@ -14,41 +14,72 @@ DOCKER_BASE_PATH=".."
 echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
 read enrich_key
 
-
 #######################################################
-#                  DFIR API Key                       #
+#                  DFIR Model & API                   #
 #######################################################
 
-menu() {
+menu_dfir() {
   echo
-  echo "1) Alias API key"
-  echo "2) OpenAI API key"
-  echo "3) Anthropic API key"
+  echo "1) Alias"
+  echo "2) OpenAI"
+  echo "3) Anthropic Claude"
   echo
-  read -p "What type of API key will you use? (1-3): " option
+  read -p "What API will you use? (1-3): " option
 }
 
-while true; do
-  menu
+confirmation() {
+  echo
+  read -n 1 -p "Are you sure you want to proceed? (y/n): " confirm
+  if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+    return 0  # User confirmed
+  else
+    return 1  # User did not confirm
+  fi
+}
 
-  echo -e "\nPlease, introduce the API Key:"
-  read api_key
+read_api_key() {
+  echo -e "\n\nPlease, introduce the API Key:"
+  read api_key_dfir
+}
+
+echo -e "\nPlease, introduce the cloud model to be used in DFIR component ("alias1", "ollama", "gpt-4o", "claude-3-opus", etc.):"  
+read model_dfir
+
+echo -e "\nNow, please, select the API to be used in DFIR component:"
+
+while true; do
+  menu_dfir
 
   case $option in
     1)
       echo -e "\nYou have selected: Alias API key"
-      sed -i "s|^ALIAS_API_KEY=.*|ALIAS_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
-      break
+      if confirmation; then
+        read_api_key
+        break
+      else
+        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        sleep 2
+      fi
       ;;
     2)
       echo -e "\nYou have selected: OpenAI API key"
-      sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
-      break
+      if confirmation; then
+        read_api_key
+        break
+      else
+        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        sleep 2
+      fi
       ;;
     3)
       echo -e "\nYou have selected: Anthropic API key"
-      sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key|" "$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/DFIR/.env.example"
-      break
+      if confirmation; then
+        read_api_key
+        break
+      else
+        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        sleep 2
+      fi
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 3."
@@ -61,12 +92,13 @@ done
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
+
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
 SERVER_IP=$(hostname -I | awk '{print $1}')
 if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP_PUBLIC=$(curl -s https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
-    echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
+    echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'\n"
 else
     mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
@@ -76,7 +108,7 @@ fi
 #####     Resilmesh network creation    #########
 #################################################
 
-echo "The first step of the deployment is creating the resilmesh network where all components will run."
+echo "\nThe first step of the deployment is creating the resilmesh network where all components will run.\n"
 
 docker network create \
   --driver bridge \
@@ -84,12 +116,10 @@ docker network create \
   --gateway 172.19.0.1 \
   resilmesh_network
 
-echo -e "\n\nYou can see the network in the following list\n"
+echo -e "\nYou can see the network in the following list:\n"
 docker network ls | grep resilmesh_network
 
-echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16."
-
-#### END NETWORK CREATION  ########
+echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16.\n"
 
 ##################################################
 ####    WAZUH ENVIRONMENT CONFIGURATION   ########
@@ -187,7 +217,7 @@ echo -e "\nMISP Server .env file has been created"
 #                                               AGGREGATION PLANE                                                                                               #
 #################################################################################################################################################################
 
-echo -e "\nLet's start with configuring components in Aggregation Plane!"
+echo -e "\nLet's start with configuring components in Aggregation Plane!\n"
 
 ####################################################
 ####      MISP CLIENT CONFIGURATION      ###########
@@ -269,9 +299,7 @@ echo "✅ Aggregation Plane has been configured."
 #                                               SECURITY OPERATIONS PLANE                                                                                       #
 #################################################################################################################################################################
 
-echo -e "\nLet's start with configuring components in Security Operations Plane!"
-echo -e "\nStarting with Playbooks Tool component configuration..."
-
+echo -e "\nLet's start with configuring components in Security Operations Plane!\n"
 
 ####### WORKFLOW ORCHESTRATOR CONFIGURATION ############
 
@@ -280,6 +308,8 @@ echo -e "\nStarting with Playbooks Tool component configuration..."
 ####### END WORKFLOW ORCHESTRATOR CONFIGURATION ############
 
 ####### PLAYBOOKS TOOL CONFIGURATION ############
+
+echo -e "\nStarting with Playbooks Tool component configuration..."
 
 mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database
 mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps
@@ -329,7 +359,9 @@ echo -e "\nSecurity Operations Plane has been now deployed"
 #################################################################################################################################################################
 #                                               SITUATION ASSESSMENT PLANE                                                                                      #
 #################################################################################################################################################################
-echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
+
+echo -e "\nLet's start with configuring components in Situation Assessment Plane!\n"
+
 #################### CASM #################
 
 echo -e "\nStarting with CASM component configuration..."
@@ -504,7 +536,8 @@ fi
 ##############################################################################
 #                           THREAT AWARENESS PLANE                           #                                                               
 ##############################################################################
-echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
+
+echo -e "\nLet's start with configuring components in Threat Awareness Plane!\n"
 
 ####### AI BASED DETECTOR CONFIGURATION  ##########
 echo -e "\nStarting with AI Based Detector component configuration..."
@@ -643,6 +676,25 @@ fi
 # Create .env file from .env.example
 cp "$DFIR_ORIGINAL_FILE" "$DFIR_COPY_FILE"
 
+# Add the model to the .env file where MODEL is located
+sed -i "s|^CAI_MODEL=.*|CAI_MODEL=$model_dfir|" "$DFIR_COPY_FILE"
+
+# Add the API Key to the .env file where API_KEY is located
+case $option in
+    1)
+      sed -i "s|^ALIAS_API_KEY=.*|ALIAS_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
+      ;;
+    2)
+      sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
+      ;; 
+    3)
+      sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
+      ;;
+  esac
+
+echo -e "\n✅ File .env created."
+
+
 echo -e "\nCreating THF .env file..."
 
 THF_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Threat-Hunting-And-Forensics/THF/.env.example"
@@ -744,6 +796,8 @@ echo -e "\nThis is a summary of all the changes made during the execution:\n"
 echo -e "- resilmesh_network has been created: IP 172.19.0.0/16"
 echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager, PBTools, SACD and NSE."
 echo -e "- You have entered the SLP key: $enrich_key"
+echo -e "- You have selected the DFIR model: $model_dfir"
+echo -e "- You have entered the DFIR API key: $api_key_dfir"
 echo -e "- MISP Server Authkey autogenerated: $CLAVE"
 echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
@@ -765,7 +819,10 @@ echo -e "- The component IoB Attack Flow Builder is accesible on: http://$SERVER
 echo -e "- The component IoB Sanic Web Server is accesible on: http://$SERVER_IP:9003"
 echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:3400"
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
-echo -e "- The component Threat Hunting and Forensics (DFIR) is accesible on: http://$SERVER_IP:5000"
+echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5000"
+echo -e "- The component THF is accesible on: http://$SERVER_IP:8501"
+echo -e "- The component PP-CTI Anonymizer is accesible on: http://$SERVER_IP:8070"
+echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
 
 echo -e "\n\nA new file output_summary.txt has been created with a summary of the changes.\n"
 
@@ -776,6 +833,8 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     echo -e "- resilmesh_network has been created: IP 172.19.0.0/16"
     echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager, PBTools, SACD and NSE."
     echo -e "- You have entered the SLP key: $enrich_key"
+    echo -e "- You have selected the DFIR model: $model_dfir"
+    echo -e "- You have entered the DFIR API key: $api_key_dfir"
     echo -e "- MISP Server Authkey autogenerated: $CLAVE \n"
     echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
@@ -818,7 +877,13 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF (DFIR)" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5000"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "DFIR" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5000"
+    printf "$SEPARATOR\n"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF" "HTTP" "$SERVER_IP" "8501" "http://$SERVER_IP:8501"
+    printf "$SEPARATOR\n"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Anonymizer" "HTTP" "$SERVER_IP" "8070" "http://$SERVER_IP:8070"
+    printf "$SEPARATOR\n"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "http://$SERVER_IP:3100"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
     printf "\n\n"
 } > ./output_summary.txt
