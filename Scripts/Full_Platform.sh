@@ -240,7 +240,7 @@ cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
 # Add the Auth Key to the .env file where MISP_API_KEY is located
 sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|" "$MISPCLIENT_COPY_FILE"
 # Add the URL to the .env file where MISP_API_URL is located
-sed -i "s|^MISP_API_URL=.*|MISP_API_URL=$mispserver_url|" "$MISPCLIENT_COPY_FILE"
+sed -i "s|^MISP_API_URL=.*|MISP_API_URL=https://$SERVER_IP:10443|" "$MISPCLIENT_COPY_FILE"
 
 echo -e "\nMISP Client .env file has been created"
 
