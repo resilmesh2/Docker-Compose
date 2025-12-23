@@ -46,7 +46,7 @@ echo -e "\n\n\n"
 #####      Remove before deployment     #########
 #################################################
 
-echo -e "\nRemoving any previous Docker containers, images, networks, volumes, and configuration files...\n"
+echo -e "Removing any previous Docker containers, images, networks, volumes, and configuration files...\n"
 ./remove_all.sh
 
 #################################################

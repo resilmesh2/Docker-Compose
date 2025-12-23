@@ -21,10 +21,10 @@ read enrich_key
 menu_dfir() {
   echo
   echo "1) Alias"
-  echo "2) OpenAI"
-  echo "3) Anthropic Claude"
+  echo "2) Claude Sonnet 4.5"
+  echo "3) Other"
   echo
-  read -p "What API will you use? (1-3): " option
+  read -p "Please, select an option (1-3): " option
 }
 
 confirmation() {
@@ -38,46 +38,45 @@ confirmation() {
 }
 
 read_api_key() {
-  echo -e "\n\nPlease, introduce the API Key:"
+  echo -e "\n\nPlease, introduce the API Key for $1:"
   read api_key_dfir
 }
 
-echo -e "\nPlease, introduce the cloud model to be used in DFIR component ("alias1", "ollama", "gpt-4o", "claude-3-opus", etc.):"  
-read model_dfir
-
-echo -e "\nNow, please, select the API to be used in DFIR component:"
+echo -e "\nWhat AI cloud model will you use in DFIR component?"
 
 while true; do
   menu_dfir
 
   case $option in
     1)
-      echo -e "\nYou have selected: Alias API key"
+      echo -e "\nYou have selected: Alias"
       if confirmation; then
-        read_api_key
+        read_api_key "Alias"
         break
       else
-        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        echo -e "\n\nOperation cancelled. Let's choose again the model."
         sleep 2
       fi
       ;;
     2)
-      echo -e "\nYou have selected: OpenAI API key"
+      echo -e "\nYou have selected: Claude Sonnet 4.5"
       if confirmation; then
-        read_api_key
+        read_api_key "Claude Sonnet 4.5"
         break
       else
-        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        echo -e "\n\nOperation cancelled. Let's choose again the model."
         sleep 2
       fi
       ;;
     3)
-      echo -e "\nYou have selected: Anthropic API key"
+      echo -e "\nYou have selected: Other"
       if confirmation; then
-        read_api_key
+        echo -e "\nPlease, introduce the model:"  
+        read model_dfir
+        read_api_key "$model_dfir"
         break
       else
-        echo -e "\n\nOperation cancelled. Let's choose again the API."
+        echo -e "\n\nOperation cancelled. Let's choose again the model."
         sleep 2
       fi
       ;;
@@ -676,19 +675,18 @@ fi
 # Create .env file from .env.example
 cp "$DFIR_ORIGINAL_FILE" "$DFIR_COPY_FILE"
 
-# Add the model to the .env file where MODEL is located
-sed -i "s|^CAI_MODEL=.*|CAI_MODEL=$model_dfir|" "$DFIR_COPY_FILE"
-
-# Add the API Key to the .env file where API_KEY is located
+# Add the model and API Key to the .env file where API_KEY is located
 case $option in
     1)
       sed -i "s|^ALIAS_API_KEY=.*|ALIAS_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
       ;;
     2)
-      sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
+      sed -i "s|^CAI_MODEL=.*|CAI_MODEL=claude-4-5-sonnet|" "$DFIR_COPY_FILE"
+      sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
       ;; 
     3)
-      sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
+      sed -i "s|^CAI_MODEL=.*|CAI_MODEL=$model_dfir|" "$DFIR_COPY_FILE"
+      sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
       ;;
   esac
 
