@@ -21,7 +21,7 @@ read enrich_key
 menu_dfir() {
   echo
   echo "1) Alias"
-  echo "2) Claude Sonnet 4.5"
+  echo "2) Claude Sonnet 4"
   echo "3) Other"
   echo
   read -p "Please, select an option (1-3): " option
@@ -59,9 +59,9 @@ while true; do
       fi
       ;;
     2)
-      echo -e "\nYou have selected: Claude Sonnet 4.5"
+      echo -e "\nYou have selected: Claude Sonnet 4"
       if confirmation; then
-        read_api_key "Claude Sonnet 4.5"
+        read_api_key "Claude Sonnet 4"
         break
       else
         echo -e "\n\nOperation cancelled. Let's choose again the model."
@@ -412,13 +412,14 @@ echo -e "\nCreating NSE .env file..."
 NSE_FILE=$DOCKER_BASE_PATH/Situation-Assessment/NSE/.env
 
 cat <<EOF >"$NSE_FILE"
-NEO4J_URI=bolt://neo4j:7687
+NEO4J_URI=bolt://resilmesh_sap_neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
-OS_HOST=https://${SERVER_IP}:9201
+OS_HOST=https://ResilMesh-Wazuh-Indexer:9200
 OS_USER=admin
 OS_PASSWORD=SecretPassword
 OS_INDEX=wazuh-alerts-*
+TEMPORAL_HOST=resilmesh_sap_wo_temporal
 EOF
 
 echo -e "\n✅ .env file has been created."
@@ -426,6 +427,7 @@ echo -e "\n✅ .env file has been created."
 echo -e "\nModifying NSE environment.ts file..."
 NSE_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.prod.ts"
 NSE_ENV_TS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.ts"
+NSE_RISK_CONFIG_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/app/services/risk-config.service.ts"
 
 # Check if the file exists
 if [ ! -f "$NSE_ENV_PRODTS_FILE" ]; then
@@ -443,15 +445,21 @@ fi
 
 # Add the Server IP to environment files where Server IP should be allocated instead localhost.
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_PRODTS_FILE"
+    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_ENV_PRODTS_FILE"
 else
-    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_PRODTS_FILE" 
+    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_ENV_PRODTS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_TS_FILE"
+    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_ENV_TS_FILE"
 else
-    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_TS_FILE" 
+    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_ENV_TS_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_RISK_CONFIG_FILE"
+else
+    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_RISK_CONFIG_FILE" 
 fi
 
 
@@ -681,7 +689,7 @@ case $option in
       sed -i "s|^ALIAS_API_KEY=.*|ALIAS_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
       ;;
     2)
-      sed -i "s|^CAI_MODEL=.*|CAI_MODEL=claude-4-5-sonnet|" "$DFIR_COPY_FILE"
+      sed -i "s|^CAI_MODEL=.*|CAI_MODEL=claude-sonnet-4-20250514|" "$DFIR_COPY_FILE"
       sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_dfir|" "$DFIR_COPY_FILE"
       ;; 
     3)
