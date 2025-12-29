@@ -471,6 +471,7 @@ echo -e "\nLet's start with SACD component configuration..."
 
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
+SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
 
 # Check if the file exists
 if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
@@ -485,7 +486,6 @@ if [ ! -f "$SACD_ENV_FILE" ]; then
  exit 1
 fi
 
-
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
 if [[ "$Cloud" == "Amazon EC2" ]]; then
     sed -i "s|127\.0\.0\.1|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_PRODTS_FILE"
@@ -499,6 +499,11 @@ else
     sed -i "s|127\.0\.0\.1|${SERVER_IP}|g" "$SACD_ENV_FILE" 
 fi
 
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
+fi
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 
