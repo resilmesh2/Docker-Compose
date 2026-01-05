@@ -777,6 +777,10 @@ docker exec -u 0 "$CONTAINER" rsyslogd
 echo -e "\nAll Wazuh container configuration are now ready."
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
+############## ISIM REST COLLECTSTATIC  ###############################################
+docker exec -it isim python /app/isim_rest/manage.py collectstatic --noinput
+########### END ISIM REST COLLECTSTATIC  ###############################################
+
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
 read -t 5
