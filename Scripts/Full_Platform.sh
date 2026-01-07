@@ -488,15 +488,15 @@ fi
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|127\.0\.0\.1|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_PRODTS_FILE"
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
 else
-    sed -i "s|127\.0\.0\.1|${SERVER_IP}|g" "$SACD_ENV_PRODTS_FILE" 
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_PRODTS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|127\.0\.0\.1|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE"
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
 else
-    sed -i "s|127\.0\.0\.1|${SERVER_IP}|g" "$SACD_ENV_FILE" 
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
