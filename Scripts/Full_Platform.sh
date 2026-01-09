@@ -428,6 +428,7 @@ echo -e "\nModifying NSE environment.ts file..."
 NSE_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.prod.ts"
 NSE_ENV_TS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/environments/environment.ts"
 NSE_RISK_CONFIG_FILE="$DOCKER_BASE_PATH/Situation-Assessment/NSE/src/app/services/risk-config.service.ts"
+NSE_LAUNCH="$DOCKER_BASE_PATH/Situation-Assessment/NSE/.vscode/launch.json"
 
 # Check if the file exists
 if [ ! -f "$NSE_ENV_PRODTS_FILE" ]; then
@@ -435,31 +436,47 @@ if [ ! -f "$NSE_ENV_PRODTS_FILE" ]; then
  exit 1
 fi
 
-
 # Check if the file exists
 if [ ! -f "$NSE_ENV_TS_FILE" ]; then
  echo "❌ The file '$NSE_ENV_TS_FILE' do not exist."
  exit 1
 fi
 
+# Check if the file exists
+if [ ! -f "$NSE_RISK_CONFIG_FILE" ]; then
+ echo "❌ The file '$NSE_RISK_CONFIG_FILE' do not exist."
+ exit 1
+fi
+
+# Check if the file exists
+if [ ! -f "$NSE_LAUNCH" ]; then
+ echo "❌ The file '$NSE_LAUNCH' do not exist."
+ exit 1
+fi
 
 # Add the Server IP to environment files where Server IP should be allocated instead localhost.
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_ENV_PRODTS_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_PRODTS_FILE"
 else
-    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_ENV_PRODTS_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_PRODTS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_ENV_TS_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_ENV_TS_FILE"
 else
-    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_ENV_TS_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_ENV_TS_FILE" 
 fi
 
 if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost:3002|${SERVER_IP_PUBLIC}:3002|g" "$NSE_RISK_CONFIG_FILE"
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_RISK_CONFIG_FILE"
 else
-    sed -i "s|localhost:3002|${SERVER_IP}:3002|g" "$NSE_RISK_CONFIG_FILE" 
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_RISK_CONFIG_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NSE_LAUNCH"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$NSE_LAUNCH" 
 fi
 
 
@@ -472,6 +489,7 @@ echo -e "\nLet's start with SACD component configuration..."
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
 SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
+SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
 
 # Check if the file exists
 if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
@@ -479,10 +497,21 @@ if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
  exit 1
 fi
 
-
 # Check if the file exists
 if [ ! -f "$SACD_ENV_FILE" ]; then
  echo "❌ The file '$SACD_ENV_FILE' do not exist."
+ exit 1
+fi
+
+# Check if the file exists
+if [ ! -f "$SACD_EXTERNAL" ]; then
+ echo "❌ The file '$SACD_EXTERNAL' do not exist."
+ exit 1
+fi
+
+# Check if the file exists
+if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then
+ echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."
  exit 1
 fi
 
@@ -503,6 +532,12 @@ if [[ "$Cloud" == "Amazon EC2" ]]; then
     sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
 else
     sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR" 
 fi
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
