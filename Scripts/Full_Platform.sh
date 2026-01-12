@@ -384,6 +384,7 @@ echo -e "\nLet's start with ISIM..."
 # Create and edit the .env file (see env.example)
 ISIM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/env.example"
 ISIM_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/.env"
+ISIM_RISK_API="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/neo4j_adapter/risk_api.py"
 
 # Check if the file exists
 if [ ! -f "$ISIM_ORIGINAL_FILE" ]; then
@@ -402,6 +403,18 @@ fi
 cp "$ISIM_ORIGINAL_FILE" "$ISIM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
+
+# Check if the file exists
+if [ ! -f "$ISIM_RISK_API" ]; then
+  echo "❌ The file '$ISIM_RISK_API' do not exist."
+  exit 1
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$ISIM_RISK_API"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_RISK_API" 
+fi
 
 ##################### NSE #################
 
