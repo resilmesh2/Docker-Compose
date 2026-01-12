@@ -667,6 +667,7 @@ echo -e "\nLet's continue with IoB component configuration..."
 
 IOB_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example"
 IOB_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env"
+IOB_INTEGRATIONS="$DOCKER_BASE_PATH/Threat-Awareness/IoB/attack_flow_builder/src/components/Elements/IntegrationToolsDialog.vue"
 
 # Check if the file exists
 if [ ! -f "$IOB_ORIGINAL_FILE" ]; then
@@ -678,6 +679,18 @@ fi
 cp "$IOB_ORIGINAL_FILE" "$IOB_COPY_FILE"
 
 echo -e "\n✅ File .env created."
+
+# Check if the file exists
+if [ ! -f "$IOB_INTEGRATIONS" ]; then
+  echo "❌ The file '$IOB_INTEGRATIONS' do not exist."
+  exit 1
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$IOB_INTEGRATIONS"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$IOB_INTEGRATIONS" 
+fi
 
 # Verify build dependencies
 # if ! command -v npm >/dev/null 2>&1; then
