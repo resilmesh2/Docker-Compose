@@ -428,11 +428,11 @@ cat <<EOF >"$NSE_FILE"
 NEO4J_URI=bolt://resilmesh_sap_neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
-OS_HOST=https://ResilMesh-Wazuh-Indexer:9200
+OS_HOST=https://resilmesh_tap_wazuh_indexer:9200
 OS_USER=admin
 OS_PASSWORD=SecretPassword
 OS_INDEX=wazuh-alerts-*
-TEMPORAL_HOST=resilmesh_sap_wo_temporal
+TEMPORAL_HOST=resilmesh_sop_wo_temporal
 EOF
 
 echo -e "\n✅ .env file has been created."
@@ -800,7 +800,7 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
 #################################################################################
 
-CONTAINER="ResilMesh-Wazuh-Manager"
+CONTAINER="resilmesh_tap_wazuh_manager"
 echo -e "\nStarting Wazuh Manager container configuration..."
 echo -e "\nInstalling telnet in the $CONTAINER..."
 read -t 2
@@ -839,8 +839,8 @@ echo -e "\nAll Wazuh container configuration are now ready."
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
 ############## ISIM REST COLLECTSTATIC  ###############################################
-docker exec -it isim python /app/isim_rest/manage.py collectstatic --noinput
-docker restart isim
+docker exec -it resilmesh_sap_isim python /app/isim_rest/manage.py collectstatic --noinput
+docker restart resilmesh_sap_isim
 ########### END ISIM REST COLLECTSTATIC  ###############################################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
