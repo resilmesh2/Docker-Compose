@@ -88,6 +88,9 @@ while true; do
 
 done
 
+echo -e "\n\nPlease, introduce the Anthropic API Key for THFramework:"
+  read api_key_thframe
+
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
@@ -778,6 +781,8 @@ if [ ! -f "$THF_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
+sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_thframe|" "$THF_ORIGINAL_FILE"
+
 cp "$THF_ORIGINAL_FILE" "$THF_COPY_FILE"
 
 echo -e "\n✅ File .env created."
@@ -846,7 +851,7 @@ docker restart resilmesh_sap_isim
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
 read -t 5
-docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
+docker exec -u 0 resilmesh_ap_vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
 
