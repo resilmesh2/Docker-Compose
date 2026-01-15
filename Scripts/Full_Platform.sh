@@ -428,14 +428,14 @@ echo -e "\nCreating NSE .env file..."
 NSE_FILE=$DOCKER_BASE_PATH/Situation-Assessment/NSE/.env
 
 cat <<EOF >"$NSE_FILE"
-NEO4J_URI=bolt://resilmesh_sap_neo4j:7687
+NEO4J_URI=bolt://resilmesh-sap-neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
 OS_HOST=https://resilmesh-tap-wazuh-indexer:9200
 OS_USER=admin
 OS_PASSWORD=SecretPassword
 OS_INDEX=wazuh-alerts-*
-TEMPORAL_HOST=resilmesh_sop_wo_temporal
+TEMPORAL_HOST=resilmesh-sop-wo-temporal
 EOF
 
 echo -e "\n✅ .env file has been created."
@@ -844,21 +844,21 @@ echo -e "\nAll Wazuh container configuration are now ready."
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
 ############## ISIM REST COLLECTSTATIC  ###############################################
-docker exec -it resilmesh_sap_isim python /app/isim_rest/manage.py collectstatic --noinput
-docker restart resilmesh_sap_isim
+docker exec -it resilmesh-sap-isim python /app/isim_rest/manage.py collectstatic --noinput
+docker restart resilmesh-sap-isim
 ########### END ISIM REST COLLECTSTATIC  ###############################################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
 read -t 5
-docker exec -u 0 resilmesh_ap_vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
+docker exec -u 0 resilmesh-ap-vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
 
 ### Executing CASM scans ##########################################################################
-docker exec -u 0 resilmesh_sap_casm_easm-worker bash -c 'python -m temporal.easm.parent_workflow'
-docker exec -it resilmesh_sap_casm_nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh_sap_casm_nmap-worker python -m temporal.nmap.basic.workflow
-docker exec -it resilmesh_sap_casm_slp-enrichment python -m temporal.slp_enrichment.workflow
+docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
+docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
+docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
 
 #############  FINAL SUMMARY  ###################################################################
 
