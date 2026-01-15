@@ -309,54 +309,6 @@ echo -e "\nLet's start with configuring components in Security Operations Plane!
 
 ####### END WORKFLOW ORCHESTRATOR CONFIGURATION ############
 
-####### PLAYBOOKS TOOL CONFIGURATION ############
-
-echo -e "\nStarting with Playbooks Tool component configuration..."
-
-mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database
-mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps
-mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/files
-chown -R 1000:1000 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
-chmod -R 755 $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes
-sudo swapoff -a
-
-PBTOOL_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/.env.example"
-PBTOOL_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/.env"
-
-# Check if the file exists
-if [ ! -f "$PBTOOL_ORIGINAL_FILE" ]; then
-  echo "❌ The file '$PBTOOL_ORIGINAL_FILE' do not exist."
-  exit 1
-fi
-
-# Create .env file from .env.example
-cp "$PBTOOL_ORIGINAL_FILE" "$PBTOOL_COPY_FILE"
-
-echo -e "\n✅ File .env created."
-
-####### END PLAYBOOKS TOOL CONFIGURATION ############
-
-####### MITIGATION MANAGER CONFIGURATION ############
-
-echo -e "\nLet's continue with Mitigation Manager component configuration..."
-echo -e "\nCreating Mitigation Manager .env file..."
-
-MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
-MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
-
-# Check if the file exists
-if [ ! -f "$MM_ORIGINAL_FILE" ]; then
-  echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
-  exit 1
-fi
-
-# Create .env file from .env.example
-cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
-
-echo -e "\n✅ File .env created."
-echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh."
-
-echo -e "\nSecurity Operations Plane has been now deployed"
 
 #################################################################################################################################################################
 #                                               SITUATION ASSESSMENT PLANE                                                                                      #
@@ -602,67 +554,6 @@ fi
 
 echo -e "\nLet's start with configuring components in Threat Awareness Plane!\n"
 
-####### AI BASED DETECTOR CONFIGURATION  ##########
-echo -e "\nStarting with AI Based Detector component configuration..."
-AI_AD_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env.sample"
-AI_AD_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/AI_Based_Detector/.env"
-
-# Check if the file exists
-if [ ! -f "$AI_AD_ORIGINAL_FILE" ]; then
-  echo "❌ The file '$AI_AD_ORIGINAL_FILE' do not exist."
-  exit 1
-fi
-
-# Create .env file from .env.example
-cp "$AI_AD_ORIGINAL_FILE" "$AI_AD_COPY_FILE"
-
-echo -e "\n✅ File .env created."
-####### END AI BASED DETECTOR CONFIGURATION  ##########
-
-echo -e "\nStarting with Federated Learning component configuration..."
-
-####### FEDERATED LEARNING CONFIGURATION  ##########
-FLAD_AGENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/config/fl_agent.conf"
-FLAD_AGENT_ORIGINAL_FILE2="$DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/config/ai_detection_engine.conf"
-
-# Check if the file exists
-if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE" ]; then
-  echo "❌ The file '$FLAD_AGENT_ORIGINAL_FILE' do not exist."
-  exit 1
-fi
-
-if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE2" ]; then
-  echo "❌ The file '$FLAD_AGENT_ORIGINAL_FILE2' do not exist."
-  exit 1
-fi
-
-# Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE"
-sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE2"
-
-echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
-
-#Build ai-detection-engine component
-docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/
-
-#Build fl-aggregator component
-docker build -t fl-aggregator -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-aggregator/
-
-#Build fl-agent component
-docker build -t fl-agent -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/
-
-#Executing the components
-docker run -p "9998:9998" -d ai-detection-engine
-docker run -p "9999:9999" -d fl-aggregator
-docker run -d fl-agent
-
-#### Add ssh connection to the second server where a new agent need to be deployed in #####
-#echo "A second Federated Learning Agent needs to be deployed in another server, please go there and deploy it"
-#echo "Follow the next steps:"
-#echo "1. Copy the $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent folder to the new server"
-#echo "2. Build the agent image and run it using the these commands: docker build -t fl-agent / docker run -d fl-agent"
-
-####### END FEDERATED LEARNING CONFIGURATION  ##########
 
 #######   IoB Configuration  ###########################
 
@@ -793,11 +684,6 @@ echo -e "\n✅ File .env created."
 #                     COMPOSE FILES EXECUTION                                    #
 ##################################################################################
 
-# echo -e "\nEnter to start docker compose build..."
-# read
-
-# docker compose -f $DOCKER_BASE_PATH/Dockerfile build
-
 echo -e "\nStarting main docker compose up..."
 docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 
@@ -896,12 +782,10 @@ echo -e "- The component ISIM (Graphql) is accesible on: http://$SERVER_IP:4001/
 echo -e "- The component NDR is accesible on: http://$SERVER_IP:3000"
 echo -e "- The component SACD is accesible on: http://$SERVER_IP:4200"
 echo -e "- The component NSE Angular frontend is accesible on: http://$SERVER_IP:4201"
-echo -e "- The component NSE Flask Risk API is accesible on: http://$SERVER_IP:3002"
 echo -e "- The component IoB Attack Flow Builder is accesible on: http://$SERVER_IP:9080"
-echo -e "- The component IoB Sanic Web Server is accesible on: http://$SERVER_IP:9003"
 echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:3400"
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
-echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5000"
+echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5005"
 echo -e "- The component THF is accesible on: http://$SERVER_IP:8501"
 echo -e "- The component PP-CTI Anonymizer is accesible on: http://$SERVER_IP:8070"
 echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
@@ -917,6 +801,7 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     echo -e "- You have entered the SLP key: $enrich_key"
     echo -e "- You have selected the DFIR model: $model_dfir"
     echo -e "- You have entered the DFIR API key: $api_key_dfir"
+    echo -e "- You have entered the THFramework Anthropic API key: $api_key_thframe"
     echo -e "- MISP Server Authkey autogenerated: $CLAVE \n"
     echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
@@ -949,17 +834,13 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "NSE Angular Frontend" "HTTP" "$SERVER_IP" "4201" "http://$SERVER_IP:4201"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "NSE Flask Risk API" "HTTP" "$SERVER_IP" "3002" "http://$SERVER_IP:3002"
-    printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB Attack Flow Builder" "HTTP" "$SERVER_IP" "9080" "http://$SERVER_IP:9080"
-    printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB Sanic Web Server" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB STIX Modeler" "HTTP" "$SERVER_IP" "3400" "http://$SERVER_IP:3400"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "DFIR" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5000"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "DFIR" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5005"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF" "HTTP" "$SERVER_IP" "8501" "http://$SERVER_IP:8501"
     printf "$SEPARATOR\n"
