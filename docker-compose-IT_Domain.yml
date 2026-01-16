@@ -6,9 +6,9 @@ include:
   - ./Threat-Awareness/docker-compose-IT_Domain.yml
 
 services:
-  resilmesh_redis:
+  resilmesh-redis:
     hostname: "redis"
-    container_name: resilmesh_redis
+    container_name: resilmesh-redis
     restart: unless-stopped
     image: valkey/valkey:7.2
     expose:

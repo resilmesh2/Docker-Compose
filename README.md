@@ -70,7 +70,7 @@ If you need to add more datasets, check [Vector](Vector/README.md) for instructi
 
 
 ## Docker convention
-Please use 'resilmesh_<PLANE>_<YOUR_COMPONENT>[_<INTERNAL_SERVICE>]', per example: 'resilmesh_ap_silentpush_redis'.
+Please use 'resilmesh_<PLANE>_<YOUR_COMPONENT>[_<INTERNAL_SERVICE>]', per example: 'resilmesh-ap-silentpush-redis'.
 
 There's a global external network called 'resilmesh_network', this network should be use for all 
 docker containers which represent the components.
