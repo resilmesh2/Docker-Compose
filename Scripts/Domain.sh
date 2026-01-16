@@ -581,7 +581,7 @@ read -t 2
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
 read -t 5
-docker exec -u 0 Vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
+docker exec -u 0 resilmesh-ap-vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
 read -t 2
