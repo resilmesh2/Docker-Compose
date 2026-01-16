@@ -9,13 +9,17 @@ docker ps -aq | xargs -r docker stop || true
 docker ps -aq | xargs -r docker rm -f || true
 
 # Delete all images
+docker system prune -a --volumes -f || true
+
+# Delete all volumes
+docker volume ls -q | xargs -r docker volume rm || true
+
+# Verification
+docker images -q | xargs -r docker rmi -f || true
 docker images -q | xargs -r docker rmi -f || true
 
 # Delete specific networks (ignore errors if they don't exist)
 docker network ls --format '{{.Name}}' | grep -vE '^(bridge|host|none)$' | xargs -r docker network rm || true
-
-# Delete all volumes
-docker volume ls -q | xargs -r docker volume rm || true
 
 # Delete the .env files
 rm -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env
@@ -37,3 +41,6 @@ sudo rm -rf $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/
 sudo rm -rf $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config
 sudo rm -rf $DOCKER_BASE_PATH/Situation-Assessment/ISIM/logs
 sudo rm -rf $DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins
+
+# Remove SLP API KEY
+sed -i "s|x_api_key: \".*\"|x_api_key: \"\"|" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
