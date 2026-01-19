@@ -256,7 +256,7 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-IoT_Domain.yml up -d
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
 #################################################################################
 
-CONTAINER="resilmesh-tap-wazuh-manager"
+CONTAINER="resilmesh.tap.wazuh.manager"
 echo -e "\nStarting Wazuh Manager container configuration..."
 read -t 2
 echo -e "\nInstalling telnet in the $CONTAINER..."

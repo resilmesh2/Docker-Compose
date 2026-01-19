@@ -383,7 +383,7 @@ cat <<EOF >"$NSE_FILE"
 NEO4J_URI=bolt://resilmesh-sap-neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=supertestovaciheslo
-OS_HOST=https://resilmesh-tap-wazuh-indexer:9200
+OS_HOST=https://resilmesh.tap.wazuh.indexer:9200
 OS_USER=admin
 OS_PASSWORD=SecretPassword
 OS_INDEX=wazuh-alerts-*
@@ -691,7 +691,7 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
 #################################################################################
 
-CONTAINER="resilmesh-tap-wazuh-manager"
+CONTAINER="resilmesh.tap.wazuh.manager"
 echo -e "\nStarting Wazuh Manager container configuration..."
 echo -e "\nInstalling telnet in the $CONTAINER..."
 read -t 2
