@@ -844,8 +844,10 @@ echo -e "\nAll Wazuh container configuration are now ready."
 ##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
 
 ############## ISIM REST COLLECTSTATIC  ###############################################
-docker exec -it resilmesh-sap-isim python /app/isim_rest/manage.py collectstatic --noinput
+echo -e "\nStarting ISIM Rest collectstatic command..."
+docker exec resilmesh-sap-isim python /app/isim_rest/manage.py collectstatic --noinput > /dev/null 2>&1
 docker restart resilmesh-sap-isim
+echo -e "\nISIM Rest collectstatic command finished."
 ########### END ISIM REST COLLECTSTATIC  ###############################################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
