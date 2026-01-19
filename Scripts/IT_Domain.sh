@@ -787,7 +787,6 @@ echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:340
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
 echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5005"
 echo -e "- The component THF is accesible on: http://$SERVER_IP:8501"
-echo -e "- The component PP-CTI Anonymizer is accesible on: http://$SERVER_IP:8070"
 echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
 
 echo -e "\n\nA new file output_summary.txt has been created with a summary of the changes.\n"
@@ -843,8 +842,6 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "DFIR" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5005"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF" "HTTP" "$SERVER_IP" "8501" "http://$SERVER_IP:8501"
-    printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Anonymizer" "HTTP" "$SERVER_IP" "8070" "http://$SERVER_IP:8070"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "http://$SERVER_IP:3100"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
