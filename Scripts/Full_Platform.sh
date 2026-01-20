@@ -703,7 +703,7 @@ fi
 
 # export NODE_OPTIONS="--openssl-legacy-provider"
 
-NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install
+NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install --legacy-peer-deps
 NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" run build
 
 #######   END IoB Configuration  ###########################
