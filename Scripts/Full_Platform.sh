@@ -801,6 +801,19 @@ echo -e "\n✅ File .env created."
 echo -e "\nStarting main docker compose up..."
 docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 
+
+############################  END COMPOSE FILES EXECUTION  ############################
+
+##################################################################################
+#                     RESTART CONTAINERS                                         #
+##################################################################################
+
+echo -e "\nRestarting MISP Client container to apply the new configuration..."
+docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml restart resilmesh-ap-misp-client
+echo -e "\nAll containers are now up and running."
+
+############################  END RESTART CONTAINERS  ############################
+
 #################################################################################
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
 #################################################################################
@@ -841,14 +854,14 @@ EOF'
 echo -e "\nStarting rsyslogd now"
 docker exec -u 0 "$CONTAINER" rsyslogd
 echo -e "\nAll Wazuh container configuration are now ready."
-##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
+############################  END WAZUH CONTAINER CONFIGURATION  ############################
 
-############## ISIM REST COLLECTSTATIC  ###############################################
+############################ ISIM REST COLLECTSTATIC  ############################
 echo -e "\nStarting ISIM Rest collectstatic command..."
 docker exec resilmesh-sap-isim python /app/isim_rest/manage.py collectstatic --noinput > /dev/null 2>&1
 docker restart resilmesh-sap-isim
 echo -e "\nISIM Rest collectstatic command finished."
-########### END ISIM REST COLLECTSTATIC  ###############################################
+############################ END ISIM REST COLLECTSTATIC  ############################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
@@ -857,12 +870,12 @@ docker exec -u 0 resilmesh-ap-vector bash -c 'tail -n50 /etc/vector/datasets/CES
 
 echo -e "\nData already inyected."
 
-### Executing CASM scans ##########################################################################
+############################ Executing CASM scans ############################
 docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
 docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
 docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
 
-#############  FINAL SUMMARY  ###################################################################
+############################  FINAL SUMMARY  ############################
 
 # Calculate script duration
 duration=$SECONDS
@@ -903,7 +916,6 @@ echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:340
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
 echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5005"
 echo -e "- The component THF is accesible on: http://$SERVER_IP:8501"
-echo -e "- The component PP-CTI Anonymizer is accesible on: http://$SERVER_IP:8070"
 echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
 
 echo -e "\n\nA new file output_summary.txt has been created with a summary of the changes.\n"
@@ -959,8 +971,6 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "DFIR" "HTTP" "$SERVER_IP" "5000" "http://$SERVER_IP:5005"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF" "HTTP" "$SERVER_IP" "8501" "http://$SERVER_IP:8501"
-    printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Anonymizer" "HTTP" "$SERVER_IP" "8070" "http://$SERVER_IP:8070"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "http://$SERVER_IP:3100"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
