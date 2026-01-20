@@ -685,7 +685,7 @@ echo -e "\n✅ File .env created."
 ##################################################################################
 
 echo -e "\nStarting main docker compose up..."
-docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
+docker compose -f $DOCKER_BASE_PATH/docker-compose-IT_Domain.yml up -d
 
 #################################################################################
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
