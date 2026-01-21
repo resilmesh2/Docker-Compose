@@ -695,7 +695,7 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-IT_Domain.yml up -d
 ##################################################################################
 
 echo -e "\nRestarting MISP Client container to apply the new configuration..."
-docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml restart resilmesh-ap-misp-client
+docker compose -f $DOCKER_BASE_PATH/docker-compose-IT_Domain.yml restart resilmesh-ap-misp-client
 echo -e "\nAll containers are now up and running."
 
 ############################  END RESTART CONTAINERS  ############################
