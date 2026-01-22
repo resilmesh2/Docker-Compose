@@ -1,9 +1,9 @@
 # Domain Resilmesh Platform
 include:
-  - ./Aggregation/docker-compose-IT_Domain.yml
-  - ./Security-Operations/docker-compose-IT_Domain.yml
-  - ./Situation-Assessment/docker-compose-IT_Domain.yml
-  - ./Threat-Awareness/docker-compose-IT_Domain.yml
+  - ./Aggregation/docker-compose-Domain.yml
+  - ./Security-Operations/docker-compose-Domain.yml
+  - ./Situation-Assessment/docker-compose-Domain.yml
+  - ./Threat-Awareness/docker-compose-Domain.yml
 
 services:
   resilmesh-redis:
