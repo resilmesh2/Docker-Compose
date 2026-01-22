@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "3)Domain executing"
 
 #######################################################
 #                   VARIABLES                         #
@@ -7,37 +6,27 @@ echo "3)Domain executing"
 
 DOCKER_BASE_PATH=".."
 
-#######################################################
-#               SilentPush API Key                    #
-#######################################################
-
-# Introduce silenpush API Key
-echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
-read enrich_key
 
 #######################################################
 #                IP'S COLLECTION                      #
 #######################################################
+
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
-SERVER_IP=$(hostname -i)
+SERVER_IP=$(hostname -I | awk '{print $1}')
 if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP_PUBLIC=$(curl -s https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
-    echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'"
+    echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'\n"
 else
     mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
 fi
-read -t 3
-
-
 
 #################################################
 #####     Resilmesh network creation    #########
 #################################################
 
-echo "The first step of the deployment is creating the resilmesh network where all components will run."
-read -t 3
+echo "\nThe first step of the deployment is creating the resilmesh network where all components will run.\n"
 
 docker network create \
   --driver bridge \
@@ -45,26 +34,19 @@ docker network create \
   --gateway 172.19.0.1 \
   resilmesh_network
 
-echo -e "\n\nYou can see the network in the following list\n"
+echo -e "\nYou can see the network in the following list:\n"
 docker network ls | grep resilmesh_network
-read -t 4
 
-echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16."
-read -t 4
-
-#### END NETWORK CREATION  ########
+echo -e "\nThe network resilmesh_network has been created with subnet 172.19.0.0/16.\n"
 
 ##################################################
 ####    WAZUH ENVIRONMENT CONFIGURATION   ########
 ##################################################
 
 echo -e "\nLet's continue configuring Wazuh Server!."
-read -t 2
 
 WAZUH_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env.example"
 WAZUH_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/.env"
-WAZUH_TARGET_LINE=4
-WAZUH_KEY_WORD="MANAGER_IP=" # keep the text and add the Auth key behind
 
 # Check if the file exists
 if [ ! -f "$WAZUH_ORIGINAL_FILE" ]; then
@@ -72,24 +54,12 @@ if [ ! -f "$WAZUH_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
-#echo -e "Please select an IP to configure wazuh manager inside resilmesh_network, example: 172.19.0.100"
-#docker network inspect resilmesh_network | grep "Subnet"
-
-#echo -e "\nEnter the IP and press enter:"
-#read WAZUH_IP
-WAZUH_IP=172.19.0.100
-
 # Create .env file from .env.example
 cp "$WAZUH_ORIGINAL_FILE" "$WAZUH_COPY_FILE"
 
-# Add the Wazuh manager container IP to the .env file where MANAGER IP is located
-sed -i "${WAZUH_TARGET_LINE}s|\(${WAZUH_KEY_WORD} *\).*|\1$WAZUH_IP|" "$WAZUH_COPY_FILE"
-
 echo -e "\nWazuh .env file has been created"
-echo "✅ Line $WAZUH_TARGET_LINE updated in '$WAZUH_COPY_FILE'."
 
 ####################################################
-
 
 # Generating server certificates
 if [ ! -d $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config ]; then
@@ -98,7 +68,6 @@ fi
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml up
 
 echo "Certificates generated correctly."
-read -t 2
 
 # Remove lingering container
 docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.yaml down --remove-orphans
@@ -107,7 +76,6 @@ docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-certs.
 docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml up -d
 
 echo "Server configuration files generated correctly."
-read -t 2
 
 docker compose --file $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose-original.yaml down --remove-orphans
 
@@ -117,24 +85,17 @@ sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rule
 sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
 sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/decoders/*
 sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations
-#cp -t config/wazuh_integrations integrations/*
+sudo cp -t $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/integrations/*
 sudo mkdir -p $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_cluster
 
 sudo bash -c "chmod --reference=$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/local_rules.xml ./$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
 
 sudo chgrp -R systemd-journal $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders
 sudo bash -c "chmod 770 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/decoders/* $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_etc/rules/*"
-# sudo bash -c 'chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*'
+sudo bash -c "chmod 750 $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/config/wazuh_integrations/*"
 
 echo -e "\nLet's start building wazuh containers."
-read -t 2
-# docker compose -f $DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml up --build -d
 docker build -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/Dockerfile" "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker"
-read -t 2
-# docker compose -f "$DOCKER_BASE_PATH/Threat-Awareness/wazuh-docker/compose.yaml" up -d
-
-# echo -e "\nWazuh has been already deployed."
-# read -t 2
 
 ####### END WAZUH CONFIGURATION  ##########
 
@@ -142,14 +103,9 @@ read -t 2
 ####      MISP SERVER CONFIGURATION         ##########
 ######################################################
 echo -e "\n\nLet's continue configuring and deploying MISP Server!"
-read -t 2
 
 MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/template.env"
 MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
-MISPSERVER_TARGET_LINE=60
-MISPSERVER_KEY_WORD="BASE_URL="  # keep the text and add new content behind
-MISPSERVER_TARGET_LINE2=48
-MISPSERVER_KEY_WORD2="ADMIN_KEY="
 
 # Installation process begins. Let's know the user pick up the Server IP to introduce it in the URL
 echo -e "\n#####  Read the following information carefully  #####\n"
@@ -166,39 +122,29 @@ cp "$MISPSERVER_ORIGINAL_FILE" "$MISPSERVER_COPY_FILE"
 # Generamos authkey misp server y la guardamos en la variable CLAVE
 CLAVE=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)
 echo -e "\nMISP Server Authkey autogenerated: $CLAVE"
-read -t 2
 
 # Add the URL to the .env file where BASE_URL is located
-sed -i "${MISPSERVER_TARGET_LINE}s|\(${MISPSERVER_KEY_WORD} *\).*|\1$mispserver_url|" "$MISPSERVER_COPY_FILE"
-sed -i "${MISPSERVER_TARGET_LINE2}s|\(${MISPSERVER_KEY_WORD2} *\).*|\1$CLAVE|" "$MISPSERVER_COPY_FILE"
+sed -i "s|^BASE_URL=.*|BASE_URL=$mispserver_url|" "$MISPSERVER_COPY_FILE"
+sed -i "s|^ADMIN_KEY=.*|ADMIN_KEY=$CLAVE|" "$MISPSERVER_COPY_FILE"
 
 echo -e "\nMISP Server .env file has been created"
-echo "✅ Line $MISPSERVER_TARGET_LINE updated in '$MISPSERVER_COPY_FILE'."
-echo "✅ Line $MISPSERVER_TARGET_LINE2 updated in '$MISPSERVER_COPY_FILE'."
 
 #### END MISP SERVER CONFIGURATION  #######
-
 
 #################################################################################################################################################################
 #                                               AGGREGATION PLANE                                                                                               #
 #################################################################################################################################################################
 
-echo -e "\nLet's start with configuring components in Aggregation Plane!"
-read -t 2
+echo -e "\nLet's start with configuring components in Aggregation Plane!\n"
 
 ####################################################
 ####      MISP CLIENT CONFIGURATION      ###########
 ####################################################
 
 echo -e "\n\nLet's continue configuring MISP Client!\n"
-read -t 2
 
 MISPCLIENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env.sample"
 MISPCLIENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env"
-MISPCLIENT_TARGET_LINE1=2
-MISPCLIENT_TARGET_LINE2=3
-MISPCLIENT_KEY_WORD1="MISP_API_KEY=" # keep the text and add the Auth key behind
-MISPCLIENT_KEY_WORD2="MISP_API_URL=" # keep the text and add the MISP Server url behind
 
 # Check if the file exists
 if [ ! -f "$MISPCLIENT_ORIGINAL_FILE" ]; then
@@ -210,15 +156,11 @@ fi
 cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
 
 # Add the Auth Key to the .env file where MISP_API_KEY is located
-sed -i "${MISPCLIENT_TARGET_LINE1}s|\(${MISPCLIENT_KEY_WORD1} *\).*|\1$CLAVE|" "$MISPCLIENT_COPY_FILE"
+sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|" "$MISPCLIENT_COPY_FILE"
+# Add the URL to the .env file where MISP_API_URL is located
+sed -i "s|^MISP_API_URL=.*|MISP_API_URL=https://$SERVER_IP:10443|" "$MISPCLIENT_COPY_FILE"
 
 echo -e "\nMISP Client .env file has been created"
-echo "✅ Line $MISPCLIENT_TARGET_LINE1 updated in '$MISPCLIENT_COPY_FILE'."
-
-# Add the URL to the .env file where MISP_API_URL is located
-sed -i "${MISPCLIENT_TARGET_LINE2}s|\(${MISPCLIENT_KEY_WORD2} *\).*|\1$mispserver_url|" "$MISPCLIENT_COPY_FILE"
-
-echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
 
 #### END MISP CLIENT CONFIGURATION  ########
 
@@ -227,12 +169,9 @@ echo "✅ Line $MISPCLIENT_TARGET_LINE2 updated in '$MISPCLIENT_COPY_FILE'."
 ####################################################
 
 echo -e "\n\nLet's continue configuring Vector!"
-read -t 2
 
 VECTOR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env.sample"
 VECTOR_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Vector/.env"
-VECTOR_TARGET_LINE=2
-VECTOR_KEY_WORD="RSYSLOG_HOST=" # keep the text and add the WAZUH MANAGER IP behind
 
 # Check if the file exists
 if [ ! -f "$VECTOR_ORIGINAL_FILE" ]; then
@@ -243,44 +182,15 @@ fi
 # Create .env file from .env.example
 cp "$VECTOR_ORIGINAL_FILE" "$VECTOR_COPY_FILE"
 
-# Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
-sed -i "${VECTOR_TARGET_LINE}s|\(${VECTOR_KEY_WORD} *\).*|\1$WAZUH_IP|" "$VECTOR_COPY_FILE"
-
 echo -e "\nVector .env file has been created"
-echo "✅ Line $VECTOR_TARGET_LINE updated in '$VECTOR_COPY_FILE'."
-read -t 2
 
 ####### END VECTOR CONFIGURATION  ##########
-
 
 ####################################################
 ####    ENRICHMENT ENVIRONMENT CONFIGURATION    ####
 ####################################################
 
-echo -e "\nLet's continue configuring Enrichment!"
-read -t 2
-
-ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
-ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
-ENRICHMENT_TARGET_LINE=15
-ENRICHMENT_KEY_WORD="API_KEY=" # keep the text and add the WAZUH MANAGER IP behind
-
-# Check if the file exists
-if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
-  echo "❌ The file '$ENRICHMENT_ORIGINAL_FILE' do not exist."
-  exit 1
-fi
-
-# Create .env file from .env.sample
-cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
-
-# Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
-sed -i "${ENRICHMENT_TARGET_LINE}s|\(${ENRICHMENT_KEY_WORD} *\).*|\1$enrich_key|" "$ENRICHMENT_COPY_FILE"
-
-echo -e "\nEnrichment .env file has been created"
-echo "✅ Line $ENRICHMENT_TARGET_LINE updated in '$ENRICHMENT_COPY_FILE'."
-echo "✅ Aggregation Plane has been configured."
-read -t 2
+#Out of scope 
 
 ####### END ENRICHMENT CONFIGURATION  ##########
 
@@ -289,10 +199,7 @@ read -t 2
 #                                               SECURITY OPERATIONS PLANE                                                                                       #
 #################################################################################################################################################################
 
-echo -e "\nLet's start with configuring components in Security Operations Plane!"
-read -t 2
-echo -e "\nStarting with Playbooks Tool component configuration..."
-
+echo -e "\nLet's start with configuring components in Security Operations Plane!\n"
 
 ####### WORKFLOW ORCHESTRATOR CONFIGURATION ############
 
@@ -301,6 +208,8 @@ echo -e "\nStarting with Playbooks Tool component configuration..."
 ####### END WORKFLOW ORCHESTRATOR CONFIGURATION ############
 
 ####### PLAYBOOKS TOOL CONFIGURATION ############
+
+echo -e "\nStarting with Playbooks Tool component configuration..."
 
 mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/database
 mkdir -p $DOCKER_BASE_PATH/Security-Operations/Playbooks-tool/volumes/apps
@@ -322,14 +231,12 @@ fi
 cp "$PBTOOL_ORIGINAL_FILE" "$PBTOOL_COPY_FILE"
 
 echo -e "\n✅ File .env created."
-read -t 2
 
 ####### END PLAYBOOKS TOOL CONFIGURATION ############
 
 ####### MITIGATION MANAGER CONFIGURATION ############
 
 echo -e "\nLet's continue with Mitigation Manager component configuration..."
-read -t 2
 echo -e "\nCreating Mitigation Manager .env file..."
 
 MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
@@ -346,41 +253,82 @@ cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
 
 echo -e "\n✅ File .env created."
 echo "--> IMPORTANT!! If you need any custom integrations, go to the installation guide and check how to create custom integrations between Mitigation Manager and Wazuh."
-read -t 2
 
 echo -e "\nSecurity Operations Plane has been now deployed"
-read -t 2
 
 #################################################################################################################################################################
 #                                               SITUATION ASSESSMENT PLANE                                                                                      #
 #################################################################################################################################################################
-echo -e "\nLet's start with configuring components in Situation Assessment Plane!"
-read -t 2
+
+echo -e "\nLet's start with configuring components in Situation Assessment Plane!\n"
+
 #################### CASM #################
 
 echo -e "\nStarting with CASM component configuration..."
-read -t 2
 echo -e "\nInstalling python3-poetry to create the venv and install all dependencies"
 sudo apt install python3-poetry -y
 
 echo -e "\nCreating the virtual environment and install all dependencies..."
-read -t 2
 
-sudo apt remove npm nodejs
-sudo apt autoremove
+sed -i "s|x_api_key: \"\"|x_api_key: \"$enrich_key\"|" "$DOCKER_BASE_PATH/Situation-Assessment/CASM/docker/config.yaml"
+
+sudo apt remove npm nodejs -y
+sudo apt autoremove -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 
 sudo apt install nodejs ng-common -y
 echo -e "\n✅ Nodejs and npm installed."
 
+#################### ISIM #################
+echo -e "\nLet's start with ISIM..."
+
+# Create and edit the .env file (see env.example)
+ISIM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/env.example"
+ISIM_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/.env"
+ISIM_RISK_API="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/neo4j_adapter/risk_api.py"
+
+# Check if the file exists
+if [ ! -f "$ISIM_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$ISIM_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$ISIM_ORIGINAL_FILE"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_ORIGINAL_FILE" 
+fi
+
+
+# Create .env file from .env.example
+cp "$ISIM_ORIGINAL_FILE" "$ISIM_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+# Check if the file exists
+if [ ! -f "$ISIM_RISK_API" ]; then
+  echo "❌ The file '$ISIM_RISK_API' do not exist."
+  exit 1
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$ISIM_RISK_API"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_RISK_API" 
+fi
+
+##################### NSE #################
+
+#Out of scope 
 
 ################### SACD ################
 
 echo -e "\nLet's start with SACD component configuration..."
-read -t 2
 
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
+SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
+SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
 
 # Check if the file exists
 if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
@@ -388,38 +336,79 @@ if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
  exit 1
 fi
 
-
 # Check if the file exists
 if [ ! -f "$SACD_ENV_FILE" ]; then
  echo "❌ The file '$SACD_ENV_FILE' do not exist."
  exit 1
 fi
 
+# Check if the file exists
+if [ ! -f "$SACD_EXTERNAL" ]; then
+ echo "❌ The file '$SACD_EXTERNAL' do not exist."
+ exit 1
+fi
+
+# Check if the file exists
+if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then
+ echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."
+ exit 1
+fi
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_PRODTS_FILE"
-sed -i "s/127\.0\.0\.1/${SERVER_IP}/g" "$SACD_ENV_FILE"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
+else
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_PRODTS_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
+else
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_FILE" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR" 
+fi
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
-read -t 2
 
+#########   NETWORK AND DETECTION RESPONSE (NDR)   ################
+
+#Out of scope 
 
 ###########   LANDING PAGE CONFIGURATION  ####################################
   
-sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+    echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
+else
+    sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json" 
+    echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
+fi
 
-echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
 ###########   END LANDING PAGE CONFIGURATION  ################################
 
 ##############################################################################
 #                           THREAT AWARENESS PLANE                           #                                                               
 ##############################################################################
-echo -e "\nLet's start with configuring components in Threat Awareness Plane!"
-read -t 2
+
+echo -e "\nLet's start with configuring components in Threat Awareness Plane!\n"
+
+####### AI BASED DETECTOR CONFIGURATION  ##########
+#Out of scope 
+####### END AI BASED DETECTOR CONFIGURATION  ##########
 
 echo -e "\nStarting with Federated Learning component configuration..."
-read -t 2
 
 ####### FEDERATED LEARNING CONFIGURATION  ##########
 FLAD_AGENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/fl-agent/config/fl_agent.conf"
@@ -437,11 +426,10 @@ if [ ! -f "$FLAD_AGENT_ORIGINAL_FILE2" ]; then
 fi
 
 # Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE"
-sed -i "s/155\.54\.205\.196/${SERVER_IP}/g" "$FLAD_AGENT_ORIGINAL_FILE2"
+sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE"
+sed -i "s|155\.54\.205\.196|${SERVER_IP}|g" "$FLAD_AGENT_ORIGINAL_FILE2"
 
 echo -e "\n✅ Server IP added for FL_Agent and AI_Detection_Engine config files."
-read -t 2
 
 #Build ai-detection-engine component
 docker build -t ai-detection-engine -f $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/Dockerfile $DOCKER_BASE_PATH/Threat-Awareness/Anomaly-Detectors/UMU-T4.3-FL-Anomaly-Detection/ai-detection-engine/
@@ -468,10 +456,10 @@ docker run -d fl-agent
 #######   IoB Configuration  ###########################
 
 echo -e "\nLet's continue with IoB component configuration..."
-read -t 2
 
 IOB_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example"
 IOB_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env"
+IOB_INTEGRATIONS="$DOCKER_BASE_PATH/Threat-Awareness/IoB/attack_flow_builder/src/components/Elements/IntegrationToolsDialog.vue"
 
 # Check if the file exists
 if [ ! -f "$IOB_ORIGINAL_FILE" ]; then
@@ -483,7 +471,18 @@ fi
 cp "$IOB_ORIGINAL_FILE" "$IOB_COPY_FILE"
 
 echo -e "\n✅ File .env created."
-read -t 2
+
+# Check if the file exists
+if [ ! -f "$IOB_INTEGRATIONS" ]; then
+  echo "❌ The file '$IOB_INTEGRATIONS' do not exist."
+  exit 1
+fi
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$IOB_INTEGRATIONS"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$IOB_INTEGRATIONS" 
+fi
 
 # Verify build dependencies
 # if ! command -v npm >/dev/null 2>&1; then
@@ -493,7 +492,7 @@ read -t 2
 
 # export NODE_OPTIONS="--openssl-legacy-provider"
 
-NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install
+NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" install --legacy-peer-deps
 NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app" run build
 
 #######   END IoB Configuration  ###########################
@@ -501,25 +500,36 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 #######   PP-CTI Configuration   ###########################
 
-# echo -e "\nLet's continue with PP-CTI component configuration..."
+echo -e "\nLet's continue with PP-CTI component configuration..."
+PPCTI_ANONYMIZER_CONFIGFILE=$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/anonymizer/config.yaml
 
-# echo -e "\nInstalling Java dependencies...\n"
+sed -i "s|<YOUR_MISP_KEY>|$CLAVE|g" "$PPCTI_ANONYMIZER_CONFIGFILE"
+sed -i "s#https://<YOUR_MISP_URL>#$mispserver_url#g" "$PPCTI_ANONYMIZER_CONFIGFILE"
 
-# sudo apt update
-# sudo apt install openjdk-21-jdk -y
+echo -e "\n✅ Config.yaml updated with Misp Server configuration."
 
-# echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
+echo -e "\nInstalling Java dependencies...\n"
 
-# docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
+sudo apt update
+sudo apt install openjdk-21-jdk -y
 
-# echo -e "\n✅ FlaskDP image built.\n"
+echo -e "\n✅ Java 21 (OpenJDK 21) installed.\n"
 
-# ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
+docker build ./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/flaskdp
 
-# echo -e "\n✅ ARXlet image built.\n"
+echo -e "\n✅ FlaskDP image built.\n"
+
+./$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet/gradlew -p $DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/arxlet server:dockerImage
+
+echo -e "\n✅ ARXlet image built.\n"
 
 #######   END PP-CTI Configuration   #######################
 
+#######   Threat-Hunting-And-Forensics Configuration   ###########################
+
+#Out of scope 
+
+#######   END Threat-Hunting-And-Forensics Configuration   #######################
 
 ##################################################################################
 #                     COMPOSE FILES EXECUTION                                    #
@@ -530,9 +540,21 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 
 # docker compose -f $DOCKER_BASE_PATH/Dockerfile build
 
-echo -e "\nEnter to start main docker compose up..."
-read
+echo -e "\nStarting main docker compose up..."
 docker compose -f $DOCKER_BASE_PATH/docker-compose-Domain.yml up -d
+
+
+############################  END COMPOSE FILES EXECUTION  ############################
+
+##################################################################################
+#                     RESTART CONTAINERS                                         #
+##################################################################################
+
+echo -e "\nRestarting MISP Client container to apply the new configuration..."
+docker compose -f $DOCKER_BASE_PATH/docker-compose-Domain.yml restart resilmesh-ap-misp-client
+echo -e "\nAll containers are now up and running."
+
+############################  END RESTART CONTAINERS  ############################
 
 #################################################################################
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
@@ -540,7 +562,6 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-Domain.yml up -d
 
 CONTAINER="resilmesh.tap.wazuh.manager"
 echo -e "\nStarting Wazuh Manager container configuration..."
-read -t 2
 echo -e "\nInstalling telnet in the $CONTAINER..."
 read -t 2
 docker exec -u 0 -it "$CONTAINER" yum install -y telnet
@@ -575,8 +596,14 @@ EOF'
 echo -e "\nStarting rsyslogd now"
 docker exec -u 0 "$CONTAINER" rsyslogd
 echo -e "\nAll Wazuh container configuration are now ready."
-read -t 2
-##############  END WAZUH CONTAINER CONFIGURATION  ###############################################
+############################  END WAZUH CONTAINER CONFIGURATION  ############################
+
+############################ ISIM REST COLLECTSTATIC  ############################
+echo -e "\nStarting ISIM Rest collectstatic command..."
+docker exec resilmesh-sap-isim python /app/isim_rest/manage.py collectstatic --noinput > /dev/null 2>&1
+docker restart resilmesh-sap-isim
+echo -e "\nISIM Rest collectstatic command finished."
+############################ END ISIM REST COLLECTSTATIC  ############################
 
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
@@ -584,11 +611,13 @@ read -t 5
 docker exec -u 0 resilmesh-ap-vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
-read -t 2
 
+############################ Executing CASM scans ############################
+docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
+docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
+#docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
 
-
-#############  FINAL SUMMARY  ###################################################################
+############################  FINAL SUMMARY  ############################
 
 # Calculate script duration
 duration=$SECONDS
@@ -604,8 +633,7 @@ fi
 # Final summary of changes
 echo -e "\nThis is a summary of all the changes made during the execution:\n"
 echo -e "- resilmesh_network has been created: IP 172.19.0.0/16"
-echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager, PBTools, SACD."
-echo -e "- You have entered the SLP key: $enrich_key"
+echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Misp Client, Mitigation Manager, PBTools, SACD."
 echo -e "- MISP Server Authkey autogenerated: $CLAVE"
 echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
@@ -621,9 +649,9 @@ echo -e "- The component ISIM (Neo4j) is accesible on: http://$SERVER_IP:7474"
 echo -e "- The component ISIM (Graphql) is accesible on: http://$SERVER_IP:4001/graphql"
 echo -e "- The component SACD is accesible on: http://$SERVER_IP:4200"
 echo -e "- The component IoB Attack Flow Builder is accesible on: http://$SERVER_IP:9080"
-echo -e "- The component IoB Sanic Web Server is accesible on: http://$SERVER_IP:9003"
 echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:3400"
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
+echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
 
 echo -e "\n\nA new file output_summary.txt has been created with a summary of the changes.\n"
 
@@ -632,8 +660,7 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
 {
     echo -e "\nThis is a summary of all the changes made during the execution:\n"
     echo -e "- resilmesh_network has been created: IP 172.19.0.0/16"
-    echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Enrichment, Misp Client, Mitigation Manager, PBTools, SACD."
-    echo -e "- You have entered the SLP key: $enrich_key"
+    echo -e "- Environment files created for Wazuh Server, Misp Server, Vector, Misp Client, Mitigation Manager, PBTools, SACD."
     echo -e "- MISP Server Authkey autogenerated: $CLAVE \n"
     echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
 
@@ -644,6 +671,8 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Plane" "Service" "Protocol" "IP Address" "Port" "URL"
     printf "$SEPARATOR\n"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "Landing page" "HTTP" "$SERVER_IP" "8181" "http://$SERVER_IP:8181"    
+    printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "Wazuh Server" "HTTPS" "$SERVER_IP" "4433" "https://$SERVER_IP:4433"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "MISP Server" "HTTPS" "$SERVER_IP" "10443" "https://$SERVER_IP:10443"
@@ -651,8 +680,6 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Security Operations" "Workflow Orchestrator" "HTTP" "$SERVER_IP" "8080" "http://$SERVER_IP:8080"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Security Operations" "Playbooks Tool" "HTTPS" "$SERVER_IP" "3443" "https://$SERVER_IP:3443"
-    printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "Landing page" "HTTP" "$SERVER_IP" "8181" "http://$SERVER_IP:8181"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "CASM" "HTTP" "$SERVER_IP" "8000" "http://$SERVER_IP:8000"
     printf "$SEPARATOR\n"
@@ -664,12 +691,11 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB Attack Flow Builder" "HTTP" "$SERVER_IP" "9080" "http://$SERVER_IP:9080"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB Sanic Web Server" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003"
-    printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB STIX Modeler" "HTTP" "$SERVER_IP" "3400" "http://$SERVER_IP:3400"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "IoB CTI STIX Visualization" "HTTP" "$SERVER_IP" "9003" "http://$SERVER_IP:9003/cti-stix-visualization/index.html"
     printf "$SEPARATOR\n"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "http://$SERVER_IP:3100"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
     printf "\n\n"
 } > ./output_summary.txt
