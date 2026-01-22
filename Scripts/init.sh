@@ -47,7 +47,7 @@ echo -e "\n\n\n"
 #################################################
 
 echo -e "Removing any previous Docker containers, images, networks, volumes, and configuration files...\n"
-./remove_all.sh
+sudo ./remove_all.sh
 
 #################################################
 #####                Proxy              #########
