@@ -77,42 +77,31 @@ while true; do
 
   case $option in
     1)
-      echo -e "\nYou have selected: IT Domain"
-      sleep 2
       echo -e "\n\nProceeding with IT Domain deployment..."
       ./IT_Domain.sh
       break
       ;;
     2)
-      echo -e "\nYou have selected: IoT Domain"
-      sleep 2
       echo -e "\n\nProceeding with IoT Domain deployment..."
       ./IoT_Domain.sh
       break
       ;;
     3)
-      echo -e "\nYou have selected: Domain"
-      sleep 2
       echo -e "\n\nProceeding with Domain deployment..."
       ./Domain.sh
       break
       ;;
     4)
-      echo -e "\nYou have selected: Full Platform"
-      sleep 2
       echo -e "\n\nProceeding with Full Platform deployment..."
       ./Full_Platform.sh
       break
       ;;
     5)
-      echo -e "\nYou have selected: Exit"
-      sleep 2
       echo -e "\n\nExiting..."
       exit 0
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 5."
-      sleep 2
       ;;
   esac
 

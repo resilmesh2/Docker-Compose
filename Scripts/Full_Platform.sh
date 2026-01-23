@@ -39,20 +39,14 @@ while true; do
 
   case $option in
     1)
-      echo -e "\nYou have selected: Alias"
-      sleep 2
       read_api_key "Alias"
       break
       ;;
     2)
-      echo -e "\nYou have selected: Claude Sonnet 4"
-      sleep 2
       read_api_key "Claude Sonnet 4"
       break
       ;;
     3)
-      echo -e "\nYou have selected: Other"
-      sleep 2
       echo -e "\nPlease, introduce the model:"  
       read model_dfir
       read_api_key "$model_dfir"
@@ -60,7 +54,6 @@ while true; do
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 3."
-      sleep 2
       ;;
   esac
 
