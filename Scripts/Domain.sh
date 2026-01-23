@@ -6,6 +6,13 @@
 
 DOCKER_BASE_PATH=".."
 
+#######################################################
+#               SilentPush API Key                    #
+#######################################################
+
+# Introduce silenpush API Key
+echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+read enrich_key
 
 #######################################################
 #                IP'S COLLECTION                      #
@@ -190,7 +197,25 @@ echo -e "\nVector .env file has been created"
 ####    ENRICHMENT ENVIRONMENT CONFIGURATION    ####
 ####################################################
 
-#Out of scope 
+echo -e "\nLet's continue configuring Enrichment!"
+
+ENRICHMENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env.sample"
+ENRICHMENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/Enrichment/.env"
+
+# Check if the file exists
+if [ ! -f "$ENRICHMENT_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$ENRICHMENT_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.sample
+cp "$ENRICHMENT_ORIGINAL_FILE" "$ENRICHMENT_COPY_FILE"
+
+# Add the Wazuh manager container IP to the .env file where RSYSLOG_HOST is located
+sed -i "s|^API_KEY=.*|API_KEY=$enrich_key|" "../Aggregation/Enrichment/.env"
+
+echo -e "\nEnrichment .env file has been created"
+echo "✅ Aggregation Plane has been configured."
 
 ####### END ENRICHMENT CONFIGURATION  ##########
 

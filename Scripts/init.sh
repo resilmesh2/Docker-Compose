@@ -15,16 +15,6 @@ menu() {
   read -p "Enter the number of your choice (1-5): " option
 }
 
-confirmation() {
-  echo
-  read -n 1 -p "Are you sure you want to proceed? (y/n): " confirm
-  if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-    return 0  # User confirmed
-  else
-    return 1  # User did not confirm
-  fi
-}
-
 #################################################
 #####                Header             #########
 #################################################
@@ -59,7 +49,7 @@ DOCKER_ORIGINAL_FILE="$DOCKER_BASE_PATH/.env.sample"
 DOCKER_COPY_FILE="$DOCKER_BASE_PATH/.env"
 
 
-read -n 1 -p "Are you behind a proxy? (y/n): " answer
+read -p "Are you behind a proxy? (y/n): " answer
 
 if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
     echo "\nYou said that you have a proxy, let's configure it."
@@ -88,57 +78,37 @@ while true; do
   case $option in
     1)
       echo -e "\nYou have selected: IT Domain"
-      if confirmation; then
-        echo -e "\n\nProceeding with IT Domain deployment..."
-        ./IT_Domain.sh
-        break
-      else
-        echo -e "\n\nOperation cancelled. Returning to menu..."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\n\nProceeding with IT Domain deployment..."
+      ./IT_Domain.sh
+      break
       ;;
     2)
       echo -e "\nYou have selected: IoT Domain"
-      if confirmation; then
-        echo -e "\n\nProceeding with IoT Domain deployment..."
-        ./IoT_Domain.sh
-        break
-      else
-        echo -e "\n\nOperation cancelled. Returning to menu..."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\n\nProceeding with IoT Domain deployment..."
+      ./IoT_Domain.sh
+      break
       ;;
     3)
       echo -e "\nYou have selected: Domain"
-      if confirmation; then
-        echo -e "\n\nProceeding with Domain deployment..."
-        ./Domain.sh
-        break
-      else
-        echo -e "\n\nOperation cancelled. Returning to menu..."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\n\nProceeding with Domain deployment..."
+      ./Domain.sh
+      break
       ;;
     4)
       echo -e "\nYou have selected: Full Platform"
-      if confirmation; then
-        echo -e "\n\nProceeding with Full Platform deployment..."
-        ./Full_Platform.sh
-        break
-      else
-        echo -e "\n\nOperation cancelled. Returning to menu..."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\n\nProceeding with Full Platform deployment..."
+      ./Full_Platform.sh
+      break
       ;;
     5)
       echo -e "\nYou have selected: Exit"
-      if confirmation; then
-        echo -e "\n\nExiting..."
-        exit 0
-      else
-        echo -e "\n\nOperation cancelled. Returning to menu..."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\n\nExiting..."
+      exit 0
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 5."

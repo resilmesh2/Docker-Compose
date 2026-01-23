@@ -27,16 +27,6 @@ menu_dfir() {
   read -p "Please, select an option (1-3): " option
 }
 
-confirmation() {
-  echo
-  read -n 1 -p "Are you sure you want to proceed? (y/n): " confirm
-  if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-    return 0  # User confirmed
-  else
-    return 1  # User did not confirm
-  fi
-}
-
 read_api_key() {
   echo -e "\n\nPlease, introduce the API Key for $1:"
   read api_key_dfir
@@ -50,35 +40,23 @@ while true; do
   case $option in
     1)
       echo -e "\nYou have selected: Alias"
-      if confirmation; then
-        read_api_key "Alias"
-        break
-      else
-        echo -e "\n\nOperation cancelled. Let's choose again the model."
-        sleep 2
-      fi
+      sleep 2
+      read_api_key "Alias"
+      break
       ;;
     2)
       echo -e "\nYou have selected: Claude Sonnet 4"
-      if confirmation; then
-        read_api_key "Claude Sonnet 4"
-        break
-      else
-        echo -e "\n\nOperation cancelled. Let's choose again the model."
-        sleep 2
-      fi
+      sleep 2
+      read_api_key "Claude Sonnet 4"
+      break
       ;;
     3)
       echo -e "\nYou have selected: Other"
-      if confirmation; then
-        echo -e "\nPlease, introduce the model:"  
-        read model_dfir
-        read_api_key "$model_dfir"
-        break
-      else
-        echo -e "\n\nOperation cancelled. Let's choose again the model."
-        sleep 2
-      fi
+      sleep 2
+      echo -e "\nPlease, introduce the model:"  
+      read model_dfir
+      read_api_key "$model_dfir"
+      break
       ;;
     *)
       echo -e "\n❌ Invalid option. Please, try again with a number between 1 to 3."
@@ -88,8 +66,13 @@ while true; do
 
 done
 
-echo -e "\n\nPlease, introduce the Anthropic API Key for THFramework:"
+if [ "$option" == "2" ]; then
+  api_key_thframe="$api_key_dfir"
+  echo -e "\n\nUsing the same API Key for THFramework."
+else
+  echo -e "\n\nPlease, introduce the API Key for THFramework:"
   read api_key_thframe
+fi
 
 #######################################################
 #                IP'S COLLECTION                      #
