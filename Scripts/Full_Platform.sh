@@ -780,16 +780,6 @@ docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml up -d
 
 ############################  END COMPOSE FILES EXECUTION  ############################
 
-##################################################################################
-#                     RESTART CONTAINERS                                         #
-##################################################################################
-
-echo -e "\nRestarting MISP Client container to apply the new configuration..."
-docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml restart resilmesh-ap-misp-client
-echo -e "\nAll containers are now up and running."
-
-############################  END RESTART CONTAINERS  ############################
-
 #################################################################################
 #                     CONFIGURATION WAZUH DOCKER CONTAINER                      #
 #################################################################################
@@ -839,17 +829,27 @@ docker restart resilmesh-sap-isim
 echo -e "\nISIM Rest collectstatic command finished."
 ############################ END ISIM REST COLLECTSTATIC  ############################
 
+############################ Executing CASM scans ############################
+docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
+docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
+docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
+
+##################################################################################
+#                     RESTART CONTAINERS                                         #
+##################################################################################
+
+echo -e "\nRestarting MISP Client container to apply the new configuration..."
+docker compose -f $DOCKER_BASE_PATH/docker-compose-Full_Platform.yml restart resilmesh-ap-misp-client
+echo -e "\nAll containers are now up and running."
+
+############################  END RESTART CONTAINERS  ############################
+
 # Test data injection from Vector to Wazuh Manager to test rsyslog
 echo -e "\nInjecting test data from Vector to test rsyslog configuration..."
 read -t 5
 docker exec -u 0 resilmesh-ap-vector bash -c 'tail -n50 /etc/vector/datasets/CESNET/bad_ips.csv >> /etc/vector/datasets/CESNET/bad_ips.csv'
 
 echo -e "\nData already inyected."
-
-############################ Executing CASM scans ############################
-docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
-docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
-docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
 
 ############################  FINAL SUMMARY  ############################
 
