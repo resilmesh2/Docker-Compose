@@ -58,7 +58,7 @@ ResilMesh v2 aligns GitHub layout with the plane-based architecture:
 ## Deployment
 ResilMesh v2 supports: 
 - On-premises Linux (Docker + Docker Compose installed) 
-- AWS Cloud testbed (Terraform provisions infra + bootstrap; then scripts deploy the platform)
+- AWS Cloud (Terraform provisions infra + bootstrap; then scripts deploy the platform)
 
 **Important:** visit the Resilmesh installation guide for fully deplyment details: `https://awscloud-deployment.readthedocs.io/en/latest/#`
 
@@ -82,6 +82,8 @@ chmod +x init.sh
 - generates .env files per component from templates, 
 - prepares a shared Docker network, 
 - executes the appropriate compose stack in a cascading manner.
+
+**Important, see** `https://github.com/resilmesh2/AWSCloud-Deployment` for instructions.
 
 **Common services (typical)**
 Depending on the selected deployment profile, common services may include: 
@@ -114,7 +116,6 @@ Typical AWS deployment includes:
 - EBS encryption at rest 
 - IAM roles with least privilege (e.g., SSM-managed instance access)
 
-**See:** `https://github.com/resilmesh2/AWSCloud-Deployment`
 
 **Security notes**
 - Use IP-restricted Security Groups / firewall rules for all exposed services.
