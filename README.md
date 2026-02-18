@@ -1,91 +1,126 @@
-# Resilmesh Framework
-ResilMesh is an Innovation Action project funded by the European Union, dedicated to revolutionizing cybersecurity practices.
+# ResilMesh — Cyber Situational Awareness (CSA) Platform
+ResilMesh is a Horizon Europe Innovation Action focused on cybersecurity resilience for critical infrastructures through Cyber Situational Awareness (CSA): collect security-relevant telemetry, correlate and enrich it, assess risk at asset/service level, and orchestrate mitigation actions across heterogeneous IT/OT environments.
 
-At its core, ResilMesh endeavors to develop a cutting-edge security orchestration and analytics toolset grounded in cyber situational awareness (CSA). This initiative aims to equip organizations with the capabilities needed for real-time defense of essential business functions in an era marked by dispersed, heterogeneous cyber systems.
+“You can’t protect what you don’t understand.” ResilMesh operationalizes that principle by linking data → detection → context/risk → response in an integrated, plane-based architecture.
 
-_see: https://resilmesh.eu/_
+**ResilMesh System v2 provides:** 
+- A plane-based, modular architecture (Aggregation & Collaboration, Threat Awareness, Situation Assessment, Security Operations). 
+- Improved deployability via a restructured GitHub layout and cascading Docker Compose execution. 
+- Automated deployment for on-prem and AWS (scripts + Terraform-based AWS testbed).
 
-## Architecture
-Here's a UML to help you understand the architecture:
-```mermaid
----
-title: Resilmesh Architecture
-config:
-   theme: dark
-   noteAlign: left
----
-sequenceDiagram
+## High-level architecture
+ResilMesh is organized into interdependent functional planes. 
 
-   participant Vector
-   participant NATS
-   participant SLP-Enrichment
-   note over SLP-Enrichment: Micro service enriches events
-   participant AD
-   note over AD: Anomaly Detector
-   participant Wazuh
-   participant MISP-Client
-   note over MISP-Client: Micro service leverages MISP API
-   participant MISP
-   
-   Vector->>+Vector: watch datasets files
-   Vector->>+Vector: dedupe events
-   Vector->>+Vector: normalize (ECS) events
-   Vector->>NATS: publish to<br/>'ecs_events' queue
-   NATS->>SLP-Enrichment: subscribe to 'ecs_events'<br/>and enrich events
-   SLP-Enrichment->>+SLP-Enrichment: enriches events
-   SLP-Enrichment-->>NATS: publish to<br/>'enriched_events' queue
-   NATS->>MISP-Client: MISP API Client subscribed to 'enriched_events' queue 
-   NATS-->>Vector: source from 'enriched_events' queue
-   Vector->>Wazuh: Vector sinks the enriched events into RSyslog using tcp connection
-   AD-->>NATS: publish to<br/>'ad_events' queue
-   NATS-->>Vector: source from 'ad_events' queue
-   Vector->>Wazuh: Vector sinks the Anomaly Detector events into RSyslog using tcp connection
-   Wazuh->>+Wazuh: RSyslog logs<br/>events from Resilmesh
-   Wazuh->>Wazuh: Wazuh Agent<br/>collects logs
-   MISP-Client->>MISP: push events
+1) Aggregation & Collaboration Plane
+Pre-processes, normalizes, enriches, and brokers data between components: 
+- Vector: telemetry collection/transformation/routing. 
+- NATS: high-performance message broker/event bus. 
+- SLP Enrichment: Silent Push enrichment for IoCs (domain/IP) with buffering/publishing patterns to avoid slow consumers. 
+- MISP Client: consumes events from NATS, normalizes, and pushes CTI to MISP Server.
+
+2) Threat Awareness Plane
+Detection, monitoring, correlation, CTI & hunting: 
+- Wazuh Server (SIEM): collection/analysis of logs and alerts. 
+- AIC (AI Correlation): correlation/pruning/RCA to reduce alert overload and add context. 
+- AIBD (AI-Based Detector): multi-view ML for heterogeneous IT/OT anomaly/attack detection (planned for advanced Pilot 2 phases). 
+- FLAD (Federated Learning Anomaly Detector): real-time detection/classification using federated learning (validated in specific pilot environments). 
+- RCTI: robust CTI with IoB (Indicator of Behaviour), PP-CTI (privacy-preserving sharing), and MISP Server. 
+- THF/DFIR: threat hunting and forensics with AI-assisted workflows and reporting.
+
+3) Situation Assessment Plane
+Contextualizes threats into system/service risk: 
+- CASM: automated internal/external attack surface scanning and vulnerability acquisition (NVD), orchestrated with Temporal-based workflows. 
+- ISIM (Neo4j): central graph model storing assets/services/vulns/dependencies (REST + GraphQL). 
+- CSA (Critical Service Awareness): maps missions/services and computes asset criticality using ISIM + network centrality inputs. 
+- NSE: network-wide risk aggregation + projection (current & future posture). 
+- NDR: traffic analysis + anomaly detection + RCA + XAI. 
+- SACD: consolidated dashboard UI for SA data. 
+- AIBAST: AI-driven automated security testing (planned for later Pilot 2 phases). 
+- Landing Page: entry point linking to platform services.
+
+4) Security Operations Plane
+Turns intelligence into mitigation actions: 
+- MM (Mitigation Manager): selects optimal response playbook using situational context (e.g., ISIM) and rule-based reasoning. 
+- PT (Playbooks Tool): executes mitigation workflows / Courses of Action (CoAs). 
+- WO (Workflow Orchestrator): runs complex automation workflows and provides feedback loops to MM.
+
+## Repository layout (v2)
+ResilMesh v2 aligns GitHub layout with the plane-based architecture: 
+- A main Docker Compose repository at the top level. 
+- Plane-level submodules nested beneath: 
+  - Aggregation/ 
+  - Threat-Awareness/ 
+  - Situation-Assessment/ 
+  - Security-Operations/ 
+- Each plane contains component repositories + compose definitions. 
+- Top-level compose files include plane compose files to enable cascading deployments.
+
+## Deployment
+ResilMesh v2 supports: 
+- On-premises Linux (Docker + Docker Compose installed) 
+- AWS Cloud testbed (Terraform provisions infra + bootstrap; then scripts deploy the platform)
+
+**Important:** visit the Resilmesh installation guide for fully deplyment details: `https://awscloud-deployment.readthedocs.io/en/latest/#`
+
+### Prerequisites
+- Linux host (on-prem) or provisioned AWS EC2 host
+- Docker + Docker Compose
+- Network access to required ports (restricted to authorized IPs recommended)
+- Component-specific keys if enabling enrichment/hunting tooling (e.g., enrichment API keys)
+- Run deployment menu (recommended)
+
+### Running the platform
+```
+cd Docker-Compose/Scripts
+chmod +x init.sh
+./init.sh
 ```
 
-## Requirements
-We will need Docker with Compose, see [Install Docker Compose](https://docs.docker.com/compose/install/)
+**The script typically:** 
+- optionally configures proxy settings, 
+- prompts for deployment type (Domain / IT / IoT / Full), 
+- generates .env files per component from templates, 
+- prepares a shared Docker network, 
+- executes the appropriate compose stack in a cascading manner.
 
-## Installation
-1. Clone this repo: `git clone https://github.com/resilmesh2/Docker-Compose.git --recurse-submodules`
-2. Create .env file and add the following, replacing the values enclosed by < >:
-```dotenv
-# Add this only if you're behind a proxy!
-# i.e.: http_proxy=http://jao:secret@192.168.0.254:8080
-http_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
-https_proxy=http://<USER>:<PASSWORD>@<PROXY_IP>:<PROXY_PORT>
-```
-3. There are some config files we need, follow instructions at [README.md](./Wazuh/README.md)
-4. Follow the README's in the other containers to set them up:
-   - [Vector](Vector/README.md)
-   - [MISP](MISP/README.md)
-   - [Silent Push - Enrichment](Enrichment/README.md)
+**Common services (typical)**
+Depending on the selected deployment profile, common services may include: 
+- Wazuh, MISP 
+- SACD, CASM, ISIM (Neo4j + GraphQL), NSE, NDR 
+- Workflow Orchestrator, Playbooks Tool 
+- PP-CTI UI/API, IoB tooling, THF/DFIR UIs 
+- Landing Page as the platform entry point
 
-## Datasets
-The datasets included in this repository are for demonstration purpose only, the real ones used in production need to be copied into Vector/datasets folder, replacing the sample ones.
+URLs/ports depend on the selected environment profile and whether the deployment is AWS (Elastic IP) or on-prem (server IP).
 
-If you need to add more datasets, check [Vector](Vector/README.md) for instructions.
+#### Manual compose execution (examples)
+**Full Platform**
+`docker compose -f docker-compose-Full_platform.yml up -d`
 
+**IT Domain**
+`docker compose -f docker-compose-IT_Domain.yml up -d`
 
-## Docker convention
-Please use 'resilmesh_<PLANE>_<YOUR_COMPONENT>[_<INTERNAL_SERVICE>]', per example: 'resilmesh-ap-silentpush-redis'.
+**IoT Domain**
+`docker compose -f docker-compose-IoT_Domain.yml up -d`
 
-There's a global external network called 'resilmesh_network', this network should be use for all 
-docker containers which represent the components.
+**Domain**
+`docker compose -f docker-compose-Domain.yml up -d`
 
-Don't expose ports unless really necessary, like dashboards, etc. Instead use the resilmesh_network
+## AWS Cloud testbed (Terraform)
+Typical AWS deployment includes: 
+- VPC + subnet + IGW + routing 
+- Security Groups restricted to explicit admin IPs 
+- EC2 instance with bootstrap (user_data) that installs dependencies and clones repositories 
+- EBS encryption at rest 
+- IAM roles with least privilege (e.g., SSM-managed instance access)
 
+**See:** `https://github.com/resilmesh2/AWSCloud-Deployment`
 
-## Build and Run the containers
-```shell
-docker compose up -f production.yml -d
-```
+**Security notes**
+- Use IP-restricted Security Groups / firewall rules for all exposed services.
+- Prefer SSH keys and disable password auth where possible.
+- Rotate default passwords and secrets before any production-like usage.
+- Treat API keys and tokens as secrets; never commit them.
 
-## Demo
-This is a quick demo showing the framework in action, on the left side you see the microservices, on the right side you can see the MISP and Wazuh instance:
-![Alt Text](./Resilmesh_Demo.gif)
-
-## Support
-Ping if you need any further help: <Jorgeley [jorgeley@silentpush.com](jorgeley@silentpush.com)>
+## Contact / contributions
+This repository is part of the ResilMesh ecosystem. If you are a project partner and need access to specific components, keys, or deployment profiles, follow the internal onboarding instructions agreed within the consortium.
