@@ -1,4 +1,4 @@
-# ResilMesh — Cyber Situational Awareness (CSA) Platform
+# ResilMesh — Cyber Situational Awareness (CSA) Platfor
 ResilMesh is a Horizon Europe Innovation Action focused on cybersecurity resilience for critical infrastructures through Cyber Situational Awareness (CSA): collect security-relevant telemetry, correlate and enrich it, assess risk at asset/service level, and orchestrate mitigation actions across heterogeneous IT/OT environments.
 
 “You can’t protect what you don’t understand.” ResilMesh operationalizes that principle by linking data → detection → context/risk → response in an integrated, plane-based architecture.
