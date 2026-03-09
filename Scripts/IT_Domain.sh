@@ -10,8 +10,8 @@ DOCKER_BASE_PATH=".."
 #               SilentPush API Key                    #
 #######################################################
 
-# Introduce silenpush API Key
-echo -e "\nPlease, introduce the Silenpush API Key requested to Maja Otic (motic@silentpush.com):"
+# Introduce silentpush API Key
+echo -e "\nPlease, introduce the Silent Push API Key requested to Maja Otic (motic@silentpush.com):"
 read enrich_key
 
 #######################################################
