@@ -36,8 +36,12 @@ echo -e "\n\n\n"
 #####      Remove before deployment     #########
 #################################################
 
-echo -e "Removing any previous Docker containers, images, networks, volumes, and configuration files...\n"
-sudo ./remove_all.sh
+read -p "Do you want to remove any previous Docker configurations and resources? (y/n): " answer_remove
+
+if [[ "$answer_remove" == "y" || "$answer_remove" == "Y" ]]; then
+    echo -e "\nRemoving Docker containers, images, networks, volumes, and configuration files...\n"
+    sudo ./remove_all.sh
+fi
 
 #################################################
 #####                Proxy              #########
