@@ -72,6 +72,8 @@ menu() {
   read -p "Enter the number of your choice (1-5): " option
 }
 
+UPDATE_SUMMARY=""
+
 ############### Check for new versions ###############
                                     
 git fetch --tags -q
@@ -138,9 +140,13 @@ if [[ "$Cloud" == "Amazon EC2" ]]; then
     SERVER_IP_PUBLIC=$(curl -s https://checkip.amazonaws.com)
     mispserver_url="https://${SERVER_IP_PUBLIC}:10443"
     echo -e "\nYour Public IP is: '$SERVER_IP_PUBLIC' and your Private IP is: '$SERVER_IP'\n"
+
+    UPDATE_SUMMARY+="Network: EC2 Instance detected. Public IP: $SERVER_IP_PUBLIC | Private IP: $SERVER_IP\n"
 else
     mispserver_url="https://${SERVER_IP}:10443"
     echo -e "\nYour Private IP is: '$SERVER_IP'\n"
+
+    UPDATE_SUMMARY+="Network: On-Premise instance detected. Private IP: $SERVER_IP\n"
 fi
 
 
@@ -149,6 +155,8 @@ fi
 ######################################################
 
 if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
+
+    UPDATE_SUMMARY+="\n########## v2.1.0 ##########\n"
 
     VERSION_UPDATES=(
         "Situation-Assessment_Network-Detection-Response"
@@ -248,6 +256,19 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             fi
 
             NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$IOB_APP_PATH" run build
+
+            UPDATE_SUMMARY+="- IoB (Threat Awareness): Peer feature added, integrations and dependencies updated, and UI rebuilt.\n"
+            if [[ -n "$IOB_PEER_URL" ]]; then
+                UPDATE_SUMMARY+="  * PEER_URL configured: $IOB_PEER_URL\n"
+            else
+                UPDATE_SUMMARY+="  * No PEER_URL configured.\n"
+            fi
+
+            if [[ -n "$IOB_PEER_AUTH_TOKEN" ]]; then
+                UPDATE_SUMMARY+="  * PEER_AUTH_TOKEN configured: $IOB_PEER_AUTH_TOKEN\n"
+            else
+                UPDATE_SUMMARY+="  * No PEER_AUTH_TOKEN configured.\n"
+            fi
         
         fi
 
@@ -276,6 +297,8 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             else
                 sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE"
             fi
+
+            UPDATE_SUMMARY+="- NDR (Situation Assessment): .env file generated and configured with the server IP.\n"
         
         fi
 
@@ -291,8 +314,15 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
         
         docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
 
+    else
+        UPDATE_SUMMARY+="- No components from the selected deployment ($DEPLOYMENT) were affected by this update.\n"
     fi
 
 fi
 
+if [[ -n "$UPDATE_SUMMARY" ]]; then
+    echo -e "\n================== UPDATE SUMMARY =================="
+    echo -e "\n$UPDATE_SUMMARY"
+    echo -e "===================================================="
+fi
 echo -e "\n✅ Deployment of $LATEST_VERSION finished successfully.\n"
