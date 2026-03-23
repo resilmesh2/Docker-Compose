@@ -262,17 +262,16 @@ if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
   exit 1
 fi
 
-if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_ORIGINAL_FILE"
-else
-    sed -i "s|localhost|${SERVER_IP}|g" "$NDR_ORIGINAL_FILE" 
-fi
-
-
 # Create .env file from .env.example
 cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
 
 echo -e "\n✅ File .env created."
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_COPY_FILE"
+else
+    sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE" 
+fi
 
 ###########   LANDING PAGE CONFIGURATION  ####################################
   
@@ -490,7 +489,7 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     echo -e "- Environment files created for Wazuh Server, Vector and NDR."
     echo -e "- You have entered the DFIR API key: $api_key_dfir"
     echo -e "- You have entered the THFramework Anthropic API key: $api_key_thframe"
-    echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
+    echo -e "- All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json.\n"
 
     SEPARATOR="+----------------------+----------------------------+----------+-----------------+-------+----------------------------------------------------------------+"
 
