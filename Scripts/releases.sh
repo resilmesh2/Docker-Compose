@@ -331,5 +331,164 @@ if [[ -n "$UPDATE_SUMMARY" ]]; then
         echo -e "$UPDATE_SUMMARY"
         echo -e "================================================================="
     } | tee -a output_summary.txt
+    CURRENT_VERSION="v2.1.0"
 fi
 echo -e "\n✅ Deployment of $LATEST_VERSION finished successfully!\n"
+
+######################################################
+#                  RELEASE V2.2.0                    #  
+######################################################
+
+if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
+
+    UPDATE_SUMMARY+="\n############### v2.2.0 ###############\n"
+
+    # Definimos los componentes que cambian en esta versión
+    VERSION_UPDATES=(
+        "Situation-Assessment_Network-Detection-Response"
+        "Situation-Assessment_Landing-Page"
+    #    "Threat-Awareness_MISP-Server"
+    #    "Aggregation_MISP-Client"
+    )
+
+    COMPONENTS_TO_UPDATE=()
+    DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
+
+    # Filtrar componentes según el despliegue del usuario
+    for comp in "${VERSION_UPDATES[@]}"; do
+        if [[ "$DEPLOYMENT_LIST" == *" $comp "* ]]; then
+            COMPONENTS_TO_UPDATE+=("$comp")
+        fi
+    done
+
+    if [ ${#COMPONENTS_TO_UPDATE[@]} -gt 0 ]; then
+
+        echo -e "\n🔄 Updating submodules for v2.2.0...\n"
+        for component in "${COMPONENTS_TO_UPDATE[@]}"; do
+            levels=(${SUBMODULES[$component]})
+            current_path="$DOCKER_BASE_PATH"
+            
+            for level in "${levels[@]}"; do
+                git -C "$current_path" submodule update --init --force "$level"
+                current_path="$current_path/$level"
+            done
+        done
+
+        ################  NDR Configuration (v2.2.0)  ################
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Network-Detection-Response "* ]]; then
+
+            echo -e "\nLet's start with Network and Detection Response...\n"
+
+            # Create and edit the .env file (see env.example)
+            NDR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/env.example"
+            NDR_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/.env"
+            
+            # Check if the file exists
+            if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
+                echo -e "\n❌ The file '$NDR_ORIGINAL_FILE' do not exist.\n"
+                exit 1 
+            fi
+
+            # Create .env file from .env.example
+            cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
+            echo -e "\n✅ File .env created.\n"
+            
+            if [[ "$Cloud" == "Amazon EC2" ]]; then
+                sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_COPY_FILE"
+            else
+                sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE"
+            fi
+
+            UPDATE_SUMMARY+="\n- NDR (Situation Assessment): .env file generated and configured with the server IP.\n"
+        
+        fi
+
+        ################  Landing Page Configuration  ################
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Landing-Page "* ]]; then
+
+            echo -e "\nConfiguring Landing Page...\n"
+
+            # Reemplazar localhost por la IP correspondiente
+        if [[ "$Cloud" == "Amazon EC2" ]]; then
+            sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+            echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
+        else
+            sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json" 
+            echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
+        fi
+
+            UPDATE_SUMMARY+="\n- Landing Page: Services configured with the server IP.\n"
+        fi
+
+        ################  MISP Server Configuration  #################
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_MISP-Server "* ]]; then
+        echo -e "\n\nLet's continue configuring and deploying MISP Server!"
+
+        MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/template.env"
+        MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
+
+        # Installation process begins. Let's know the user pick up the Server IP to introduce it in the URL
+        echo -e "\n#####  Read the following information carefully  #####\n"
+
+        # Check if the file exists
+        if [ ! -f "$MISPSERVER_ORIGINAL_FILE" ]; then
+        echo "❌ The file '$MISPSERVER_ORIGINAL_FILE' do not exist."
+        exit 1
+        fi
+
+        # Create .env file from template.env
+        cp "$MISPSERVER_ORIGINAL_FILE" "$MISPSERVER_COPY_FILE"
+
+        # Generamos authkey misp server y la guardamos en la variable CLAVE
+        CLAVE=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)
+        echo -e "\nMISP Server Authkey autogenerated: $CLAVE"
+
+        # Add the URL to the .env file where BASE_URL is located
+        sed -i "s|^BASE_URL=.*|BASE_URL=$mispserver_url|" "$MISPSERVER_COPY_FILE"
+        sed -i "s|^ADMIN_KEY=.*|ADMIN_KEY=$CLAVE|" "$MISPSERVER_COPY_FILE"
+
+        echo -e "\nMISP Server .env file has been created"
+        fi
+
+        ################  MISP Client Configuration  #################
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Aggregation_MISP-Client "* ]]; then
+
+        echo -e "\n\nLet's continue configuring MISP Client!\n"
+
+        MISPCLIENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env.sample"
+        MISPCLIENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env"
+
+        # Check if the file exists
+        if [ ! -f "$MISPCLIENT_ORIGINAL_FILE" ]; then
+        echo "❌ The file '$MISPCLIENT_ORIGINAL_FILE' do not exist."
+        exit 1
+        fi
+
+        # Create .env file from .env.sample
+        cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
+
+        # Add the Auth Key to the .env file where MISP_API_KEY is located
+        sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|" "$MISPCLIENT_COPY_FILE"
+        # Add the URL to the .env file where MISP_API_URL is located
+        sed -i "s|^MISP_API_URL=.*|MISP_API_URL=https://$SERVER_IP:10443|" "$MISPCLIENT_COPY_FILE"
+
+        echo -e "\nMISP Client .env file has been created"
+
+        fi
+
+        ################  Docker Deployment (v2.2.0)  ################
+        SERVICES_TO_BUILD=()
+        for component in "${COMPONENTS_TO_UPDATE[@]}"; do
+            SERVICES_TO_BUILD+=(${SERVICES[$component]})
+        done
+
+        echo -e "\nRebuilding services for v2.2.0: ${SERVICES_TO_BUILD[*]}...\n"
+        docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
+
+    else
+        UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.2.0 update.\n"
+    fi
+
+    # Actualizamos la versión actual al terminar el bloque
+    CURRENT_VERSION="v2.2.0"
+fi
