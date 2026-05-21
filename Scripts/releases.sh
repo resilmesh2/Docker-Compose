@@ -347,8 +347,8 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
     VERSION_UPDATES=(
         "Situation-Assessment_Network-Detection-Response"
         "Situation-Assessment_Landing-Page"
-    #    "Threat-Awareness_MISP-Server"
-    #    "Aggregation_MISP-Client"
+        "Threat-Awareness_MISP-Server"
+        "Aggregation_MISP-Client"
     )
 
     COMPONENTS_TO_UPDATE=()
@@ -484,6 +484,17 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
 
         echo -e "\nRebuilding services for v2.2.0: ${SERVICES_TO_BUILD[*]}...\n"
         docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
+
+        read -t 5
+
+        if [ "$DEPLOYMENT" != "IoT_Domain" ]; then
+            echo -e "\n🔄 Restarting MISP Client (Required for $DEPLOYMENT)..."
+            docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
+        #else
+           # echo -e "\n⏭️ Skipping MISP Client restart (Not applicable for IoT_Domain)."
+        fi
+
+        echo -e "\n✅ All containers are now up and running."
 
     else
         UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.2.0 update.\n"
