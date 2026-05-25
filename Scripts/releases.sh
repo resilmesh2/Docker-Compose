@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ######################################################
-#                         MAIN                       #  
+#                         MAIN                       #
 ######################################################
 
 ################       Variables      ################
- 
+
 DOCKER_BASE_PATH=".."
 
 declare -A SERVICES=(
@@ -75,9 +75,9 @@ menu() {
 UPDATE_SUMMARY=""
 
 ############### Check for new versions ###############
-                                    
+
 git fetch --tags -q
-CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null)                                               
+CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null)
 LATEST_VERSION=$(git tag -l "v[0-9]*.[0-9]*.0" --sort=-v:refname | head -n 1)
 
 if [ "$CURRENT_VERSION" == "$LATEST_VERSION" ]; then
@@ -131,7 +131,7 @@ while true; do
   esac
 
 done
- 
+
 ################      IP Addresses    ################
 
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
@@ -151,7 +151,7 @@ fi
 
 
 ######################################################
-#                  RELEASE V2.1.0                    #  
+#                  RELEASE V2.1.0                    #
 ######################################################
 
 if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
@@ -178,7 +178,7 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
         for component in "${COMPONENTS_TO_UPDATE[@]}"; do
             levels=(${SUBMODULES[$component]})
             current_path="$DOCKER_BASE_PATH"
-            
+
             for level in "${levels[@]}"; do
                 git -C "$current_path" submodule update --init --force "$level"
                 current_path="$current_path/$level"
@@ -208,20 +208,20 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             else
                 echo -e "\nYou said that you don't want to receive IoBs.\n"
             fi
-            
+
             IOB_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example"
             IOB_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env"
             IOB_INTEGRATIONS="$DOCKER_BASE_PATH/Threat-Awareness/IoB/attack_flow_builder/src/components/Elements/IntegrationToolsDialog.vue"
-            
+
             # Check if the file exists
             if [ ! -f "$IOB_ORIGINAL_FILE" ]; then
                 echo -e "\n❌ The file '$IOB_ORIGINAL_FILE' do not exist.\n"
                 exit 1
             fi
-            
+
             # Create .env file from .env.example
             cp "$IOB_ORIGINAL_FILE" "$IOB_COPY_FILE"
-            
+
             echo -e "\n✅ File .env created.\n"
 
             # Add PEER_URL and PEER_AUTH_TOKEN to the .env file where they are located
@@ -236,21 +236,21 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             else
                 sed -i "s|PEER_AUTH_TOKEN=.*|PEER_AUTH_TOKEN=|g" "$IOB_COPY_FILE"
             fi
-            
+
             # Check if the file exists
             if [ ! -f "$IOB_INTEGRATIONS" ]; then
                 echo -e "\n❌ The file '$IOB_INTEGRATIONS' do not exist.\n"
                 exit 1
             fi
-            
+
             if [[ "$Cloud" == "Amazon EC2" ]]; then
                 sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$IOB_INTEGRATIONS"
             else
                 sed -i "s|localhost|${SERVER_IP}|g" "$IOB_INTEGRATIONS"
             fi
-            
+
             IOB_APP_PATH="$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app"
-            
+
             if [ ! -d "$IOB_APP_PATH/node_modules" ]; then
                 echo -e "\nInstalling npm dependencies for IoB (this may take a while)...\n"
                 NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$IOB_APP_PATH" install --legacy-peer-deps
@@ -270,7 +270,7 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             else
                 UPDATE_SUMMARY+="  * No PEER_AUTH_TOKEN configured.\n"
             fi
-        
+
         fi
 
         ################  NDR Configuration   ################
@@ -282,17 +282,17 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             # Create and edit the .env file (see env.example)
             NDR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/env.example"
             NDR_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/.env"
-            
+
             # Check if the file exists
             if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
                 echo -e "\n❌ The file '$NDR_ORIGINAL_FILE' do not exist.\n"
-                exit 1 
+                exit 1
             fi
 
             # Create .env file from .env.example
             cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
             echo -e "\n✅ File .env created.\n"
-            
+
             if [[ "$Cloud" == "Amazon EC2" ]]; then
                 sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_COPY_FILE"
             else
@@ -300,7 +300,7 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
             fi
 
             UPDATE_SUMMARY+="\n- NDR (Situation Assessment): .env file generated and configured with the server IP.\n"
-        
+
         fi
 
         ################   Docker Deployment  ################
@@ -312,7 +312,7 @@ if [ "$CURRENT_VERSION" == "v2.0.0" ]; then
         done
 
         echo -e "\nRebuilding selected services: ${SERVICES_TO_BUILD[*]}...\n"
-        
+
         docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
 
     else
@@ -336,7 +336,7 @@ fi
 echo -e "\n✅ Deployment of $LATEST_VERSION finished successfully!\n"
 
 ######################################################
-#                  RELEASE V2.2.0                    #  
+#                  RELEASE V2.2.0                    #
 ######################################################
 
 if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
@@ -348,7 +348,6 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
         "Situation-Assessment_Network-Detection-Response"
         "Situation-Assessment_Landing-Page"
         "Threat-Awareness_MISP-Server"
-        "Aggregation_MISP-Client"
     )
 
     COMPONENTS_TO_UPDATE=()
@@ -367,7 +366,7 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
         for component in "${COMPONENTS_TO_UPDATE[@]}"; do
             levels=(${SUBMODULES[$component]})
             current_path="$DOCKER_BASE_PATH"
-            
+
             for level in "${levels[@]}"; do
                 git -C "$current_path" submodule update --init --force "$level"
                 current_path="$current_path/$level"
@@ -382,17 +381,17 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
             # Create and edit the .env file (see env.example)
             NDR_ORIGINAL_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/env.example"
             NDR_COPY_FILE="$DOCKER_BASE_PATH/Situation-Assessment/Network-Detection-Response/.env"
-            
+
             # Check if the file exists
             if [ ! -f "$NDR_ORIGINAL_FILE" ]; then
                 echo -e "\n❌ The file '$NDR_ORIGINAL_FILE' do not exist.\n"
-                exit 1 
+                exit 1
             fi
 
             # Create .env file from .env.example
             cp "$NDR_ORIGINAL_FILE" "$NDR_COPY_FILE"
             echo -e "\n✅ File .env created.\n"
-            
+
             if [[ "$Cloud" == "Amazon EC2" ]]; then
                 sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$NDR_COPY_FILE"
             else
@@ -400,7 +399,7 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
             fi
 
             UPDATE_SUMMARY+="\n- NDR (Situation Assessment): .env file generated and configured with the server IP.\n"
-        
+
         fi
 
         ################  Landing Page Configuration  ################
@@ -413,85 +412,42 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
             sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
             echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
         else
-            sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json" 
+            sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
             echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
         fi
 
             UPDATE_SUMMARY+="\n- Landing Page: Services configured with the server IP.\n"
         fi
 
-        ################  MISP Server Configuration  #################
-        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_MISP-Server "* ]]; then
-        echo -e "\n\nLet's continue configuring and deploying MISP Server!"
-
-        MISPSERVER_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/template.env"
-        MISPSERVER_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
-
-        # Installation process begins. Let's know the user pick up the Server IP to introduce it in the URL
-        echo -e "\n#####  Read the following information carefully  #####\n"
-
-        # Check if the file exists
-        if [ ! -f "$MISPSERVER_ORIGINAL_FILE" ]; then
-        echo "❌ The file '$MISPSERVER_ORIGINAL_FILE' do not exist."
-        exit 1
-        fi
-
-        # Create .env file from template.env
-        cp "$MISPSERVER_ORIGINAL_FILE" "$MISPSERVER_COPY_FILE"
-
-        # Generamos authkey misp server y la guardamos en la variable CLAVE
-        CLAVE=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)
-        echo -e "\nMISP Server Authkey autogenerated: $CLAVE"
-
-        # Add the URL to the .env file where BASE_URL is located
-        sed -i "s|^BASE_URL=.*|BASE_URL=$mispserver_url|" "$MISPSERVER_COPY_FILE"
-        sed -i "s|^ADMIN_KEY=.*|ADMIN_KEY=$CLAVE|" "$MISPSERVER_COPY_FILE"
-
-        echo -e "\nMISP Server .env file has been created"
-        fi
-
-        ################  MISP Client Configuration  #################
-        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Aggregation_MISP-Client "* ]]; then
-
-        echo -e "\n\nLet's continue configuring MISP Client!\n"
-
-        MISPCLIENT_ORIGINAL_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env.sample"
-        MISPCLIENT_COPY_FILE="$DOCKER_BASE_PATH/Aggregation/MISP_client/.env"
-
-        # Check if the file exists
-        if [ ! -f "$MISPCLIENT_ORIGINAL_FILE" ]; then
-        echo "❌ The file '$MISPCLIENT_ORIGINAL_FILE' do not exist."
-        exit 1
-        fi
-
-        # Create .env file from .env.sample
-        cp "$MISPCLIENT_ORIGINAL_FILE" "$MISPCLIENT_COPY_FILE"
-
-        # Add the Auth Key to the .env file where MISP_API_KEY is located
-        sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|" "$MISPCLIENT_COPY_FILE"
-        # Add the URL to the .env file where MISP_API_URL is located
-        sed -i "s|^MISP_API_URL=.*|MISP_API_URL=https://$SERVER_IP:10443|" "$MISPCLIENT_COPY_FILE"
-
-        echo -e "\nMISP Client .env file has been created"
-
-        fi
-
         ################  Docker Deployment (v2.2.0)  ################
         SERVICES_TO_BUILD=()
+        UPDATE_ONLY_SMTP=false
+
         for component in "${COMPONENTS_TO_UPDATE[@]}"; do
-            SERVICES_TO_BUILD+=(${SERVICES[$component]})
+            # If the component is MISP Server, activate the flag and avoid enter all the services
+            if [ "$component" == "Threat-Awareness_MISP-Server" ]; then
+                UPDATE_ONLY_SMTP=true
+            else
+                SERVICES_TO_BUILD+=(${SERVICES[$component]})
+            fi
         done
 
-        echo -e "\nRebuilding services for v2.2.0: ${SERVICES_TO_BUILD[*]}...\n"
-        docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
+        # 1. Rebuild NDR and Landing page
+        if [ ${#SERVICES_TO_BUILD[@]} -gt 0 ]; then
+            echo -e "\n🚀 Rebuilding standard services: ${SERVICES_TO_BUILD[*]}...\n"
+            docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
+            docker compose -f "$COMPOSE_FILE" up -d "${SERVICES_TO_BUILD[@]}"
+        fi
 
-        read -t 5
+        # 2. Rebuild SMTP (misp-mail) if needed
+        if [ "$UPDATE_ONLY_SMTP" = true ]; then
+            echo -e "\n🛡️ Isolating MISP update: Rebuilding ONLY SMTP/Mail service to protect API keys...\n"
 
-        if [ "$DEPLOYMENT" != "IoT_Domain" ]; then
-            echo -e "\n🔄 Restarting MISP Client (Required for $DEPLOYMENT)..."
-            docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
-        #else
-           # echo -e "\n⏭️ Skipping MISP Client restart (Not applicable for IoT_Domain)."
+            # Force build and up for smtp service
+            docker compose -f "$COMPOSE_FILE" build --no-cache resilmesh-tap-misp-mail
+            docker compose -f "$COMPOSE_FILE" up -d --force-recreate resilmesh-tap-misp-mail
+
+            echo -e "\n✅ SMTP Service updated. MISP Core & Database were completely untouched."
         fi
 
         echo -e "\n✅ All containers are now up and running."
@@ -500,6 +456,6 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
         UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.2.0 update.\n"
     fi
 
-    # Actualizamos la versión actual al terminar el bloque
+    # Update the actual version
     CURRENT_VERSION="v2.2.0"
 fi
