@@ -149,6 +149,8 @@ else
     UPDATE_SUMMARY+="Network: On-Premise instance detected. Private IP: $SERVER_IP\n"
 fi
 
+sudo chown -R $USER:$USER ../Threat-Awareness/MISP_Server-docker/configs
+sudo chmod -R u+rw ../Threat-Awareness/MISP_Server-docker/configs
 
 ######################################################
 #                  RELEASE V2.1.0                    #
@@ -333,7 +335,7 @@ if [[ -n "$UPDATE_SUMMARY" ]]; then
     } | tee -a output_summary.txt
     CURRENT_VERSION="v2.1.0"
 fi
-echo -e "\n✅ Deployment of $LATEST_VERSION finished successfully!\n"
+
 
 ######################################################
 #                  RELEASE V2.2.0                    #
@@ -500,4 +502,5 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
 
     # Update the actual version
     CURRENT_VERSION="v2.2.0"
+    echo -e "\n✅ Deployment of $CURRENT_VERSION finished successfully!\n"
 fi
