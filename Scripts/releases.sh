@@ -85,9 +85,12 @@ if [ "$CURRENT_VERSION" == "$LATEST_VERSION" ]; then
     exit 0
 fi
 
+sudo chown -R $USER:$USER ../Threat-Awareness/MISP_Server-docker/configs
+
 git checkout "$LATEST_VERSION" -q
 echo -e "\n🚀 New version detected: Updating from $CURRENT_VERSION to $LATEST_VERSION\n"
 
+sudo chmod -R u+rw ../Threat-Awareness/MISP_Server-docker/configs
 ###############          Menu          ###############
 
 echo -e "\n---------- ResilMesh Update Manager ----------\n"
@@ -149,8 +152,7 @@ else
     UPDATE_SUMMARY+="Network: On-Premise instance detected. Private IP: $SERVER_IP\n"
 fi
 
-sudo chown -R $USER:$USER ../Threat-Awareness/MISP_Server-docker/configs
-sudo chmod -R u+rw ../Threat-Awareness/MISP_Server-docker/configs
+
 
 ######################################################
 #                  RELEASE V2.1.0                    #
