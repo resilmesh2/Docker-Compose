@@ -67,6 +67,25 @@ else
   read api_key_thframe
 fi
 
+# ==========================================
+# Collect OpenAI key
+# ==========================================
+while true; do
+    read -p "\Do you have an OpenAI Key? [y/n]: " openai_key
+    case "$openai_key" in
+        [Yy]* ) 
+            read -p "Enter your OpenAI Key: " openai_key
+            break
+            ;;
+        [Nn]* ) 
+            echo "Skiping openai key (empty)..."
+            break
+            ;;
+        * ) 
+            echo "Please, enter y or n."
+            ;;
+    esac
+done
 
 #######################################################
 #                  IoB Questions                      #
@@ -580,6 +599,9 @@ if [[ "$Cloud" == "Amazon EC2" ]]; then
 else
     sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE" 
 fi
+
+sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$api_key_thframe|" "$NDR_COPY_FILE"
+sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$openai_key|" "$NDR_COPY_FILE"
 
 ###########   LANDING PAGE CONFIGURATION  ####################################
   

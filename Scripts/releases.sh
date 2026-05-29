@@ -398,6 +398,48 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
                 sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE"
             fi
 
+                # ==========================================
+            # 1. PROCESAR CLAVE A (OpenAI)
+            # ==========================================
+            while true; do
+                read -p "Do you have an OpenAI Key? [y/n]: " openai_key
+                case "$openai_key" in
+                    [Yy]* ) 
+                        read -p "Enter your OpenAI Key: " openai_key
+                        sed -i "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=$openai_key/" "$NDR_COPY_FILE"
+                        break
+                        ;;
+                    [Nn]* ) 
+                        echo "Skiping openai key (empty)..."
+                        break
+                        ;;
+                    * ) 
+                        echo "Please, enter y or n."
+                        ;;
+                esac
+            done
+
+            # ==========================================
+            # 2. PROCESAR CLAVE B (Anthropic)
+            # ==========================================
+            while true; do
+                read -p "Do you have an Anthropic Key? [y/n]: " anthropic_key
+                case "$anthropic_key" in
+                    [Yy]* ) 
+                        read -p "Enter your Anthropic Key: " anthropic_key
+                        sed -i "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=$anthropic_key/" "$NDR_COPY_FILE"
+                        break
+                        ;;
+                    [Nn]* ) 
+                        echo "Skiping anthropic key (empty)..."
+                        break
+                        ;;
+                    * ) 
+                        echo "Please, enter y or n."
+                        ;;
+                esac
+            done
+
             UPDATE_SUMMARY+="\n- NDR (Situation Assessment): .env file generated and configured with the server IP.\n"
 
         fi
