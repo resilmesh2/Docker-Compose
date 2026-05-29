@@ -90,7 +90,7 @@ sudo chown -R $USER:$USER ../Threat-Awareness/MISP_Server-docker/configs
 git checkout "$LATEST_VERSION" -q
 echo -e "\n🚀 New version detected: Updating from $CURRENT_VERSION to $LATEST_VERSION\n"
 
-sudo chmod -R u+rw ../Threat-Awareness/MISP_Server-docker/configs
+
 ###############          Menu          ###############
 
 echo -e "\n---------- ResilMesh Update Manager ----------\n"
@@ -377,6 +377,8 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
             done
         done
 
+        sudo chown -R 33:33 ../Threat-Awareness/MISP_Server-docker/configs
+
         ################  NDR Configuration (v2.2.0)  ################
         if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Network-Detection-Response "* ]]; then
 
@@ -502,6 +504,19 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
         UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.2.0 update.\n"
     fi
 
+       
+    ##################################################################################
+    #                     RESTART CONTAINERS                                         #
+    ##################################################################################
+    docker compose -f "$COMPOSE_FILE" restart resilmesh-tap-misp-core resilmesh-tap-misp-db resilmesh-tap-misp-modules
+
+    echo -e "\nRestarting MISP Client container to apply the new configuration..."
+    read -t 5
+
+    docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
+    echo -e "\nAll containers are now up and running."
+
+############################  END RESTART CONTAINERS  ############################
     # Update the actual version
     CURRENT_VERSION="v2.2.0"
     echo -e "\n✅ Deployment of $CURRENT_VERSION finished successfully!\n"
