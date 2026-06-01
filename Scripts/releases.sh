@@ -338,7 +338,6 @@ if [[ -n "$UPDATE_SUMMARY" ]]; then
     CURRENT_VERSION="v2.1.0"
 fi
 
-
 ######################################################
 #                  RELEASE V2.2.0                    #
 ######################################################
@@ -347,7 +346,7 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
 
     UPDATE_SUMMARY+="\n############### v2.2.0 ###############\n"
 
-    # Definimos los componentes que cambian en esta versión
+    # Components to be updated in this version
     VERSION_UPDATES=(
         "Situation-Assessment_Network-Detection-Response"
         "Situation-Assessment_Landing-Page"
@@ -357,7 +356,7 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
     COMPONENTS_TO_UPDATE=()
     DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
 
-    # Filtrar componentes según el despliegue del usuario
+    # Filter components depending on the environment
     for comp in "${VERSION_UPDATES[@]}"; do
         if [[ "$DEPLOYMENT_LIST" == *" $comp "* ]]; then
             COMPONENTS_TO_UPDATE+=("$comp")
@@ -365,6 +364,14 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
     done
 
     if [ ${#COMPONENTS_TO_UPDATE[@]} -gt 0 ]; then
+
+        # Only change to $USER if MISP is going to be deployed (Not attended for IoT) ---
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_MISP-Server "* ]]; then
+            if [ -d "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs" ]; then
+                sudo chown -R $USER:$USER "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs"
+                sudo chmod -R u+rw "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs"
+            fi
+        fi
 
         echo -e "\n🔄 Updating submodules for v2.2.0...\n"
         for component in "${COMPONENTS_TO_UPDATE[@]}"; do
@@ -376,8 +383,6 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
                 current_path="$current_path/$level"
             done
         done
-
-        sudo chown -R 33:33 ../Threat-Awareness/MISP_Server-docker/configs
 
         ################  NDR Configuration (v2.2.0)  ################
         if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Network-Detection-Response "* ]]; then
@@ -404,43 +409,43 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
                 sed -i "s|localhost|${SERVER_IP}|g" "$NDR_COPY_FILE"
             fi
 
-                # ==========================================
-            # 1. PROCESAR CLAVE A (OpenAI)
+            # ==========================================
+            # 1. PROCESS KEY (OpenAI)
             # ==========================================
             while true; do
                 read -p "Do you have an OpenAI Key? [y/n]: " openai_key
                 case "$openai_key" in
-                    [Yy]* ) 
+                    [Yy]* )
                         read -p "Enter your OpenAI Key: " openai_key
                         sed -i "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=$openai_key/" "$NDR_COPY_FILE"
                         break
                         ;;
-                    [Nn]* ) 
+                    [Nn]* )
                         echo "Skiping openai key (empty)..."
                         break
                         ;;
-                    * ) 
+                    * )
                         echo "Please, enter y or n."
                         ;;
                 esac
             done
 
             # ==========================================
-            # 2. PROCESAR CLAVE B (Anthropic)
+            # 2. PROCESS KEY (Anthropic)
             # ==========================================
             while true; do
                 read -p "Do you have an Anthropic Key? [y/n]: " anthropic_key
                 case "$anthropic_key" in
-                    [Yy]* ) 
+                    [Yy]* )
                         read -p "Enter your Anthropic Key: " anthropic_key
                         sed -i "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=$anthropic_key/" "$NDR_COPY_FILE"
                         break
                         ;;
-                    [Nn]* ) 
+                    [Nn]* )
                         echo "Skiping anthropic key (empty)..."
                         break
                         ;;
-                    * ) 
+                    * )
                         echo "Please, enter y or n."
                         ;;
                 esac
@@ -455,14 +460,14 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
 
             echo -e "\nConfiguring Landing Page...\n"
 
-            # Reemplazar localhost por la IP correspondiente
-        if [[ "$Cloud" == "Amazon EC2" ]]; then
-            sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
-            echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
-        else
-            sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
-            echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
-        fi
+            # Replace localhost for IP
+            if [[ "$Cloud" == "Amazon EC2" ]]; then
+                sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+                echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP_PUBLIC' in the file /Landing-Page/src/data/entries.json."
+            else
+                sed -i 's/localhost/'"$SERVER_IP"'/g' "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+                echo -e "\n✅ All landing page services URLs have been configured from 'localhost' to '$SERVER_IP' in the file /Landing-Page/src/data/entries.json."
+            fi
 
             UPDATE_SUMMARY+="\n- Landing Page: Services configured with the server IP.\n"
         fi
@@ -472,13 +477,20 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
         UPDATE_ONLY_SMTP=false
 
         for component in "${COMPONENTS_TO_UPDATE[@]}"; do
-            # If the component is MISP Server, activate the flag and avoid enter all the services
             if [ "$component" == "Threat-Awareness_MISP-Server" ]; then
                 UPDATE_ONLY_SMTP=true
             else
                 SERVICES_TO_BUILD+=(${SERVICES[$component]})
             fi
         done
+
+        # Return ownership to www-data (33) only if it was changed during the deployment
+        if [ "$UPDATE_ONLY_SMTP" = true ]; then
+            if [ -d "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs" ]; then
+                echo -e "\n🔒 Restoring production permissions for MISP configs (UID 33)..."
+                sudo chown -R 33:33 "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs"
+            fi
+        fi
 
         # 1. Rebuild NDR and Landing page
         if [ ${#SERVICES_TO_BUILD[@]} -gt 0 ]; then
@@ -487,36 +499,34 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
             docker compose -f "$COMPOSE_FILE" up -d "${SERVICES_TO_BUILD[@]}"
         fi
 
-        # 2. Rebuild SMTP (misp-mail) if needed
+        # 2. Rebuild SMTP (misp-mail) if needed (Ignored completely in IoT)
         if [ "$UPDATE_ONLY_SMTP" = true ]; then
             echo -e "\n🛡️ Isolating MISP update: Rebuilding ONLY SMTP/Mail service to protect API keys...\n"
-
-            # Force build and up for smtp service
             docker compose -f "$COMPOSE_FILE" build --no-cache resilmesh-tap-misp-mail
             docker compose -f "$COMPOSE_FILE" up -d --force-recreate resilmesh-tap-misp-mail
-
             echo -e "\n✅ SMTP Service updated. MISP Core & Database were completely untouched."
         fi
-
-        echo -e "\n✅ All containers are now up and running."
 
     else
         UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.2.0 update.\n"
     fi
 
-       
     ##################################################################################
-    #                     RESTART CONTAINERS                                         #
+    #                            RESTART CONTAINERS                                  #
     ##################################################################################
-    docker compose -f "$COMPOSE_FILE" restart resilmesh-tap-misp-core resilmesh-tap-misp-db resilmesh-tap-misp-modules
+    # Restart MISP containers only for no IoT environments.
+    if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_MISP-Server "* ]]; then
+        docker compose -f "$COMPOSE_FILE" restart resilmesh-tap-misp-core resilmesh-tap-misp-db resilmesh-tap-misp-modules
 
-    echo -e "\nRestarting MISP Client container to apply the new configuration..."
-    read -t 5
+        echo -e "\nRestarting MISP Client container to apply the new configuration..."
+        read -t 5
 
-    docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
+        docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
+    fi
+
     echo -e "\nAll containers are now up and running."
+    ############################  END RESTART CONTAINERS  ############################
 
-############################  END RESTART CONTAINERS  ############################
     # Update the actual version
     CURRENT_VERSION="v2.2.0"
     echo -e "\n✅ Deployment of $CURRENT_VERSION finished successfully!\n"
