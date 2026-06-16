@@ -29,6 +29,7 @@ declare -A SERVICES=(
     ["Threat-Awareness_Wazuh"]="resilmesh.tap.wazuh.manager resilmesh.tap.wazuh.indexer resilmesh.tap.wazuh.dashboard"
     ["Threat-Awareness_Threat-Hunting-And-Forensics_DFIR"]="resilmesh-tap-dfir-cai-framework"
     ["Threat-Awareness_Threat-Hunting-And-Forensics_THF"]="resilmesh-tap-thf"
+    ["Threat-Awareness_PPCTI"]="arxlet anonymizer context flaskdp frontend nginx backend"
 )
 
 declare -A SUBMODULES=(
@@ -52,13 +53,14 @@ declare -A SUBMODULES=(
     ["Threat-Awareness_Wazuh"]="Threat-Awareness wazuh-docker"
     ["Threat-Awareness_Threat-Hunting-And-Forensics_DFIR"]="Threat-Awareness Threat-Hunting-And-Forensics DFIR"
     ["Threat-Awareness_Threat-Hunting-And-Forensics_THF"]="Threat-Awareness Threat-Hunting-And-Forensics THF"
+    ["Threat-Awareness_PPCTI"]="Threat-Awareness PPCTI"
 )
 
 declare -A DEPLOYMENTS=(
-    ["IT_Domain"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_NSE Situation-Assessment_Network-Detection-Response Situation-Assessment_SACD Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh Threat-Awareness_Threat-Hunting-And-Forensics_DFIR Threat-Awareness_Threat-Hunting-And-Forensics_THF"
+    ["IT_Domain"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_NSE Situation-Assessment_Network-Detection-Response Situation-Assessment_SACD Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh Threat-Awareness_Threat-Hunting-And-Forensics_DFIR Threat-Awareness_Threat-Hunting-And-Forensics_THF Threat-Awareness_PPCTI"
     ["IoT_Domain"]="Aggregation_Enrichment Aggregation_NATS Aggregation_Vector Situation-Assessment_Landing-Page Situation-Assessment_Network-Detection-Response Threat-Awareness_AI-Based-Detector Threat-Awareness_Wazuh Threat-Awareness_Threat-Hunting-And-Forensics_DFIR Threat-Awareness_Threat-Hunting-And-Forensics_THF"
-    ["Domain"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Mitigation-Manager Security-Operations_Playbooks-Tool Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_CSA Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_SACD Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh"
-    ["Full_Platform"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Mitigation-Manager Security-Operations_Playbooks-Tool Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_CSA Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_NSE Situation-Assessment_Network-Detection-Response Situation-Assessment_SACD Threat-Awareness_AI-Based-Detector Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh Threat-Awareness_Threat-Hunting-And-Forensics_DFIR Threat-Awareness_Threat-Hunting-And-Forensics_THF"
+    ["Domain"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Mitigation-Manager Security-Operations_Playbooks-Tool Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_CSA Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_SACD Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh Threat-Awareness_PPCTI"
+    ["Full_Platform"]="Aggregation_Enrichment Aggregation_MISP-Client Aggregation_NATS Aggregation_Vector Security-Operations_Mitigation-Manager Security-Operations_Playbooks-Tool Security-Operations_Workflow-Orchestrator Situation-Assessment_CASM Situation-Assessment_CSA Situation-Assessment_ISIM Situation-Assessment_Landing-Page Situation-Assessment_NSE Situation-Assessment_Network-Detection-Response Situation-Assessment_SACD Threat-Awareness_AI-Based-Detector Threat-Awareness_IoB Threat-Awareness_MISP-Server Threat-Awareness_Wazuh Threat-Awareness_Threat-Hunting-And-Forensics_DFIR Threat-Awareness_Threat-Hunting-And-Forensics_THF Threat-Awareness_PPCTI"
 )
 
 menu() {
@@ -529,5 +531,102 @@ if [ "$CURRENT_VERSION" == "v2.1.0" ]; then
 
     # Update the actual version
     CURRENT_VERSION="v2.2.0"
+    echo -e "\n✅ Deployment of $CURRENT_VERSION finished successfully!\n"
+fi
+
+######################################################
+#                  RELEASE V2.3.0                    #
+######################################################
+
+if [ "$CURRENT_VERSION" == "v2.2.0" ]; then
+
+    UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
+
+    # Componentes que se actualizan en la v2.3.0 con sus nuevas identidades
+    VERSION_UPDATES=(
+        "Threat-Awareness_PPCTI"
+        "Situation-Assessment_CASM"
+        "Situation-Assessment_ISIM"
+        "Situation-Assessment_SACD"
+        "Situation-Assessment_CSA"
+    )
+
+    COMPONENTS_TO_UPDATE=()
+    DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
+
+    # Filtrar componentes según el tipo de entorno activo
+    for comp in "${VERSION_UPDATES[@]}"; do
+        if [[ "$DEPLOYMENT_LIST" == *" $comp "* ]]; then
+            COMPONENTS_TO_UPDATE+=("$comp")
+        fi
+    done
+
+    if [ ${#COMPONENTS_TO_UPDATE[@]} -gt 0 ]; then
+
+        echo -e "\n🔄 Updating submodules for v2.3.0...\n"
+        for component in "${COMPONENTS_TO_UPDATE[@]}"; do
+            levels=(${SUBMODULES[$component]})
+            current_path="$DOCKER_BASE_PATH"
+
+            for level in "${levels[@]}"; do
+                git -C "$current_path" submodule update --init --force "$level"
+                current_path="$current_path/$level"
+            done
+        done
+
+        ################  ISIM Specific Configuration  ################
+        if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_ISIM "* ]]; then
+
+            echo -e "\n🔐 Generating SSL Certificates and Nginx Configuration for ISIM...\n"
+
+            mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
+
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -keyout "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.key" \
+              -out "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.crt" \
+              -subj "/CN=resilmesh-isim"
+
+            mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf"
+
+            cat << "EOF" > "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf/isim.conf"
+server {
+    listen 443 ssl;
+
+    ssl_certificate     /etc/nginx/certs/isim.crt;
+    ssl_certificate_key /etc/nginx/certs/isim.key;
+
+    location / {
+        proxy_pass http://resilmesh-sap-isim-graphql:4001;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+            echo -e "\n✅ ISIM SSL certs and nginx.conf generated successfully."
+            UPDATE_SUMMARY+="\n- ISIM (Situation Assessment): SSL Certificates and reverse proxy configurations deployed.\n"
+        fi
+
+        ################  Docker Deployment (v2.3.0)  ################
+        SERVICES_TO_BUILD=()
+
+        for component in "${COMPONENTS_TO_UPDATE[@]}"; do
+            SERVICES_TO_BUILD+=(${SERVICES[$component]})
+        done
+
+        # Reconstrucción limpia de todos los servicios (incluyendo el ecosistema PPCTI desglosado)
+        echo -e "\n🚀 Rebuilding components to v2.3.0: ${SERVICES_TO_BUILD[*]}...\n"
+        docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
+        docker compose -f "$COMPOSE_FILE" up -d "${SERVICES_TO_BUILD[@]}"
+
+        UPDATE_SUMMARY+="- Components updated to v2.3.0 and rebuilt: ${COMPONENTS_TO_UPDATE[*]}\n"
+
+    else
+        UPDATE_SUMMARY+="\n- No components from the selected deployment ($DEPLOYMENT) were affected by v2.3.0 update.\n"
+    fi
+
+    # Actualizar la versión global de control
+    CURRENT_VERSION="v2.3.0"
     echo -e "\n✅ Deployment of $CURRENT_VERSION finished successfully!\n"
 fi

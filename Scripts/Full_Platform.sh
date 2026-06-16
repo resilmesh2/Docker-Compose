@@ -437,6 +437,32 @@ else
     sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_RISK_API" 
 fi
 
+mkdir -p $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.key \
+  -out $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.crt \
+  -subj "/CN=resilmesh-isim"
+
+mkdir -p $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf
+
+cat << "EOF" > $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf/isim.conf
+server {
+    listen 443 ssl;
+
+    ssl_certificate     /etc/nginx/certs/isim.crt;
+    ssl_certificate_key /etc/nginx/certs/isim.key;
+
+    location / {
+        proxy_pass http://resilmesh-sap-isim-graphql:4001;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
 ##################### NSE #################
 
 echo -e "\nStarting with NSE component configuration..."
@@ -972,7 +998,7 @@ echo -e "- The component Playbooks Tool (Shuffle) is accesible on: https://$SERV
 echo -e "- The component Landing Page is accesible on: http://$SERVER_IP:8181"
 echo -e "- The component ISIM REST is accesible on: http://$SERVER_IP:8000"
 echo -e "- The component ISIM (Neo4j) is accesible on: http://$SERVER_IP:7474"
-echo -e "- The component ISIM (Graphql) is accesible on: http://$SERVER_IP:4001/graphql"
+echo -e "- The component ISIM (Graphql) is accesible on: https://$SERVER_IP:4443/graphql"
 echo -e "- The component NDR is accesible on: http://$SERVER_IP:3000"
 echo -e "- The component SACD is accesible on: http://$SERVER_IP:4200"
 echo -e "- The component NSE Angular frontend is accesible on: http://$SERVER_IP:4201"
@@ -1029,7 +1055,7 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "ISIM Neo4j" "HTTP" "$SERVER_IP" "7474" "http://$SERVER_IP:7474"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "ISIM Graphql" "HTTP" "$SERVER_IP" "4001" "http://$SERVER_IP:4001/graphql"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "ISIM Graphql" "HTTPS" "$SERVER_IP" "4443" "https://$SERVER_IP:4443/graphql"
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Situation Assessment" "NDR" "HTTP" "$SERVER_IP" "3000" "http://$SERVER_IP:3000"
     printf "$SEPARATOR\n"
