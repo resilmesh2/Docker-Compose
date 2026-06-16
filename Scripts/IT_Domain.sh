@@ -638,12 +638,33 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 #######   PP-CTI Configuration   ###########################
 
 echo -e "\nLet's continue with PP-CTI component configuration..."
-PPCTI_ANONYMIZER_CONFIGFILE=$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/anonymizer/config.yaml
 
-sed -i "s|key:.*|key: $CLAVE|g" "$PPCTI_ANONYMIZER_CONFIGFILE"
-#sed -i "s#https://<YOUR_MISP_URL>#$mispserver_url#g" "$PPCTI_ANONYMIZER_CONFIGFILE"
+PPCTI_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/.env.example"
+PPCTI_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/.env"
 
-echo -e "\n✅ Config.yaml updated with Misp Server configuration."
+# Check if the file exists
+if [ ! -f "$PPCTI_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$PPCTI_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$PPCTI_ORIGINAL_FILE" "$PPCTI_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+
+sed -i "s|MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|g" "$PPCTI_COPY_FILE"
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s#localhost#ORIGIN_HOSTNAME=#ORIGIN_HOSTNAME=https://${SERVER_IP_PUBLIC}#g" "$PPCTI_COPY_FILE"
+    echo -e "\n✅ Origin hostname set to '$SERVER_IP_PUBLIC' in the .env file"
+else
+    sed -i "s#localhost#ORIGIN_HOSTNAME=#ORIGIN_HOSTNAME=https://${SERVER_IP}#g" "$PPCTI_COPY_FILE" 
+    echo -e "\n✅ Origin hostname set to '$SERVER_IP' in the .env file"
+fi
+
+echo -e "\n✅ .env file updated with Misp Server configuration."
 
 echo -e "\nInstalling Java dependencies...\n"
 

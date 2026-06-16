@@ -745,12 +745,33 @@ NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$DOCKER_BASE_PATH/Threat-
 #######   PP-CTI Configuration   ###########################
 
 echo -e "\nLet's continue with PP-CTI component configuration..."
-PPCTI_ANONYMIZER_CONFIGFILE=$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/anonymizer/config.yaml
 
-sed -i "s|key:.*|key: $CLAVE|g" "$PPCTI_ANONYMIZER_CONFIGFILE"
-#sed -i "s#https://<YOUR_MISP_URL>#$mispserver_url#g" "$PPCTI_ANONYMIZER_CONFIGFILE"
+PPCTI_ORIGINAL_FILE="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/.env.example"
+PPCTI_COPY_FILE="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI/.env"
 
-echo -e "\n✅ Config.yaml updated with Misp Server configuration."
+# Check if the file exists
+if [ ! -f "$PPCTI_ORIGINAL_FILE" ]; then
+  echo "❌ The file '$PPCTI_ORIGINAL_FILE' do not exist."
+  exit 1
+fi
+
+# Create .env file from .env.example
+cp "$PPCTI_ORIGINAL_FILE" "$PPCTI_COPY_FILE"
+
+echo -e "\n✅ File .env created."
+
+
+sed -i "s|MISP_API_KEY=.*|MISP_API_KEY=$CLAVE|g" "$PPCTI_COPY_FILE"
+
+if [[ "$Cloud" == "Amazon EC2" ]]; then
+    sed -i "s#localhost#ORIGIN_HOSTNAME=#ORIGIN_HOSTNAME=https://${SERVER_IP_PUBLIC}#g" "$PPCTI_COPY_FILE"
+    echo -e "\n✅ Origin hostname set to '$SERVER_IP_PUBLIC' in the .env file"
+else
+    sed -i "s#localhost#ORIGIN_HOSTNAME=#ORIGIN_HOSTNAME=https://${SERVER_IP}#g" "$PPCTI_COPY_FILE" 
+    echo -e "\n✅ Origin hostname set to '$SERVER_IP' in the .env file"
+fi
+
+echo -e "\n✅ .env file updated with Misp Server configuration."
 
 echo -e "\nInstalling Java dependencies...\n"
 
@@ -960,7 +981,7 @@ echo -e "- The component IoB STIX Modeler is accesible on: http://$SERVER_IP:340
 echo -e "- The component IoB CTI STIX Visualization is accesible on: http://$SERVER_IP:9003/cti-stix-visualization/index.html"
 echo -e "- The component DFIR is accesible on: http://$SERVER_IP:5005"
 echo -e "- The component THF is accesible on: http://$SERVER_IP:8501"
-echo -e "- The component PP-CTI Frontend is accesible on: http://$SERVER_IP:3100"
+echo -e "- The component PP-CTI Frontend is accesible on: https://$SERVER_IP:3100"
 
 echo -e "\n\nA new file output_summary.txt has been created with a summary of the changes.\n"
 
@@ -1026,7 +1047,7 @@ echo -e "\n\nA new file output_summary.txt has been created with a summary of th
     printf "$SEPARATOR\n"
     printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "THF" "HTTP" "$SERVER_IP" "8501" "http://$SERVER_IP:8501"
     printf "$SEPARATOR\n"
-    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "http://$SERVER_IP:3100"
+    printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |\n" "Threat Awareness" "PP-CTI Frontend" "HTTP" "$SERVER_IP" "3100" "https://$SERVER_IP:3100"
     printf "+---------------------------------------------------------------------------------------------------------------------------------------------------------+"
     printf "\n\n"
 } > ./output_summary.txt
