@@ -11,7 +11,7 @@ declare -A SERVICES=(
     ["Aggregation_MISP-Client"]="resilmesh-ap-misp-client"
     ["Aggregation_NATS"]="resilmesh-ap-nats"
     ["Aggregation_Vector"]="resilmesh-ap-vector"
-    ["Security-Operations_Mitigation-Manager"]="resilmesh-sop-mm"
+    ["Security-Operations_Mitigation-Manager"]="mitigation-manager"
     ["Security-Operations_Playbooks-Tool"]="resilmesh-sop-pt-frontend resilmesh-sop-pt resilmesh-sop-pt-orborus resilmesh-sop-pt-opensearch"
     ["Security-Operations_Workflow-Orchestrator"]="resilmesh-sop-wo-elasticsearch resilmesh-sop-wo-postgresql resilmesh-sop-wo-temporal resilmesh-sop-wo-temporal-admin-tools resilmesh-sop-wo-temporal-ui"
     ["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
@@ -277,7 +277,7 @@ case "$CURRENT_VERSION" in
         echo -e "\n🔄 [Fase 3] Aplicando cambios de la release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
-        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA")
+        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Security-Operations_Mitigation-Manager" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA")
         COMPONENTS_TO_UPDATE=()
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
@@ -335,6 +335,25 @@ EOF
                 UPDATE_SUMMARY+="- ISIM: Certificados SSL y proxy Nginx configurados.\n"
             fi
 
+            ####### MITIGATION MANAGER CONFIGURATION ############
+
+            echo -e "\nLet's continue with Mitigation Manager component configuration..."
+            echo -e "\nCreating Mitigation Manager .env file..."
+
+            MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
+            MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
+
+            # Check if the file exists
+            if [ ! -f "$MM_ORIGINAL_FILE" ]; then
+            echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
+            exit 1
+            fi
+
+            # Create .env file from .env.example
+            cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
+
+            echo -e "\n✅ File .env created."
+            
             ################ 📦 MANEJO DE CAMBIOS ESTRUCTURALES EN CASM ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_CASM "* ]]; then
                 echo -e "\n🧹 Detectados cambios en la arquitectura de CASM (v2.3.0)..."
