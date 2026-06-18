@@ -14,7 +14,7 @@ declare -A SERVICES=(
     ["Security-Operations_Mitigation-Manager"]="resilmesh-sop-mm"
     ["Security-Operations_Playbooks-Tool"]="resilmesh-sop-pt-frontend resilmesh-sop-pt resilmesh-sop-pt-orborus resilmesh-sop-pt-opensearch"
     ["Security-Operations_Workflow-Orchestrator"]="resilmesh-sop-wo-elasticsearch resilmesh-sop-wo-postgresql resilmesh-sop-wo-temporal resilmesh-sop-wo-temporal-admin-tools resilmesh-sop-wo-temporal-ui"
-    ["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-component-scheduler-worker resilmesh-sap-casm-nmap-worker resilmesh-sap-cve-connector-worker resilmesh-sap-slp-enrichment-worker"
+    ["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
     ["Situation-Assessment_CSA"]="resilmesh-sap-csa-worker"
     ["Situation-Assessment_ISIM"]="resilmesh-sap-isim resilmesh-sap-isim-graphql resilmesh-sap-isim-automation resilmesh-sap-neo4j resilmesh-sap-isim-nginx"
     ["Situation-Assessment_Landing-Page"]="resilmesh-sap-landing-page"
@@ -147,7 +147,7 @@ fi
 
 
 ######################################################
-#         EJECUCIÓN SECUENCIAL DE RELEASES           #
+#          EJECUCIÓN SECUENCIAL DE RELEASES          #
 ######################################################
 
 case "$CURRENT_VERSION" in
@@ -282,7 +282,6 @@ case "$CURRENT_VERSION" in
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
 
-        # VALIDACIÓN ENTORNO IOT: Si el array está vacío para IoT, evitamos acciones innecesarias
         if [ ${#COMPONENTS_TO_UPDATE[@]} -eq 0 ]; then
             echo -e "ℹ️ El entorno seleccionado ($DEPLOYMENT) no contiene módulos que requieran actualización en la v2.3.0."
             UPDATE_SUMMARY+="- Entorno $DEPLOYMENT: Ya se encuentra al día, no requiere reconstrucción de servicios en v2.3.0.\n"
@@ -290,32 +289,20 @@ case "$CURRENT_VERSION" in
             ################ 🛠️ CONFIGURACIÓN PPCTI ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_PPCTI "* ]]; then
                 echo -e "\n⚙️ Configurando variables de entorno para PPCTI..."
-                PPCTI_DIR="$DOCKER_BASE_PATH/Threat-Awareness/PPCTI"
-                SUMMARY_FILE="output_summary.txt"
-                
+                PPCTI_DIR="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI"
+
                 if [ -f "$PPCTI_DIR/.env.example" ]; then
                     cp "$PPCTI_DIR/.env.example" "$PPCTI_DIR/.env"
-                    
-                    if [[ "$Cloud" == "Amazon EC2" ]]; then
-                        sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$PPCTI_DIR/.env"
-                    else
-                        sed -i "s|localhost|${SERVER_IP}|g" "$PPCTI_DIR/.env"
-                    fi
+                    [[ "$Cloud" == "Amazon EC2" ]] && sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$PPCTI_DIR/.env" || sed -i "s|localhost|${SERVER_IP}|g" "$PPCTI_DIR/.env"
 
                     MISP_KEY_DETECTED=$(grep "^ADMIN_KEY=" "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env" | cut -d'=' -f2 | sed "s/['\"]//g" | tr -d '[:space:]')
-
-                    # Inyectar la API Key válida en el .env de PPCTI
                     if grep -q "MISP_API_KEY=" "$PPCTI_DIR/.env"; then
                         sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$MISP_KEY_DETECTED|g" "$PPCTI_DIR/.env"
                     else
                         echo "MISP_API_KEY=$MISP_KEY_DETECTED" >> "$PPCTI_DIR/.env"
                     fi
-
                     export MISP_API_KEY="$MISP_KEY_DETECTED"
-                    UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generado e integrado con la clave MISP vinculada.\n"
-                    echo -e "✅ MISP_API_KEY inyectada correctamente en la configuración de PPCTI."
-                else
-                    echo -e "⚠️ Alerta: No se encontró el archivo .env.example en PPCTI."
+                    UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generado e integrado con MISP.\n"
                 fi
             fi
 
@@ -345,22 +332,100 @@ server {
     }
 }
 EOF
-                UPDATE_SUMMARY+="- ISIM: Certificados SSL criptográficos y proxy reverso de Nginx configurados.\n"
+                UPDATE_SUMMARY+="- ISIM: Certificados SSL y proxy Nginx configurados.\n"
             fi
 
+            ################ 📦 MANEJO DE CAMBIOS ESTRUCTURALES EN CASM ################
+            if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_CASM "* ]]; then
+                echo -e "\n🧹 Detectados cambios en la arquitectura de CASM (v2.3.0)..."
+                OLD_CASM_SERVICES="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-component-scheduler-worker resilmesh-sap-casm-nmap-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
+
+                echo -e "🛑 Deteniendo y removiendo contenedores obsoletos de CASM de forma selectiva..."
+                docker compose -f "$COMPOSE_FILE" stop $OLD_CASM_SERVICES 2>/dev/null
+                docker compose -f "$COMPOSE_FILE" rm -f $OLD_CASM_SERVICES 2>/dev/null
+                
+                SERVICES["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
+                UPDATE_SUMMARY+="- CASM: Migración estructural completada (Contenedores obsoletos purgados).\n"
+            fi
+
+            ################ 📊 CONFIGURACIÓN COMPONENTE SACD ################
+            if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_SACD "* ]]; then
+                echo -e "\nLet's start with SACD component configuration..."
+
+                SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
+                SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
+                SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
+                SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
+
+                # Verificaciones de existencia de archivos requeridos
+                if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
+                    echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."
+                    exit 1
+                fi
+                if [ ! -f "$SACD_ENV_FILE" ]; then
+                    echo "❌ The file '$SACD_ENV_FILE' do not exist."
+                    exit 1
+                fi
+                if [ ! -f "$SACD_EXTERNAL" ]; then
+                    echo "❌ The file '$SACD_EXTERNAL' do not exist."
+                    exit 1
+                fi
+                if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then
+                    echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."
+                    exit 1
+                fi
+
+                # Inyección dinámica de IPs (Pública en AWS EC2 u On-Premise) para cada configuración de SACD
+                if [[ "$Cloud" == "Amazon EC2" ]]; then
+                    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
+                    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
+                    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
+                    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
+                else
+                    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_PRODTS_FILE" 
+                    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_FILE" 
+                    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
+                    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
+                fi
+
+                echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
+                UPDATE_SUMMARY+="- SACD: Archivos de entorno y Mission Editor actualizados con la IP del servidor.\n"
+            fi
+
+            # Construcción del listado de servicios final
             SERVICES_TO_BUILD=()
             for component in "${COMPONENTS_TO_UPDATE[@]}"; do SERVICES_TO_BUILD+=(${SERVICES[$component]}); done
 
-            echo -e "\n🚀 Reconstruyendo contenedores en Docker para v2.3.0...\n"
+            # Limpieza preventiva de la caché de BuildKit antes de compilar
+            echo -e "\n🧽 Solucionando preventivamente el problema de caché en Nginx..."
+            docker builder prune -f
+
+            # Gestión robusta de permisos para evitar fallos de compilación por submódulos de Git
+            ISIM_PLUGINS_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins"
+            if [ -d "$ISIM_PLUGINS_PATH" ]; then
+                echo -e "🔐 Salvaguardando permisos de ISIM/plugins con privilegios elevados..."
+                PREV_PERMS=$(stat -c "%a" "$ISIM_PLUGINS_PATH")
+                sudo chmod -R 755 "$ISIM_PLUGINS_PATH"
+            fi
+
+            echo -e "\n🚀 Reconstruyendo y levantando componentes en Docker para v2.3.0...\n"
             docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
-            docker compose -f "$COMPOSE_FILE" up -d "${SERVICES_TO_BUILD[@]}"
+            
+            # El parámetro --remove-orphans se añade aquí de forma segura para limpiar CASM sin apagar el resto de la app
+            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans "${SERVICES_TO_BUILD[@]}"
             UPDATE_SUMMARY+="- Componentes actualizados a v2.3.0: ${COMPONENTS_TO_UPDATE[*]}\n"
+
+            # Restauración garantizada con privilegios elevados
+            if [ -d "$ISIM_PLUGINS_PATH" ] && [ ! -z "$PREV_PERMS" ]; then
+                echo -e "🔄 Restableciendo permisos de ISIM/plugins al estado previo ($PREV_PERMS)..."
+                sudo chmod -R "$PREV_PERMS" "$ISIM_PLUGINS_PATH"
+                echo -e "✅ Permisos restaurados con éxito."
+            fi
         fi
 
         CURRENT_VERSION="v2.3.0"
         echo -e "\n✅ ¡Actualización global a la versión $CURRENT_VERSION completada con éxito!\n"
         ;;
-
     *)
         echo -e "\nℹ️ Sin ruta de migración para la versión: $CURRENT_VERSION\n"
         ;;
