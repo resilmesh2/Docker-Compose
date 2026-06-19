@@ -11,7 +11,7 @@ declare -A SERVICES=(
     ["Aggregation_MISP-Client"]="resilmesh-ap-misp-client"
     ["Aggregation_NATS"]="resilmesh-ap-nats"
     ["Aggregation_Vector"]="resilmesh-ap-vector"
-    ["Security-Operations_Mitigation-Manager"]="mitigation-manager"
+    ["Security-Operations_Mitigation-Manager"]="resilmesh-sop-mm"
     ["Security-Operations_Playbooks-Tool"]="resilmesh-sop-pt-frontend resilmesh-sop-pt resilmesh-sop-pt-orborus resilmesh-sop-pt-opensearch"
     ["Security-Operations_Workflow-Orchestrator"]="resilmesh-sop-wo-elasticsearch resilmesh-sop-wo-postgresql resilmesh-sop-wo-temporal resilmesh-sop-wo-temporal-admin-tools resilmesh-sop-wo-temporal-ui"
     ["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
@@ -277,7 +277,7 @@ case "$CURRENT_VERSION" in
         echo -e "\n🔄 [Fase 3] Aplicando cambios de la release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
-        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Security-Operations_Mitigation-Manager" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA")
+        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA")
         COMPONENTS_TO_UPDATE=()
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
@@ -335,25 +335,6 @@ EOF
                 UPDATE_SUMMARY+="- ISIM: Certificados SSL y proxy Nginx configurados.\n"
             fi
 
-            ####### MITIGATION MANAGER CONFIGURATION ############
-
-            echo -e "\nLet's continue with Mitigation Manager component configuration..."
-            echo -e "\nCreating Mitigation Manager .env file..."
-
-            MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
-            MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
-
-            # Check if the file exists
-            if [ ! -f "$MM_ORIGINAL_FILE" ]; then
-            echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
-            exit 1
-            fi
-
-            # Create .env file from .env.example
-            cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
-
-            echo -e "\n✅ File .env created."
-            
             ################ 📦 MANEJO DE CAMBIOS ESTRUCTURALES EN CASM ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_CASM "* ]]; then
                 echo -e "\n🧹 Detectados cambios en la arquitectura de CASM (v2.3.0)..."
@@ -376,25 +357,11 @@ EOF
                 SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
                 SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
 
-                # Verificaciones de existencia de archivos requeridos
-                if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
-                    echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."
-                    exit 1
-                fi
-                if [ ! -f "$SACD_ENV_FILE" ]; then
-                    echo "❌ The file '$SACD_ENV_FILE' do not exist."
-                    exit 1
-                fi
-                if [ ! -f "$SACD_EXTERNAL" ]; then
-                    echo "❌ The file '$SACD_EXTERNAL' do not exist."
-                    exit 1
-                fi
-                if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then
-                    echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."
-                    exit 1
-                fi
+                if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."; exit 1; fi
+                if [ ! -f "$SACD_ENV_FILE" ]; then echo "❌ The file '$SACD_ENV_FILE' do not exist."; exit 1; fi
+                if [ ! -f "$SACD_EXTERNAL" ]; then echo "❌ The file '$SACD_EXTERNAL' do not exist."; exit 1; fi
+                if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."; exit 1; fi
 
-                # Inyección dinámica de IPs (Pública en AWS EC2 u On-Premise) para cada configuración de SACD
                 if [[ "$Cloud" == "Amazon EC2" ]]; then
                     sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
                     sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
@@ -415,11 +382,11 @@ EOF
             SERVICES_TO_BUILD=()
             for component in "${COMPONENTS_TO_UPDATE[@]}"; do SERVICES_TO_BUILD+=(${SERVICES[$component]}); done
 
-            # Limpieza preventiva de la caché de BuildKit antes de compilar
+            # Limpieza silenciosa preventiva de la caché de BuildKit antes de compilar
             echo -e "\n🧽 Solucionando preventivamente el problema de caché en Nginx..."
             docker builder prune -f > /dev/null 2>&1
 
-            # Gestión robusta de permisos para evitar fallos de compilación por submódulos de Git
+            # Gestión de permisos para evitar fallos de compilación por Git
             ISIM_PLUGINS_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins"
             if [ -d "$ISIM_PLUGINS_PATH" ]; then
                 echo -e "🔐 Salvaguardando permisos de ISIM/plugins con privilegios elevados..."
@@ -429,16 +396,30 @@ EOF
 
             echo -e "\n🚀 Reconstruyendo y levantando componentes en Docker para v2.3.0...\n"
             docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
-            
-            # El parámetro --remove-orphans se añade aquí de forma segura para limpiar CASM sin apagar el resto de la app
             docker compose -f "$COMPOSE_FILE" up -d --remove-orphans "${SERVICES_TO_BUILD[@]}"
             UPDATE_SUMMARY+="- Componentes actualizados a v2.3.0: ${COMPONENTS_TO_UPDATE[*]}\n"
 
-            # Restauración garantizada con privilegios elevados
+            # Restauración de permisos
             if [ -d "$ISIM_PLUGINS_PATH" ] && [ ! -z "$PREV_PERMS" ]; then
                 echo -e "🔄 Restableciendo permisos de ISIM/plugins al estado previo ($PREV_PERMS)..."
                 sudo chmod -R "$PREV_PERMS" "$ISIM_PLUGINS_PATH"
                 echo -e "✅ Permisos restaurados con éxito."
+            fi
+
+            # ⚙️ ACTUALIZACIÓN DINÁMICA DEL ARCHIVO output_summary.txt EXISTENTE
+            SUMMARY_FILE="./output_summary.txt"
+            if [ -f "$SUMMARY_FILE" ]; then
+                echo -e "\n📝 Actualizando endpoint de ISIM Graphql en output_summary.txt..."
+                
+                # Se determina la IP de destino según el entorno Cloud / On-Prem
+                [[ "$Cloud" == "Amazon EC2" ]] && TARGET_IP="$SERVER_IP_PUBLIC" || TARGET_IP="$SERVER_IP"
+                
+                # Fila exacta alineada usando printf adaptada al nuevo proxy seguro Nginx en puerto 4443
+                NEW_ROW=$(printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |" "Situation Assessment" "ISIM Graphql" "HTTPS" "$TARGET_IP" "4443" "https://$TARGET_IP:4443/graphql")
+                
+                # Sed busca la línea que contiene "ISIM Graphql" y la sustituye de manera segura
+                sed -i "s|.*ISIM Graphql.*|$NEW_ROW|g" "$SUMMARY_FILE"
+                echo -e "✅ Archivo output_summary.txt modificado con éxito."
             fi
         fi
 
