@@ -11,7 +11,7 @@ declare -A SERVICES=(
     ["Aggregation_MISP-Client"]="resilmesh-ap-misp-client"
     ["Aggregation_NATS"]="resilmesh-ap-nats"
     ["Aggregation_Vector"]="resilmesh-ap-vector"
-    ["Security-Operations_Mitigation-Manager"]="resilmesh-sop-mm"
+    ["Security-Operations_Mitigation-Manager"]="mitigation-manager"
     ["Security-Operations_Playbooks-Tool"]="resilmesh-sop-pt-frontend resilmesh-sop-pt resilmesh-sop-pt-orborus resilmesh-sop-pt-opensearch"
     ["Security-Operations_Workflow-Orchestrator"]="resilmesh-sop-wo-elasticsearch resilmesh-sop-wo-postgresql resilmesh-sop-wo-temporal resilmesh-sop-wo-temporal-admin-tools resilmesh-sop-wo-temporal-ui"
     ["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
@@ -277,7 +277,7 @@ case "$CURRENT_VERSION" in
         echo -e "\n🔄 [Fase 3] Aplicando cambios de la release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
-        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" Security-Operations_Mitigation-Manager)
+        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" "Security-Operations_Mitigation-Manager")
         COMPONENTS_TO_UPDATE=()
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
@@ -295,7 +295,17 @@ case "$CURRENT_VERSION" in
                     cp "$PPCTI_DIR/.env.example" "$PPCTI_DIR/.env"
                     [[ "$Cloud" == "Amazon EC2" ]] && sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$PPCTI_DIR/.env" || sed -i "s|localhost|${SERVER_IP}|g" "$PPCTI_DIR/.env"
 
-                    MISP_KEY_DETECTED=$(grep "^ADMIN_KEY=" "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env" | cut -d'=' -f2 | sed "s/['\"]//g" | tr -d '[:space:]')
+                    MISP_ENV_FILE="$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/.env"
+                    if [ -f "$MISP_ENV_FILE" ]; then
+                        MISP_KEY_DETECTED=$(grep "^ADMIN_KEY=" "$MISP_ENV_FILE" | cut -d'=' -f2 | sed "s/['\"]//g" | tr -d '[:space:]')
+                    else
+                        echo -e "\n⚠️ No se encontró el .env de MISP Server — no se podrá inyectar MISP_API_KEY en PPCTI."
+                    fi
+
+                    if [[ -z "$MISP_KEY_DETECTED" ]]; then
+                        echo -e "\n❌ MISP_API_KEY está vacía. No es posible continuar sin esta clave.\n"
+                        exit 1
+                    fi
                     if grep -q "MISP_API_KEY=" "$PPCTI_DIR/.env"; then
                         sed -i "s|^MISP_API_KEY=.*|MISP_API_KEY=$MISP_KEY_DETECTED|g" "$PPCTI_DIR/.env"
                     else
@@ -305,24 +315,24 @@ case "$CURRENT_VERSION" in
                     UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generado e integrado con MISP.\n"
                 fi
             fi
+
             ####### MITIGATION MANAGER CONFIGURATION ############
+            if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Security-Operations_Mitigation-Manager "* ]]; then
+                echo -e "\nLet's continue with Mitigation Manager component configuration..."
+                echo -e "\nCreating Mitigation Manager .env file..."
 
-            echo -e "\nLet's continue with Mitigation Manager component configuration..."
-            echo -e "\nCreating Mitigation Manager .env file..."
+                MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
+                MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
 
-            MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
-            MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
+                if [ ! -f "$MM_ORIGINAL_FILE" ]; then
+                    echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
+                    exit 1
+                fi
 
-            # Check if the file exists
-            if [ ! -f "$MM_ORIGINAL_FILE" ]; then
-            echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
-            exit 1
+                cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
+                echo -e "\n✅ File .env created."
+                UPDATE_SUMMARY+="- Mitigation Manager: .env generado.\n"
             fi
-
-            # Create .env file from .env.example
-            cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
-
-            echo -e "\n✅ File .env created."
 
             ################ Configuración segura ISIM ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_ISIM "* ]]; then
@@ -356,11 +366,11 @@ EOF
             ################ 📦 MANEJO DE CAMBIOS ESTRUCTURALES EN CASM ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_CASM "* ]]; then
                 echo -e "\n🧹 Detectados cambios en la arquitectura de CASM (v2.3.0)..."
-                OLD_CASM_SERVICES="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-component-scheduler-worker resilmesh-sap-casm-nmap-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
+                OLD_CASM_SERVICES=(resilmesh-sap-casm-component-scheduler-worker resilmesh-sap-casm-nmap-worker)
 
                 echo -e "🛑 Deteniendo y removiendo contenedores obsoletos de CASM de forma selectiva..."
-                docker compose -f "$COMPOSE_FILE" stop $OLD_CASM_SERVICES 2>/dev/null
-                docker compose -f "$COMPOSE_FILE" rm -f $OLD_CASM_SERVICES 2>/dev/null
+                docker compose -f "$COMPOSE_FILE" stop "${OLD_CASM_SERVICES[@]}" 2>/dev/null
+                docker compose -f "$COMPOSE_FILE" rm -f "${OLD_CASM_SERVICES[@]}" 2>/dev/null
                 
                 SERVICES["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
                 UPDATE_SUMMARY+="- CASM: Migración estructural completada (Contenedores obsoletos purgados).\n"
@@ -404,7 +414,7 @@ EOF
             echo -e "\n🧽 Solucionando preventivamente el problema de caché en Nginx..."
             docker builder prune -f > /dev/null 2>&1
 
-            # Gestión de permisos para evitar fallos de compilación por Git
+            PREV_PERMS=""
             ISIM_PLUGINS_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins"
             if [ -d "$ISIM_PLUGINS_PATH" ]; then
                 echo -e "🔐 Salvaguardando permisos de ISIM/plugins con privilegios elevados..."
@@ -436,9 +446,14 @@ EOF
                 NEW_ROW=$(printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |" "Situation Assessment" "ISIM Graphql" "HTTPS" "$TARGET_IP" "4443" "https://$TARGET_IP:4443/graphql")
                 
                 # Usamos una asignación limpia con un archivo temporal para evitar que los caracteres '|' rompan sed
-                awk -v new_line="$NEW_ROW" '/ISIM Graphql/ {print new_line; next} {print}' "$SUMMARY_FILE" > "$SUMMARY_FILE.tmp" && mv "$SUMMARY_FILE.tmp" "$SUMMARY_FILE"
+                if grep -q "ISIM Graphql" "$SUMMARY_FILE"; then
+                    awk -v new_line="$NEW_ROW" '/ISIM Graphql/ {print new_line; next} {print}' "$SUMMARY_FILE" > "$SUMMARY_FILE.tmp" && mv "$SUMMARY_FILE.tmp" "$SUMMARY_FILE"
+                    echo -e "✅ Archivo output_summary.txt modificado con éxito."
+                else
+                    echo "$NEW_ROW" >> "$SUMMARY_FILE"
+                    echo -e "⚠️ No se encontró fila previa de 'ISIM Graphql' — se ha añadido una nueva al final."
+                fi
                 
-                echo -e "✅ Archivo output_summary.txt modificado con éxito."
             fi
         fi
 
