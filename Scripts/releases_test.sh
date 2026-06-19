@@ -417,7 +417,7 @@ EOF
 
             # Limpieza preventiva de la caché de BuildKit antes de compilar
             echo -e "\n🧽 Solucionando preventivamente el problema de caché en Nginx..."
-            docker builder prune -f
+            docker builder prune -f > /dev/null 2>&1
 
             # Gestión robusta de permisos para evitar fallos de compilación por submódulos de Git
             ISIM_PLUGINS_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins"
