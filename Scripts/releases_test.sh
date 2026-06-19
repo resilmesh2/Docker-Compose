@@ -277,7 +277,7 @@ case "$CURRENT_VERSION" in
         echo -e "\n🔄 [Fase 3] Aplicando cambios de la release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
-        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA")
+        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" Security-Operations_Mitigation-Manager)
         COMPONENTS_TO_UPDATE=()
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
@@ -305,6 +305,24 @@ case "$CURRENT_VERSION" in
                     UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generado e integrado con MISP.\n"
                 fi
             fi
+            ####### MITIGATION MANAGER CONFIGURATION ############
+
+            echo -e "\nLet's continue with Mitigation Manager component configuration..."
+            echo -e "\nCreating Mitigation Manager .env file..."
+
+            MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
+            MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
+
+            # Check if the file exists
+            if [ ! -f "$MM_ORIGINAL_FILE" ]; then
+            echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
+            exit 1
+            fi
+
+            # Create .env file from .env.example
+            cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
+
+            echo -e "\n✅ File .env created."
 
             ################ Configuración segura ISIM ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_ISIM "* ]]; then
@@ -417,8 +435,9 @@ EOF
                 # Fila exacta alineada usando printf adaptada al nuevo proxy seguro Nginx en puerto 4443
                 NEW_ROW=$(printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |" "Situation Assessment" "ISIM Graphql" "HTTPS" "$TARGET_IP" "4443" "https://$TARGET_IP:4443/graphql")
                 
-                # Sed busca la línea que contiene "ISIM Graphql" y la sustituye de manera segura
-                sed -i "s|.*ISIM Graphql.*|$NEW_ROW|g" "$SUMMARY_FILE"
+                # Usamos una asignación limpia con un archivo temporal para evitar que los caracteres '|' rompan sed
+                awk -v new_line="$NEW_ROW" '/ISIM Graphql/ {print new_line; next} {print}' "$SUMMARY_FILE" > "$SUMMARY_FILE.tmp" && mv "$SUMMARY_FILE.tmp" "$SUMMARY_FILE"
+                
                 echo -e "✅ Archivo output_summary.txt modificado con éxito."
             fi
         fi
