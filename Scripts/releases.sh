@@ -30,6 +30,14 @@ declare -A SERVICES=(
     ["Threat-Awareness_PPCTI"]="arxlet anonymizer context flaskdp frontend nginx backend"
 )
 
+# NOTE: Some Compose services have a fixed container_name that differs from
+# the service name (e.g. "mitigation-manager" -> container "resilmesh-sop-mm").
+# This table maps service name -> real container name so we can clean up
+# name conflicts before recreating them.
+declare -A CONTAINER_NAME_OVERRIDES=(
+    ["mitigation-manager"]="resilmesh-sop-mm"
+)
+
 declare -A SUBMODULES=(
     ["Aggregation_Enrichment"]="Aggregation Enrichment"
     ["Aggregation_MISP-Client"]="Aggregation MISP_client"
@@ -63,77 +71,118 @@ declare -A DEPLOYMENTS=(
 
 UPDATE_SUMMARY=""
 
-# 1. Obtener etiquetas de Git para conocer el estado actual
+######################################################
+#            DOCKER HELPER FUNCTIONS                 #
+######################################################
+
+cleanup_conflicting_containers() {
+    local service_names=("$@")
+    local real_name
+
+    for svc in "${service_names[@]}"; do
+        real_name="${CONTAINER_NAME_OVERRIDES[$svc]:-$svc}"
+
+        existing_id=$(docker ps -aq -f "name=^/${real_name}$")
+        if [ -n "$existing_id" ]; then
+            echo -e "⚠️  Container '$real_name' (service '$svc') already exists (ID: $existing_id). Removing it to prevent conflicts..."
+            docker rm -f "$existing_id" >/dev/null 2>&1
+        fi
+    done
+}
+
+compose_up_safe() {
+    local compose_file="$1"
+    shift
+    local services_to_build=("$@")
+
+    if [ ${#services_to_build[@]} -eq 0 ]; then
+        return 0
+    fi
+
+    cleanup_conflicting_containers "${services_to_build[@]}"
+
+    docker compose -f "$compose_file" build --no-cache "${services_to_build[@]}"
+    local build_rc=$?
+
+    docker compose -f "$compose_file" up -d --remove-orphans --force-recreate "${services_to_build[@]}"
+    local up_rc=$?
+
+    if [ $build_rc -ne 0 ] || [ $up_rc -ne 0 ]; then
+        echo -e "\n❌ Error: One or more services failed to build/start correctly (build_rc=$build_rc, up_rc=$up_rc). Please check logs above."
+        return 1
+    fi
+
+    return 0
+}
+
+# 1. Get Git tags to determine the current state
 git fetch --tags -q
 CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null)
 LATEST_VERSION=$(git tag -l "v[0-9]*.[0-9]*.0" --sort=-v:refname | head -n 1)
 
 echo -e "\n=============================================="
-echo -e "  Versión detectada:     \033[1;32m$CURRENT_VERSION\033[0m"
-echo -e "  Última tag disponible: \033[1;36m$LATEST_VERSION\033[0m"
+echo -e "  Detected version:     \033[1;32m$CURRENT_VERSION\033[0m"
+echo -e "  Latest available tag: \033[1;36m$LATEST_VERSION\033[0m"
 echo -e "==============================================\n"
 
 if [ "$CURRENT_VERSION" == "$LATEST_VERSION" ]; then
-    echo -e "✅ El sistema ya está actualizado a la versión más reciente ($LATEST_VERSION).\n"
+    echo -e "✅ The system is already up to date with the latest version ($LATEST_VERSION).\n"
     exit 0
 fi
 
-# 2. Menú interactivo de selección de destino objetivo
-echo "Selecciona a qué versión deseas actualizar el sistema:"
+# 2. Interactive menu to select the target version
+echo "Select the version you want to upgrade the system to:"
 echo "1) v2.1.0"
 echo "2) v2.2.0"
-echo "3) v2.3.0 (Última versión)"
-echo "4) Salir"
+echo "3) v2.3.0 (Latest version)"
+echo "4) Exit"
 echo
-read -p "Introduce una opción (1-4): " target_option
+read -p "Enter an option (1-4): " target_option
 
 case $target_option in
     1) TARGET_VERSION="v2.1.0" ;;
     2) TARGET_VERSION="v2.2.0" ;;
     3) TARGET_VERSION="v2.3.0" ;;
-    *) echo -e "\nCancelado por el usuario o selección incorrecta.\n"; exit 0 ;;
+    *) echo -e "\nUpgrade cancelled by user or invalid selection.\n"; exit 0 ;;
 esac
 
-# Extraer cadenas numéricas para blindar la comparación alfabética/ASCII de Bash
 VERSION_CUR_NUM="${CURRENT_VERSION#v}"
 VERSION_TAR_NUM="${TARGET_VERSION#v}"
 
 if [[ "$VERSION_CUR_NUM" == "$VERSION_TAR_NUM" ]]; then
-    echo -e "\n❌ Error: Ya te encuentras en la versión $TARGET_VERSION.\n"
+    echo -e "\n❌ Error: You are already on version $TARGET_VERSION.\n"
     exit 1
 elif [ "$(printf '%s\n' "$VERSION_TAR_NUM" "$VERSION_CUR_NUM" | sort -V | head -n1)" == "$VERSION_TAR_NUM" ]; then
-    echo -e "\n❌ Error: No puedes actualizar a la versión $TARGET_VERSION porque tu versión actual es $CURRENT_VERSION.\n"
+    echo -e "\n❌ Error: Cannot downgrade to version $TARGET_VERSION because your current version is higher ($CURRENT_VERSION).\n"
     exit 1
 fi
 
-# 3. Selección del entorno de despliegue
+# 3. Target deployment environment selection
 while true; do
-  echo -e "\nSelecciona tu entorno de despliegue objetivo:"
+  echo -e "\nSelect your target deployment environment:"
   echo "1) IT Domain (ICERT)"
   echo "2) IoT Domain (ALIAS)"
   echo "3) Domain (CARM)"
   echo "4) Full Platform"
-  read -p "Opción (1-4): " option
+  read -p "Option (1-4): " option
 
   case $option in
     1) DEPLOYMENT="IT_Domain"; COMPOSE_FILE="../docker-compose-IT_Domain.yml"; break ;;
     2) DEPLOYMENT="IoT_Domain"; COMPOSE_FILE="../docker-compose-IoT_Domain.yml"; break ;;
     3) DEPLOYMENT="Domain"; COMPOSE_FILE="../docker-compose-Domain.yml"; break ;;
     4) DEPLOYMENT="Full_Platform"; COMPOSE_FILE="../docker-compose-Full_Platform.yml"; break ;;
-    *) echo -e "\n❌ Opción inválida. Inténtalo de nuevo." ;;
+    *) echo -e "\n❌ Invalid option. Please try again." ;;
   esac
 done
 
-# Actualización recursiva global inicial para garantizar coherencia en archivos del tag elegido
-echo -e "\n📦 Sincronizando la estructura del repositorio principal con la versión $TARGET_VERSION..."
+echo -e "\n📦 Syncing the main repository structure with version $TARGET_VERSION..."
 sudo chown -R $USER:$USER ../Threat-Awareness/MISP_Server-docker/configs 2>/dev/null
 git checkout "$TARGET_VERSION" -q
 
-echo -e "🔄 Actualizando de forma recursiva todo el árbol de repositorios secundarios..."
+echo -e "🔄 Recursively updating the entire submodule tree..."
 git submodule update --init --recursive --force
-echo -e "✅ Todos los componentes locales se encuentran ahora alineados con los commits de la versión $TARGET_VERSION.\n"
+echo -e "✅ All local components are now aligned with commits for version $TARGET_VERSION.\n"
 
-# Recolección de IPs de red
 Cloud=$(cat /sys/class/dmi/id/sys_vendor)
 SERVER_IP=$(hostname -I | awk '{print $1}')
 if [[ "$Cloud" == "Amazon EC2" ]]; then
@@ -147,13 +196,13 @@ fi
 
 
 ######################################################
-#          EJECUCIÓN SECUENCIAL DE RELEASES          #
+#         SEQUENTIAL EXECUTION OF RELEASES           #
 ######################################################
 
 case "$CURRENT_VERSION" in
 
     "v2.0.0")
-        echo -e "\n🔄 [Fase 1] Aplicando cambios de la release: v2.0.0 -> v2.1.0"
+        echo -e "\n🔄 [Phase 1] Applying changes for release: v2.0.0 -> v2.1.0"
         UPDATE_SUMMARY+="\n############### v2.1.0 ###############\n"
 
         VERSION_UPDATES=("Situation-Assessment_Network-Detection-Response" "Threat-Awareness_IoB")
@@ -163,12 +212,12 @@ case "$CURRENT_VERSION" in
 
         if [ ${#COMPONENTS_TO_UPDATE[@]} -gt 0 ]; then
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_IoB "* ]]; then
-                read -p "Do you want to share IoBs with someone? (y/n): " answer_iob1
+                read -p "Do you want to share IoBs with a peer? (y/n): " answer_iob1
                 if [[ "$answer_iob1" == "y" || "$answer_iob1" == "Y" ]]; then
                     read -p "Enter your peer's URL (<IP>:<PORT>): " peer_url
                     IOB_PEER_URL="http://${peer_url}"
                 fi
-                read -p "Do you want to receive the IoBs? (y/n): " answer_iob2
+                read -p "Do you want to authorize receiving IoBs from them? (y/n): " answer_iob2
                 [[ "$answer_iob2" == "y" || "$answer_iob2" == "Y" ]] && IOB_PEER_AUTH_TOKEN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 40)
 
                 cp "$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env.example" "$DOCKER_BASE_PATH/Threat-Awareness/IoB/.env"
@@ -182,7 +231,7 @@ case "$CURRENT_VERSION" in
                 IOB_APP_PATH="$DOCKER_BASE_PATH/Threat-Awareness/IoB/UI/app"
                 if [ ! -d "$IOB_APP_PATH/node_modules" ]; then NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$IOB_APP_PATH" install --legacy-peer-deps; fi
                 NODE_OPTIONS="--openssl-legacy-provider" npm --prefix "$IOB_APP_PATH" run build
-                UPDATE_SUMMARY+="- IoB (Threat Awareness): Módulo configurado y UI reconstruida.\n"
+                UPDATE_SUMMARY+="- IoB (Threat Awareness): Module configured and UI rebuilt.\n"
             fi
 
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Network-Detection-Response "* ]]; then
@@ -192,7 +241,9 @@ case "$CURRENT_VERSION" in
 
             SERVICES_TO_BUILD=()
             for component in "${COMPONENTS_TO_UPDATE[@]}"; do SERVICES_TO_BUILD+=(${SERVICES[$component]}); done
-            docker compose -f "$COMPOSE_FILE" up -d --build "${SERVICES_TO_BUILD[@]}"
+
+            compose_up_safe "$COMPOSE_FILE" "${SERVICES_TO_BUILD[@]}" \
+                || UPDATE_SUMMARY+="- ⚠️ WARNING: Failures detected while starting v2.1.0 services (check Docker logs).\n"
         fi
 
         CURRENT_VERSION="v2.1.0"
@@ -202,7 +253,7 @@ case "$CURRENT_VERSION" in
         ;&
 
     "v2.1.0")
-        echo -e "\n🔄 [Fase 2] Aplicando cambios de la release: v2.1.0 -> v2.2.0"
+        echo -e "\n🔄 [Phase 2] Applying changes for release: v2.1.0 -> v2.2.0"
         UPDATE_SUMMARY+="\n############### v2.2.0 ###############\n"
 
         VERSION_UPDATES=("Situation-Assessment_Network-Detection-Response" "Situation-Assessment_Landing-Page" "Threat-Awareness_MISP-Server")
@@ -251,13 +302,13 @@ case "$CURRENT_VERSION" in
             done
 
             [ "$UPDATE_ONLY_SMTP" = true ] && sudo chown -R 33:33 "$DOCKER_BASE_PATH/Threat-Awareness/MISP_Server-docker/configs" 2>/dev/null
-            if [ ${#SERVICES_TO_BUILD[@]} -gt 0 ]; then
-                docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
-                docker compose -f "$COMPOSE_FILE" up -d "${SERVICES_TO_BUILD[@]}"
-            fi
+
+            compose_up_safe "$COMPOSE_FILE" "${SERVICES_TO_BUILD[@]}" \
+                || UPDATE_SUMMARY+="- ⚠️ WARNING: Failures detected while starting v2.2.0 services (check Docker logs).\n"
+
             if [ "$UPDATE_ONLY_SMTP" = true ] && [ -n "${SERVICES[Threat-Awareness_MISP-Server]}" ]; then
-                docker compose -f "$COMPOSE_FILE" build --no-cache resilmesh-tap-misp-mail
-                docker compose -f "$COMPOSE_FILE" up -d --force-recreate resilmesh-tap-misp-mail
+                compose_up_safe "$COMPOSE_FILE" "resilmesh-tap-misp-mail" \
+                    || UPDATE_SUMMARY+="- ⚠️ WARNING: Failed to recreate resilmesh-tap-misp-mail.\n"
             fi
         fi
 
@@ -274,7 +325,7 @@ case "$CURRENT_VERSION" in
         ;&
 
     "v2.2.0")
-        echo -e "\n🔄 [Fase 3] Aplicando cambios de la release: v2.2.0 -> v2.3.0"
+        echo -e "\n🔄 [Phase 3] Applying changes for release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
         VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" "Security-Operations_Mitigation-Manager")
@@ -283,12 +334,12 @@ case "$CURRENT_VERSION" in
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
 
         if [ ${#COMPONENTS_TO_UPDATE[@]} -eq 0 ]; then
-            echo -e "ℹ️ El entorno seleccionado ($DEPLOYMENT) no contiene módulos que requieran actualización en la v2.3.0."
-            UPDATE_SUMMARY+="- Entorno $DEPLOYMENT: Ya se encuentra al día, no requiere reconstrucción de servicios en v2.3.0.\n"
+            echo -e "ℹ️ The selected environment ($DEPLOYMENT) does not contain modules requiring a v2.3.0 update."
+            UPDATE_SUMMARY+="- Environment $DEPLOYMENT: Already up to date, no service rebuild required for v2.3.0.\n"
         else
-            ################ 🛠️ CONFIGURACIÓN PPCTI ################
+            ################ 🛠️ PPCTI CONFIGURATION ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Threat-Awareness_PPCTI "* ]]; then
-                echo -e "\n⚙️ Configurando variables de entorno para PPCTI..."
+                echo -e "\n⚙️ Configuring environment variables for PPCTI..."
                 PPCTI_DIR="$DOCKER_BASE_PATH/Threat-Awareness/PP-CTI"
 
                 if [ -f "$PPCTI_DIR/.env.example" ]; then
@@ -299,11 +350,11 @@ case "$CURRENT_VERSION" in
                     if [ -f "$MISP_ENV_FILE" ]; then
                         MISP_KEY_DETECTED=$(grep "^ADMIN_KEY=" "$MISP_ENV_FILE" | cut -d'=' -f2 | sed "s/['\"]//g" | tr -d '[:space:]')
                     else
-                        echo -e "\n⚠️ No se encontró el .env de MISP Server — no se podrá inyectar MISP_API_KEY en PPCTI."
+                        echo -e "\n⚠️ MISP Server .env file not found — MISP_API_KEY cannot be injected into PPCTI."
                     fi
 
                     if [[ -z "$MISP_KEY_DETECTED" ]]; then
-                        echo -e "\n❌ MISP_API_KEY está vacía. No es posible continuar sin esta clave.\n"
+                        echo -e "\n❌ MISP_API_KEY is empty. Cannot proceed without this key.\n"
                         exit 1
                     fi
                     if grep -q "MISP_API_KEY=" "$PPCTI_DIR/.env"; then
@@ -312,31 +363,31 @@ case "$CURRENT_VERSION" in
                         echo "MISP_API_KEY=$MISP_KEY_DETECTED" >> "$PPCTI_DIR/.env"
                     fi
                     export MISP_API_KEY="$MISP_KEY_DETECTED"
-                    UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generado e integrado con MISP.\n"
+                    UPDATE_SUMMARY+="- PPCTI (Threat Awareness): .env generated and integrated with MISP.\n"
                 fi
             fi
 
             ####### MITIGATION MANAGER CONFIGURATION ############
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Security-Operations_Mitigation-Manager "* ]]; then
-                echo -e "\nLet's continue with Mitigation Manager component configuration..."
+                echo -e "\nConfiguring Mitigation Manager component variables..."
                 echo -e "\nCreating Mitigation Manager .env file..."
 
                 MM_ORIGINAL_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env.example"
                 MM_COPY_FILE="$DOCKER_BASE_PATH/Security-Operations/Mitigation-manager/.env"
 
                 if [ ! -f "$MM_ORIGINAL_FILE" ]; then
-                    echo "❌ The file '$MM_ORIGINAL_FILE' do not exist."
+                    echo "❌ The file '$MM_ORIGINAL_FILE' does not exist."
                     exit 1
                 fi
 
                 cp "$MM_ORIGINAL_FILE" "$MM_COPY_FILE"
                 echo -e "\n✅ File .env created."
-                UPDATE_SUMMARY+="- Mitigation Manager: .env generado.\n"
+                UPDATE_SUMMARY+="- Mitigation Manager: .env generated.\n"
             fi
 
-            ################ Configuración segura ISIM ################
+            ################ Secure ISIM configuration ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_ISIM "* ]]; then
-                echo -e "\n🔐 Generando Certificados SSL y Archivos Nginx para ISIM...\n"
+                echo -e "\n🔐 Generating SSL Certificates and Nginx Configuration Files for ISIM...\n"
                 mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
                 mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf"
 
@@ -360,35 +411,35 @@ server {
     }
 }
 EOF
-                UPDATE_SUMMARY+="- ISIM: Certificados SSL y proxy Nginx configurados.\n"
+                UPDATE_SUMMARY+="- ISIM: SSL certificates and Nginx proxy configured.\n"
             fi
 
-            ################ 📦 MANEJO DE CAMBIOS ESTRUCTURALES EN CASM ################
+            ################ 📦 HANDLING CASM STRUCTURAL CHANGES ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_CASM "* ]]; then
-                echo -e "\n🧹 Detectados cambios en la arquitectura de CASM (v2.3.0)..."
+                echo -e "\n🧹 Architectural updates detected in CASM (v2.3.0)..."
                 OLD_CASM_SERVICES=(resilmesh-sap-casm-component-scheduler-worker resilmesh-sap-casm-nmap-worker)
 
-                echo -e "🛑 Deteniendo y removiendo contenedores obsoletos de CASM de forma selectiva..."
+                echo -e "🛑 Safely removing obsolete CASM containers..."
                 docker compose -f "$COMPOSE_FILE" stop "${OLD_CASM_SERVICES[@]}" 2>/dev/null
                 docker compose -f "$COMPOSE_FILE" rm -f "${OLD_CASM_SERVICES[@]}" 2>/dev/null
-                
+
                 SERVICES["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
-                UPDATE_SUMMARY+="- CASM: Migración estructural completada (Contenedores obsoletos purgados).\n"
+                UPDATE_SUMMARY+="- CASM: Structural migration completed (obsolete containers purged).\n"
             fi
 
-            ################ 📊 CONFIGURACIÓN COMPONENTE SACD ################
+            ################ 📊 SACD COMPONENT CONFIGURATION ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_SACD "* ]]; then
-                echo -e "\nLet's start with SACD component configuration..."
+                echo -e "\nInjecting host configurations into SACD..."
 
                 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
                 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
                 SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
                 SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
 
-                if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."; exit 1; fi
-                if [ ! -f "$SACD_ENV_FILE" ]; then echo "❌ The file '$SACD_ENV_FILE' do not exist."; exit 1; fi
-                if [ ! -f "$SACD_EXTERNAL" ]; then echo "❌ The file '$SACD_EXTERNAL' do not exist."; exit 1; fi
-                if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."; exit 1; fi
+                if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then echo "❌ The file '$SACD_ENV_PRODTS_FILE' does not exist."; exit 1; fi
+                if [ ! -f "$SACD_ENV_FILE" ]; then echo "❌ The file '$SACD_ENV_FILE' does not exist."; exit 1; fi
+                if [ ! -f "$SACD_EXTERNAL" ]; then echo "❌ The file '$SACD_EXTERNAL' does not exist."; exit 1; fi
+                if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' does not exist."; exit 1; fi
 
                 if [[ "$Cloud" == "Amazon EC2" ]]; then
                     sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
@@ -402,78 +453,93 @@ EOF
                     sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
                 fi
 
-                echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
-                UPDATE_SUMMARY+="- SACD: Archivos de entorno y Mission Editor actualizados con la IP del servidor.\n"
+                echo -e "\n✅ Server IP injected into environment and Mission Editor configs."
+                UPDATE_SUMMARY+="- SACD: Environment files and Mission Editor updated with host IP addresses.\n"
             fi
 
-            # Construcción del listado de servicios final
             SERVICES_TO_BUILD=()
             for component in "${COMPONENTS_TO_UPDATE[@]}"; do SERVICES_TO_BUILD+=(${SERVICES[$component]}); done
 
-            # Limpieza silenciosa preventiva de la caché de BuildKit antes de compilar
-            echo -e "\n🧽 Solucionando preventivamente el problema de caché en Nginx..."
+            echo -e "\n🧽 Proactively clearing BuildKit/Nginx cache tags..."
             docker builder prune -f > /dev/null 2>&1
 
             PREV_PERMS=""
             ISIM_PLUGINS_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/plugins"
             if [ -d "$ISIM_PLUGINS_PATH" ]; then
-                echo -e "🔐 Salvaguardando permisos de ISIM/plugins con privilegios elevados..."
+                echo -e "🔐 Preserving ISIM directory permissions with elevated context..."
                 PREV_PERMS=$(stat -c "%a" "$ISIM_PLUGINS_PATH")
                 sudo chmod -R 755 "$ISIM_PLUGINS_PATH"
             fi
 
-            echo -e "\n🚀 Reconstruyendo y levantando componentes en Docker para v2.3.0...\n"
-            docker compose -f "$COMPOSE_FILE" build --no-cache "${SERVICES_TO_BUILD[@]}"
-            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans "${SERVICES_TO_BUILD[@]}"
-            UPDATE_SUMMARY+="- Componentes actualizados a v2.3.0: ${COMPONENTS_TO_UPDATE[*]}\n"
+            echo -e "\n🚀 Rebuilding and launching Docker components for v2.3.0...\n"
+            compose_up_safe "$COMPOSE_FILE" "${SERVICES_TO_BUILD[@]}"
+            COMPOSE_RC=$?
+            if [ $COMPOSE_RC -ne 0 ]; then
+                UPDATE_SUMMARY+="- ⚠️ WARNING: Failures encountered while launching v2.3.0 instances. Check name overrides or logs.\n"
+            fi
+            UPDATE_SUMMARY+="- Components updated to v2.3.0: ${COMPONENTS_TO_UPDATE[*]}\n"
 
-            # Restauración de permisos
-            if [ -d "$ISIM_PLUGINS_PATH" ] && [ ! -z "$PREV_PERMS" ]; then
-                echo -e "🔄 Restableciendo permisos de ISIM/plugins al estado previo ($PREV_PERMS)..."
+            if [ -d "$ISIM_PLUGINS_PATH" ] && [ -n "$PREV_PERMS" ]; then
+                echo -e "🔄 Restoring original ISIM folder permissions back to ($PREV_PERMS)..."
                 sudo chmod -R "$PREV_PERMS" "$ISIM_PLUGINS_PATH"
-                echo -e "✅ Permisos restaurados con éxito."
+                echo -e "✅ Permissions successfully restored."
             fi
 
-            # ⚙️ ACTUALIZACIÓN DINÁMICA DEL ARCHIVO output_summary.txt EXISTENTE
+            # ⚙️ PREVENTIVE MISP CORE & CLIENT ACCESSIBILITY FIX AT END OF V2.3.0
+            if [[ " ${DEPLOYMENTS[$DEPLOYMENT]} " == *" Threat-Awareness_MISP-Server "* ]]; then
+                echo -e "\n🔄 Applying routing accessibility patch for MISP Server stacks..."
+                echo -e "🛑 Triggering restart of 'resilmesh-tap-misp-core'..."
+                docker compose -f "$COMPOSE_FILE" restart resilmesh-tap-misp-core
+                
+                echo -e "⏳ Polling for 10 seconds to allow network sockets inside the core core to bind..."
+                sleep 10
+                
+                echo -e "🔄 Refreshing network bridge on 'resilmesh-ap-misp-client'..."
+                docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
+                echo -e "✅ MISP accessibility patches applied successfully."
+                UPDATE_SUMMARY+="- MISP Core Accessibility Patch: Sequential container refresh successfully executed.\n"
+            fi
+
             SUMMARY_FILE="./output_summary.txt"
             if [ -f "$SUMMARY_FILE" ]; then
-                echo -e "\n📝 Actualizando endpoint de ISIM Graphql en output_summary.txt..."
-                
-                # Se determina la IP de destino según el entorno Cloud / On-Prem
+                echo -e "\n📝 Updating ISIM Graphql endpoint in output_summary.txt..."
+
                 [[ "$Cloud" == "Amazon EC2" ]] && TARGET_IP="$SERVER_IP_PUBLIC" || TARGET_IP="$SERVER_IP"
-                
-                # Fila exacta alineada usando printf adaptada al nuevo proxy seguro Nginx en puerto 4443
+
                 NEW_ROW=$(printf "| %-20s | %-26s | %-8s | %-15s | %-5s | %-62s |" "Situation Assessment" "ISIM Graphql" "HTTPS" "$TARGET_IP" "4443" "https://$TARGET_IP:4443/graphql")
-                
-                # Usamos una asignación limpia con un archivo temporal para evitar que los caracteres '|' rompan sed
+
                 if grep -q "ISIM Graphql" "$SUMMARY_FILE"; then
                     awk -v new_line="$NEW_ROW" '/ISIM Graphql/ {print new_line; next} {print}' "$SUMMARY_FILE" > "$SUMMARY_FILE.tmp" && mv "$SUMMARY_FILE.tmp" "$SUMMARY_FILE"
-                    echo -e "✅ Archivo output_summary.txt modificado con éxito."
+                    echo -e "✅ output_summary.txt updated successfully."
                 else
                     echo "$NEW_ROW" >> "$SUMMARY_FILE"
-                    echo -e "⚠️ No se encontró fila previa de 'ISIM Graphql' — se ha añadido una nueva al final."
+                    echo -e "⚠️ No 'ISIM Graphql' token found — appending entry to the end of the summary file."
                 fi
-                
             fi
         fi
 
         CURRENT_VERSION="v2.3.0"
-        echo -e "\n✅ ¡Actualización global a la versión $CURRENT_VERSION completada con éxito!\n"
+        if [ "${COMPOSE_RC:-0}" -eq 0 ]; then
+            echo -e "\n✅ Global upgrade to version $CURRENT_VERSION completed successfully!\n"
+        else
+            echo -e "\n⚠️ Upgrade to version $CURRENT_VERSION finished WITH ERRORS. Check details above and Docker runtime logs.\n"
+        fi
         ;;
     *)
-        echo -e "\nℹ️ Sin ruta de migración para la versión: $CURRENT_VERSION\n"
+        echo -e "\nℹ️ No valid migration manifest found for engine state: $CURRENT_VERSION\n"
         ;;
 esac
 
 ######################################################
-#               IMPRESIÓN DEL REPORTE                #
+#                REPORT PRINTING                     #
 ######################################################
 if [[ -n "$UPDATE_SUMMARY" ]]; then
-    CURRENT_DATE=$(date "+%d/%m/%Y")
+    CURRENT_DATE=$(date "+%m/%d/%Y")
     {
-        echo -e "\n================== RESUMEN FINAL DE LA OPERACIÓN ($CURRENT_DATE) =================="
-        echo -e "Versión final alcanzada en el servidor: $CURRENT_VERSION"
-        echo -e "\n$UPDATE_SUMMARY"
-        echo -e "=================================================================================="
-    } | tee -a output_summary.txt
+        echo -e "\n================== FINAL OPERATION SUMMARY ($CURRENT_DATE) =================="
+        echo -e "Final version reached on the server: $CURRENT_VERSION"
+        echo -e "Details:"
+        echo -e "$UPDATE_SUMMARY"
+        echo -e "=========================================================================\n"
+    }
 fi
