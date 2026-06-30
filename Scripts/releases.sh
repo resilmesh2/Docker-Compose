@@ -115,6 +115,66 @@ compose_up_safe() {
     return 0
 }
 
+######################################################
+#       CASM TEMPORAL SCHEDULE MIGRATION (v2.3.0)    #
+######################################################
+# Root cause (confirmed via CASM's workflow.py,
+# initialize_core_component_schedules): on startup CASM only calls
+# client.create_schedule(schedule_id, schedule). If the Schedule ID
+# already exists, it catches ScheduleAlreadyRunningError, logs
+# "component_schedule_already_exists" and does nothing else — it never
+# updates the existing Schedule's action (Workflow Type / Task Queue).
+# So a Schedule created in v2.2.0 (e.g. Workflow Type
+# "ComponentCalculationWorkflow" / Task Queue "component-calculation",
+# or Task Queue "component-calculations" for the risk formula schedule)
+# is left untouched forever after upgrading to v2.3.0.
+#
+# Fix: delete each known-affected Schedule ID BEFORE the new v2.3.0 CASM
+# containers start. On their next startup, create_schedule() will
+# succeed (no ID collision) and recreate them with the correct v2.3.0
+# Workflow Type / Task Queue. This is safe and idempotent: if a Schedule
+# doesn't exist, the delete attempt is simply skipped.
+migrate_casm_schedules() {
+    local temporal_admin_container="${TEMPORAL_ADMIN_CONTAINER:-resilmesh-sop-wo-temporal-admin-tools}"
+    local temporal_address="${TEMPORAL_ADDRESS:-resilmesh-sop-wo-temporal:7233}"
+    local temporal_namespace="${TEMPORAL_NAMESPACE:-default}"
+
+    # Confirmed from workflow.py (initialize_core_component_schedules):
+    #   component-schedule-criticality / threatScore / cvss_score
+    # Confirmed from the Temporal Web UI "Edit Schedule" view (stale Task
+    # Queue "component-calculations" instead of "shared"):
+    #   automation-schedule-base-risk
+    local casm_schedule_ids=(
+        "component-schedule-criticality"
+        "component-schedule-threatScore"
+        "component-schedule-cvss_score"
+        "automation-schedule-base-risk"
+    )
+
+    echo -e "\n🔎 Migrating CASM Temporal schedules to v2.3.0 configuration..."
+
+    for schedule_id in "${casm_schedule_ids[@]}"; do
+        if docker exec "$temporal_admin_container" \
+            temporal schedule describe \
+            --address "$temporal_address" \
+            --namespace "$temporal_namespace" \
+            --schedule-id "$schedule_id" >/dev/null 2>&1; then
+
+            echo "⚠️  Schedule '$schedule_id' exists with potentially stale v2.2.0 config. Deleting so v2.3.0 CASM can recreate it correctly..."
+            docker exec "$temporal_admin_container" \
+                temporal schedule delete \
+                --address "$temporal_address" \
+                --namespace "$temporal_namespace" \
+                --schedule-id "$schedule_id"
+            echo "✅ Deleted '$schedule_id'."
+        else
+            echo "ℹ️  Schedule '$schedule_id' not found — nothing to migrate (already clean or not yet created)."
+        fi
+    done
+
+    echo -e "🔄 Done. CASM v2.3.0 containers should recreate any deleted schedules on next startup with the correct Workflow Type / Task Queue.\n"
+}
+
 # 1. Get Git tags to determine the current state
 git fetch --tags -q
 CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null)
@@ -425,6 +485,13 @@ EOF
 
                 SERVICES["Situation-Assessment_CASM"]="resilmesh-sap-casm-postgres resilmesh-sap-casm-component-calculation-worker resilmesh-sap-casm-worker resilmesh-sap-casm-metasploitable3 resilmesh-sap-casm-shared-worker resilmesh-sap-casm-cve-connector-worker resilmesh-sap-casm-slp-enrichment-worker"
                 UPDATE_SUMMARY+="- CASM: Structural migration completed (obsolete containers purged).\n"
+
+                # NEW: migrate stale Temporal schedules BEFORE the new CASM
+                # containers are built/started below, so create_schedule()
+                # finds a clean slate and recreates them with the correct
+                # v2.3.0 Workflow Type / Task Queue.
+                migrate_casm_schedules
+                UPDATE_SUMMARY+="- CASM: Stale v2.2.0 Temporal schedules removed for clean recreation in v2.3.0.\n"
             fi
 
             ################ 📊 SACD COMPONENT CONFIGURATION ################
@@ -490,10 +557,10 @@ EOF
                 echo -e "\n🔄 Applying routing accessibility patch for MISP Server stacks..."
                 echo -e "🛑 Triggering restart of 'resilmesh-tap-misp-core'..."
                 docker compose -f "$COMPOSE_FILE" restart resilmesh-tap-misp-core
-                
+
                 echo -e "⏳ Polling for 10 seconds to allow network sockets inside the core core to bind..."
                 sleep 10
-                
+
                 echo -e "🔄 Refreshing network bridge on 'resilmesh-ap-misp-client'..."
                 docker compose -f "$COMPOSE_FILE" restart resilmesh-ap-misp-client
                 echo -e "✅ MISP accessibility patches applied successfully."
