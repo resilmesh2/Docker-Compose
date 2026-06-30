@@ -934,9 +934,13 @@ echo -e "\nISIM Rest collectstatic command finished."
 ############################ END ISIM REST COLLECTSTATIC  ############################
 
 ############################ Executing CASM scans ############################
-docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
-docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
 docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
+docker exec -it resilmesh_sap_casm_scanning-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh_sap_casm_scanning-worker python -m temporal.nmap.basic.workflow
+docker exec -it resilmesh_sap_casm_scanning-worker python -m temporal.nuclei.workflow
+
+#docker exec -u 0 resilmesh-sap-casm-easm-worker bash -c 'python -m temporal.easm.parent_workflow'
+#docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.topology.workflow && docker exec -it resilmesh-sap-casm-nmap-worker python -m temporal.nmap.basic.workflow
+#docker exec -it resilmesh-sap-casm-slp-enrichment python -m temporal.slp_enrichment.workflow
 
 ##################################################################################
 #                     RESTART CONTAINERS                                         #
