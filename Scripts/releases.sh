@@ -508,20 +508,29 @@ EOF
                 if [ ! -f "$SACD_EXTERNAL" ]; then echo "❌ The file '$SACD_EXTERNAL' does not exist."; exit 1; fi
                 if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' does not exist."; exit 1; fi
 
-                if [[ "$Cloud" == "Amazon EC2" ]]; then
-                    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
-                    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
-                    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
-                    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
-                else
-                    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_PRODTS_FILE" 
-                    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_FILE" 
-                    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
-                    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
-                fi
+                [[ "$Cloud" == "Amazon EC2" ]] && SACD_TARGET_IP="$SERVER_IP_PUBLIC" || SACD_TARGET_IP="$SERVER_IP"
 
-                echo -e "\n✅ Server IP injected into environment and Mission Editor configs."
-                UPDATE_SUMMARY+="- SACD: Environment files and Mission Editor updated with host IP addresses.\n"
+                # Step 1: replace localhost -> IP in all four files.
+                # Covers fresh deployments and upgrades where localhost was
+                # never replaced (e.g. SACD first deployed in v2.3.0).
+                sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_PRODTS_FILE"
+                sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_FILE"
+                sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_EXTERNAL"
+                sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
+
+                # Step 2: in external.ts only, replace the direct GraphQL
+                # endpoint (http://IP:4001/graphql) with the Nginx HTTPS
+                # reverse proxy (https://IP:4443/graphql). Covers both:
+                #   a) Fresh v2.3.0: after step 1 the URL reads
+                #      http://IP:4001/graphql -> https://IP:4443/graphql
+                #   b) Upgrade from v2.2.0 where SACD was already deployed
+                #      with http://IP:4001/graphql (localhost already replaced)
+                #      -> same substitution fixes the port and scheme.
+                sed -i "s|http://${SACD_TARGET_IP}:4001/graphql|https://${SACD_TARGET_IP}:4443/graphql|g" "$SACD_EXTERNAL"
+
+                echo -e "\n✅ Server IP injected and ISIM GraphQL endpoint in external.ts updated to HTTPS proxy (port 4443)."
+                UPDATE_SUMMARY+="- SACD: external.ts updated — ISIM GraphQL endpoint migrated to https://IP:4443/graphql (Nginx HTTPS proxy).\n"
+                UPDATE_SUMMARY+="- SACD: environment.ts, environment.prod.ts and Mission Editor updated with host IP.\n"
             fi
 
             SERVICES_TO_BUILD=()

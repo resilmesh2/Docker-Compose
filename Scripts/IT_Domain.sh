@@ -498,59 +498,31 @@ echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config
 
 echo -e "\nLet's start with SACD component configuration..."
 
+################### SACD ################
+
+echo -e "\nLet's start with SACD component configuration..."
+
 SACD_ENV_PRODTS_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.prod.ts"
 SACD_ENV_FILE="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/environments/environment.ts"
 SACD_EXTERNAL="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/external.ts"
 SACD_ENV_FILE_MISSION_EDITOR="$DOCKER_BASE_PATH/Situation-Assessment/SACD/src/app/pages/mission-editor-page/mission-editor.service.ts"
 
 # Check if the file exists
-if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then
- echo "❌ The file '$SACD_ENV_PRODTS_FILE' do not exist."
- exit 1
-fi
+if [ ! -f "$SACD_ENV_PRODTS_FILE" ]; then echo "❌ The file '$SACD_ENV_PRODTS_FILE' does not exist."; exit 1; fi
+if [ ! -f "$SACD_ENV_FILE" ]; then echo "❌ The file '$SACD_ENV_FILE' does not exist."; exit 1; fi
+if [ ! -f "$SACD_EXTERNAL" ]; then echo "❌ The file '$SACD_EXTERNAL' does not exist."; exit 1; fi
+if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' does not exist."; exit 1; fi
 
-# Check if the file exists
-if [ ! -f "$SACD_ENV_FILE" ]; then
- echo "❌ The file '$SACD_ENV_FILE' do not exist."
- exit 1
-fi
+[[ "$Cloud" == "Amazon EC2" ]] && SACD_TARGET_IP="$SERVER_IP_PUBLIC" || SACD_TARGET_IP="$SERVER_IP"
 
-# Check if the file exists
-if [ ! -f "$SACD_EXTERNAL" ]; then
- echo "❌ The file '$SACD_EXTERNAL' do not exist."
- exit 1
-fi
+# Paso 1 — localhost → IP en los 4 ficheros (sin cambios)
+sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_PRODTS_FILE"
+sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_FILE"
+sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_EXTERNAL"
+sed -i "s|localhost|${SACD_TARGET_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
 
-# Check if the file exists
-if [ ! -f "$SACD_ENV_FILE_MISSION_EDITOR" ]; then
- echo "❌ The file '$SACD_ENV_FILE_MISSION_EDITOR' do not exist."
- exit 1
-fi
-
-# Add the Server IP fl_agent.conf and ai_detection_engine.conf files where Server IP should be allocated
-if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_PRODTS_FILE"
-else
-    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_PRODTS_FILE" 
-fi
-
-if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i 's/localhost/'"$SERVER_IP_PUBLIC"'/g' "$SACD_ENV_FILE"
-else
-    sed -i 's/localhost/'"$SERVER_IP"'/g' "$SACD_ENV_FILE" 
-fi
-
-if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_EXTERNAL"
-else
-    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_EXTERNAL" 
-fi
-
-if [[ "$Cloud" == "Amazon EC2" ]]; then
-    sed -i "s|localhost|${SERVER_IP_PUBLIC}|g" "$SACD_ENV_FILE_MISSION_EDITOR"
-else
-    sed -i "s|localhost|${SERVER_IP}|g" "$SACD_ENV_FILE_MISSION_EDITOR" 
-fi
+# Paso 2 — solo external.ts: http://IP:4001/graphql → https://IP:4443/graphql
+sed -i "s|http://${SACD_TARGET_IP}:4001/graphql|https://${SACD_TARGET_IP}:4443/graphql|g" "$SACD_EXTERNAL"
 
 echo -e "\n✅ Server IP added for environment.ts and environment.prod.ts config files."
 
