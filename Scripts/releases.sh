@@ -388,7 +388,23 @@ case "$CURRENT_VERSION" in
         echo -e "\n🔄 [Phase 3] Applying changes for release: v2.2.0 -> v2.3.0"
         UPDATE_SUMMARY+="\n############### v2.3.0 ###############\n"
 
-        VERSION_UPDATES=("Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" "Security-Operations_Mitigation-Manager")
+        # ── IoT_Domain exclusion ─────────────────────────────────────────────
+        # v2.3.0 introduces: PPCTI, CASM structural changes, ISIM HTTPS proxy,
+        # SACD updates, CSA and Mitigation Manager. None of these components
+        # belong to the IoT_Domain deployment profile, so this entire phase
+        # is a no-op for that environment. This explicit guard makes the
+        # exclusion clear rather than relying on COMPONENTS_TO_UPDATE being
+        # implicitly empty.
+        if [[ "$DEPLOYMENT" == "IoT_Domain" ]]; then
+            echo -e "ℹ️  IoT Domain environment: no v2.3.0 components apply to this profile."
+            echo -e "    Components updated in this release (PPCTI, CASM, ISIM, SACD, CSA,"
+            echo -e "    Mitigation Manager, Landing page) are not part of the IoT_Domain deployment.\n"
+            UPDATE_SUMMARY+="- IoT Domain: excluded from v2.3.0 changes (none of the updated components belong to this profile).\n"
+            CURRENT_VERSION="v2.3.0"
+            echo -e "\n✅ IoT Domain is already aligned with v2.3.0 — no changes needed.\n"
+        else
+
+        VERSION_UPDATES=("Situation-Assessment_Landing-Page" "Threat-Awareness_PPCTI" "Situation-Assessment_CASM" "Situation-Assessment_ISIM" "Situation-Assessment_SACD" "Situation-Assessment_CSA" "Security-Operations_Mitigation-Manager")
         COMPONENTS_TO_UPDATE=()
         DEPLOYMENT_LIST=" ${DEPLOYMENTS[$DEPLOYMENT]} "
         for comp in "${VERSION_UPDATES[@]}"; do [[ "$DEPLOYMENT_LIST" == *" $comp "* ]] && COMPONENTS_TO_UPDATE+=("$comp"); done
@@ -447,16 +463,84 @@ case "$CURRENT_VERSION" in
 
             ################ Secure ISIM configuration ################
             if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_ISIM "* ]]; then
-                echo -e "\n🔐 Generating SSL Certificates and Nginx Configuration Files for ISIM...\n"
+                echo -e "\n🔐 Generating SSL CA chain and Nginx configuration for ISIM...\n"
                 mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
                 mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf"
 
-                openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                  -keyout "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.key" \
-                  -out "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.crt" \
-                  -subj "/CN=resilmesh-isim"
+                [[ "$Cloud" == "Amazon EC2" ]] && ISIM_CERT_IP="$SERVER_IP_PUBLIC" || ISIM_CERT_IP="$SERVER_IP"
+                ISIM_CERT_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
 
-                cat << "EOF" > "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf/isim.conf"
+                # ── Why a CA chain instead of a plain self-signed cert? ──────────
+                # Browsers block iframe/XHR requests to endpoints with untrusted
+                # certs (NET::ERR_CERT_AUTHORITY_INVALID) even when the user has
+                # previously accepted the warning for direct navigation — the
+                # "proceed anyway" exception does not carry over to embedded
+                # content loaded by SACD. A self-signed cert (even with a correct
+                # IP SAN) is always untrusted until imported as a root authority.
+                #
+                # By generating a local Root CA and signing ISIM's cert with it,
+                # operators need to import only the CA cert ONCE into their browser
+                # or OS trust store. After that:
+                #   • No more security warnings in SACD.
+                #   • No manual "proceed anyway" clicks.
+                #   • When the server cert expires and is regenerated, operators
+                #     do NOT need to re-import anything — the CA stays the same.
+                # ─────────────────────────────────────────────────────────────────
+
+                echo -e "🔑 Step 1/3 — Generating Resilmesh Internal Root CA..."
+                openssl genrsa -out "$ISIM_CERT_PATH/resilmesh_ca.key" 4096 2>/dev/null
+                openssl req -x509 -new -nodes \
+                  -key  "$ISIM_CERT_PATH/resilmesh_ca.key" \
+                  -sha256 -days 1825 \
+                  -out  "$ISIM_CERT_PATH/resilmesh_ca.crt" \
+                  -subj "/O=Resilmesh/CN=Resilmesh Internal CA"
+
+                echo -e "🔑 Step 2/3 — Generating ISIM server key and CSR..."
+                openssl genrsa -out "$ISIM_CERT_PATH/isim.key" 2048 2>/dev/null
+                openssl req -new \
+                  -key  "$ISIM_CERT_PATH/isim.key" \
+                  -out  "$ISIM_CERT_PATH/isim.csr" \
+                  -subj "/O=Resilmesh/CN=${ISIM_CERT_IP}"
+
+                # SAN extension — required by modern browsers for IP-based endpoints
+                printf "subjectAltName=IP:%s\n" "$ISIM_CERT_IP" > "$ISIM_CERT_PATH/isim_san.cnf"
+
+                echo -e "🔑 Step 3/3 — Signing ISIM cert with Resilmesh CA..."
+                openssl x509 -req \
+                  -in      "$ISIM_CERT_PATH/isim.csr" \
+                  -CA      "$ISIM_CERT_PATH/resilmesh_ca.crt" \
+                  -CAkey   "$ISIM_CERT_PATH/resilmesh_ca.key" \
+                  -CAcreateserial \
+                  -out     "$ISIM_CERT_PATH/isim.crt" \
+                  -days    365 \
+                  -sha256 \
+                  -extfile "$ISIM_CERT_PATH/isim_san.cnf" 2>/dev/null
+
+                # Clean up CSR and SAN temp file (keep CA key for future renewals)
+                rm -f "$ISIM_CERT_PATH/isim.csr" "$ISIM_CERT_PATH/isim_san.cnf"
+
+                # ── Export the CA cert for operator import ────────────────────────
+                # Operators import THIS file (not the server cert) into their
+                # browser / OS trust store — just once, permanently.
+                cp "$ISIM_CERT_PATH/resilmesh_ca.crt" "./resilmesh_isim_ca.crt"
+                echo -e "\n✅ Certificates generated successfully."
+                echo -e "\n📋 ══════════════════════════════════════════════════════════════"
+                echo -e "   CA CERTIFICATE FOR BROWSER IMPORT: $(pwd)/resilmesh_isim_ca.crt"
+                echo -e "   Import this file ONCE — no need to re-import on cert renewal."
+                echo -e "   ══════════════════════════════════════════════════════════════"
+                echo -e "\n   ── Chrome / Edge (Windows / Linux / Mac):"
+                echo -e "        Settings → Privacy → Manage certificates → Authorities → Import"
+                echo -e "        Select: resilmesh_isim_ca.crt  ✓ Trust for websites"
+                echo -e "\n   ── Firefox:"
+                echo -e "        Settings → Privacy → View Certificates → Authorities → Import"
+                echo -e "        Select: resilmesh_isim_ca.crt  ✓ Trust this CA to identify websites"
+                echo -e "\n   ── Ubuntu / Debian (system-wide, picked up by Chrome/Edge):"
+                echo -e "        sudo cp resilmesh_isim_ca.crt /usr/local/share/ca-certificates/resilmesh-isim.crt"
+                echo -e "        sudo update-ca-certificates"
+                echo -e "\n   ── After import: no more security warnings in SACD. No 'proceed anyway' needed."
+                echo -e "   ══════════════════════════════════════════════════════════════\n"
+
+                cat << 'NGINXEOF' > "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf/isim.conf"
 server {
     listen 443 ssl;
     ssl_certificate     /etc/nginx/certs/isim.crt;
@@ -470,8 +554,34 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-EOF
-                UPDATE_SUMMARY+="- ISIM: SSL certificates and Nginx proxy configured.\n"
+NGINXEOF
+
+                if [[ " ${COMPONENTS_TO_UPDATE[*]} " == *" Situation-Assessment_Landing-Page "* ]]; then
+                    [[ "$Cloud" == "Amazon EC2" ]] && sed -i "s/localhost/${SERVER_IP_PUBLIC}/g" "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json" || sed -i "s/localhost/${SERVER_IP}/g" "$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+                fi
+                # Update Landing Page entries.json: replace the ISIM GraphQL
+                # entry with the new HTTPS proxy URL (port 4443).
+                # Handles both cases:
+                #   a) localhost not yet replaced → http://localhost:4001/graphql
+                #   b) Already replaced in v2.2.0  → http://IP:4001/graphql
+                #LANDING_ENTRIES="$DOCKER_BASE_PATH/Situation-Assessment/Landing-Page/src/data/entries.json"
+                #if [ -f "$LANDING_ENTRIES" ]; then
+                 #  echo -e "\n📝 Updating ISIM GraphQL entry in Landing Page entries.json..."
+                    # Step 1: replace localhost with IP in case it hasn't been done yet
+                    # sed -i "s|http://localhost:4001/graphql|https://${ISIM_CERT_IP}:4443/graphql|g" "$LANDING_ENTRIES"
+                    # Step 2: replace already-substituted IP:4001 with IP:4443 + HTTPS
+                    #sed -i "s|http://${ISIM_CERT_IP}:4001/graphql|https://${ISIM_CERT_IP}:4443/graphql|g" "$LANDING_ENTRIES"
+                  # echo -e "✅ entries.json updated: ISIM GraphQL → https://${ISIM_CERT_IP}:4443/graphql"
+                   # UPDATE_SUMMARY+="- Landing Page entries.json: ISIM GraphQL link updated to https://${ISIM_CERT_IP}:4443/graphql.\n"
+                #else
+                 #   echo -e "⚠️  entries.json not found at $LANDING_ENTRIES — skipping Landing Page update."
+                #fi
+
+                ISIM_CERT_EXPIRY=$(date -d "+365 days" "+%d/%m/%Y")
+                UPDATE_SUMMARY+="- ISIM: CA chain generated (Resilmesh Internal CA → isim.crt with IP SAN ${ISIM_CERT_IP}).\n"
+                UPDATE_SUMMARY+="- ISIM: ⚠️  Certificate expires on ${ISIM_CERT_EXPIRY} — regenerate before that date to avoid SACD GraphQL disruption.\n"
+                UPDATE_SUMMARY+="- ISIM: CA cert exported to ./resilmesh_isim_ca.crt — import into browser/OS once to permanently trust ISIM HTTPS.\n"
+                UPDATE_SUMMARY+="- ISIM: Nginx HTTPS proxy configured on port 4443.\n"
             fi
 
             ################ 📦 HANDLING CASM STRUCTURAL CHANGES ################
@@ -600,6 +710,8 @@ EOF
         else
             echo -e "\n⚠️ Upgrade to version $CURRENT_VERSION finished WITH ERRORS. Check details above and Docker runtime logs.\n"
         fi
+
+        fi  # end IoT_Domain else
         ;;
     *)
         echo -e "\nℹ️ No valid migration manifest found for engine state: $CURRENT_VERSION\n"
