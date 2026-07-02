@@ -389,14 +389,83 @@ else
     sed -i "s|localhost|${SERVER_IP}|g" "$ISIM_RISK_API" 
 fi
 
-mkdir -p $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs
+            ################ Secure ISIM configuration ################
+            echo -e "\n🔐 Generating SSL CA chain and Nginx configuration for ISIM...\n"
+            mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
+            mkdir -p "$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf"
 
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.key \
-  -out $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs/isim.crt \
-  -subj "/CN=resilmesh-isim"
+            [[ "$Cloud" == "Amazon EC2" ]] && ISIM_CERT_IP="$SERVER_IP_PUBLIC" || ISIM_CERT_IP="$SERVER_IP"
+            ISIM_CERT_PATH="$DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/certs"
 
-mkdir -p $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf
+            # ── Why a CA chain instead of a plain self-signed cert? ──────────
+            # Browsers block iframe/XHR requests to endpoints with untrusted
+            # certs (NET::ERR_CERT_AUTHORITY_INVALID) even when the user has
+            # previously accepted the warning for direct navigation — the
+            # "proceed anyway" exception does not carry over to embedded
+            # content loaded by SACD. A self-signed cert (even with a correct
+            # IP SAN) is always untrusted until imported as a root authority.
+            #
+            # By generating a local Root CA and signing ISIM's cert with it,
+            # operators need to import only the CA cert ONCE into their browser
+            # or OS trust store. After that:
+            #   • No more security warnings in SACD.
+            #   • No manual "proceed anyway" clicks.
+            #   • When the server cert expires and is regenerated, operators
+            #     do NOT need to re-import anything — the CA stays the same.
+            # ─────────────────────────────────────────────────────────────────
+
+            echo -e "🔑 Step 1/3 — Generating Resilmesh Internal Root CA..."
+            openssl genrsa -out "$ISIM_CERT_PATH/resilmesh_ca.key" 4096 2>/dev/null
+            openssl req -x509 -new -nodes \
+                -key  "$ISIM_CERT_PATH/resilmesh_ca.key" \
+                -sha256 -days 1825 \
+                -out  "$ISIM_CERT_PATH/resilmesh_ca.crt" \
+                -subj "/O=Resilmesh/CN=Resilmesh Internal CA"
+
+            echo -e "🔑 Step 2/3 — Generating ISIM server key and CSR..."
+            openssl genrsa -out "$ISIM_CERT_PATH/isim.key" 2048 2>/dev/null
+            openssl req -new \
+                -key  "$ISIM_CERT_PATH/isim.key" \
+                -out  "$ISIM_CERT_PATH/isim.csr" \
+                -subj "/O=Resilmesh/CN=${ISIM_CERT_IP}"
+
+            # SAN extension — required by modern browsers for IP-based endpoints
+            printf "subjectAltName=IP:%s\n" "$ISIM_CERT_IP" > "$ISIM_CERT_PATH/isim_san.cnf"
+
+            echo -e "🔑 Step 3/3 — Signing ISIM cert with Resilmesh CA..."
+            openssl x509 -req \
+                -in      "$ISIM_CERT_PATH/isim.csr" \
+                -CA      "$ISIM_CERT_PATH/resilmesh_ca.crt" \
+                -CAkey   "$ISIM_CERT_PATH/resilmesh_ca.key" \
+                -CAcreateserial \
+                -out     "$ISIM_CERT_PATH/isim.crt" \
+                -days    365 \
+                -sha256 \
+                -extfile "$ISIM_CERT_PATH/isim_san.cnf" 2>/dev/null
+
+            # Clean up CSR and SAN temp file (keep CA key for future renewals)
+            rm -f "$ISIM_CERT_PATH/isim.csr" "$ISIM_CERT_PATH/isim_san.cnf"
+
+            # ── Export the CA cert for operator import ────────────────────────
+            # Operators import THIS file (not the server cert) into their
+            # browser / OS trust store — just once, permanently.
+            cp "$ISIM_CERT_PATH/resilmesh_ca.crt" "./resilmesh_isim_ca.crt"
+            echo -e "\n✅ Certificates generated successfully."
+            echo -e "\n📋 ══════════════════════════════════════════════════════════════"
+            echo -e "   CA CERTIFICATE FOR BROWSER IMPORT: $(pwd)/resilmesh_isim_ca.crt"
+            echo -e "   Import this file ONCE — no need to re-import on cert renewal."
+            echo -e "   ══════════════════════════════════════════════════════════════"
+            echo -e "\n   ── Chrome / Edge (Windows / Linux / Mac):"
+            echo -e "        Settings → Privacy → Manage certificates → Authorities → Import"
+            echo -e "        Select: resilmesh_isim_ca.crt  ✓ Trust for websites"
+            echo -e "\n   ── Firefox:"
+            echo -e "        Settings → Privacy → View Certificates → Authorities → Import"
+            echo -e "        Select: resilmesh_isim_ca.crt  ✓ Trust this CA to identify websites"
+            echo -e "\n   ── Ubuntu / Debian (system-wide, picked up by Chrome/Edge):"
+            echo -e "        sudo cp resilmesh_isim_ca.crt /usr/local/share/ca-certificates/resilmesh-isim.crt"
+            echo -e "        sudo update-ca-certificates"
+            echo -e "\n   ── After import: no more security warnings in SACD. No 'proceed anyway' needed."
+            echo -e "   ══════════════════════════════════════════════════════════════\n"
 
 cat << "EOF" > $DOCKER_BASE_PATH/Situation-Assessment/ISIM/nginx/conf/isim.conf
 server {
